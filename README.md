@@ -1,6 +1,6 @@
 # Crônicas de Vallen
 
-Jogo de ação 2D feito em um único arquivo HTML, sem dependências para instalar. Basta abrir o `index.html` no navegador.
+Jogo de ação 2D feito com HTML, CSS e JavaScript puro, sem etapa de build. Basta abrir o `index.html` no navegador (ou publicar a pasta, como no GitHub Pages).
 
 ## Modos
 
@@ -8,6 +8,8 @@ Jogo de ação 2D feito em um único arquivo HTML, sem dependências para instal
 - **PvP Online**: um jogador cria uma sala e o outro entra com o código de 4 letras. Precisa de internet.
 
 ## Controles
+
+Teclado (as teclas podem ser trocadas em **Opções → Configurar teclas**):
 
 | Tecla | Ação |
 |---|---|
@@ -17,5 +19,28 @@ Jogo de ação 2D feito em um único arquivo HTML, sem dependências para instal
 | Z | atacar |
 | X | especial de 1 barra de MP |
 | C | especial de 2 barras de MP |
-| P | pausar |
+| P / Esc | pausar |
 | M | ligar/desligar o som |
+
+Controle de Xbox ou PlayStation: analógico ou direcional para andar, A pula, X ataca, Y e B são os especiais, Start pausa.
+
+No celular aparecem botões na tela (jogue com o aparelho na horizontal).
+
+## Estrutura do código
+
+| Arquivo | Conteúdo |
+|---|---|
+| `js/util.js` | canvas, constantes e funções de desenho |
+| `js/settings.js` | opções e teclas salvas no navegador |
+| `js/input.js` | teclado, controle e toque convertidos em ações |
+| `js/audio.js` | efeitos sonoros e músicas geradas por código |
+| `js/world.js` | estado do mundo, física e efeitos visuais |
+| `js/heroes.js` | heróis: atributos, golpes, especiais e visual |
+| `js/player.js` | lógica dos jogadores e dos acertos |
+| `js/enemies.js` | inimigos, chefes e suas IAs |
+| `js/stages.js` | fases e cenários |
+| `js/render.js` | desenho do mundo e do HUD |
+| `js/net.js` | conexão online (PeerJS) |
+| `js/pvp.js` | regras do PvP |
+| `js/menus.js` | menus, opções e pausa |
+| `js/game.js` | fluxo do jogo e loop principal |

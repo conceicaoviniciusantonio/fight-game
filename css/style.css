@@ -1,0 +1,49 @@
+html,body{margin:0;height:100%;background:#0b0d17;overflow:hidden;touch-action:manipulation;-webkit-user-select:none;user-select:none}
+body{display:flex;align-items:center;justify-content:center;font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif}
+#wrap{position:relative;width:min(100vw,calc(100dvh*16/9));aspect-ratio:16/9}
+canvas{display:block;width:100%;height:100%;background:#000;border-radius:6px;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+
+/* ----- online lobby ----- */
+#lobby{position:fixed;left:50%;top:50%;max-height:96dvh;overflow:auto;transform:translate(-50%,-50%);width:min(420px,86%);box-sizing:border-box;padding:22px 24px;
+  background:rgba(12,14,34,.94);border:2px solid #ffd23f;border-radius:14px;color:#fff;text-align:center;z-index:5;-webkit-user-select:text;user-select:text}
+#lobby h2{margin:0 0 4px;color:#ffd23f;font-size:26px;letter-spacing:1px}
+#lobby .sub{margin:0 0 16px;color:#cfe3ff;font-size:14px}
+#lobby button{font:inherit;font-weight:bold;font-size:16px;border:0;border-radius:10px;padding:10px 18px;cursor:pointer;background:#ffd23f;color:#1b1b2e}
+#lobby button:hover{filter:brightness(1.08)}
+#lobby button:focus-visible,#lobby input:focus-visible{outline:3px solid #8fe6ff;outline-offset:2px}
+#lobby button.ghost{background:transparent;color:#cfe3ff;border:1px solid rgba(255,255,255,.3);margin-top:12px;font-size:14px;padding:7px 14px}
+#lobby .or{margin:14px 0;color:#8a93b5;font-size:13px}
+#lobby .row{display:flex;gap:8px;justify-content:center}
+#lobby input{font:inherit;font-size:20px;font-weight:bold;letter-spacing:6px;text-transform:uppercase;text-align:center;width:150px;padding:8px;border-radius:10px;border:2px solid #4e5a8a;background:#0b0d17;color:#fff}
+#lobby .code{font-size:40px;font-weight:bold;letter-spacing:10px;color:#ffd23f;margin:6px 0 2px}
+#lobby small{color:#cfe3ff}
+#lobbyStatus{min-height:20px;margin:14px 0 0;font-size:14px;color:#9fe3a8}
+#lobbyStatus.err{color:#ff8a8a}
+[hidden]{display:none!important}
+
+/* ----- touch controls ----- */
+#touch{position:fixed;inset:0;z-index:4;pointer-events:none;touch-action:none}
+#touch button{pointer-events:auto;touch-action:none;font:inherit;font-weight:bold;color:#fff;border:2px solid rgba(255,255,255,.35);
+  background:rgba(12,14,34,.45);border-radius:50%;display:flex;align-items:center;justify-content:center;padding:0;
+  -webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+#touch button.on{background:rgba(255,210,63,.55);border-color:#ffd23f}
+#touch .dpad{position:absolute;left:max(16px,env(safe-area-inset-left));bottom:max(16px,env(safe-area-inset-bottom));width:170px;height:170px}
+#touch .dpad button{position:absolute;width:58px;height:58px;font-size:22px;border-radius:14px}
+#touch .dpad .up{left:56px;top:0} #touch .dpad .down{left:56px;bottom:0}
+#touch .dpad .left{left:0;top:56px} #touch .dpad .right{right:0;top:56px}
+#touch .acts{position:absolute;right:max(16px,env(safe-area-inset-right));bottom:max(16px,env(safe-area-inset-bottom));width:230px;height:190px}
+#touch .acts button{position:absolute}
+#touch .atk{width:78px;height:78px;right:76px;bottom:0;font-size:28px}
+#touch .jmp{width:64px;height:64px;right:0;bottom:46px;font-size:24px}
+#touch .s1{width:50px;height:50px;right:150px;bottom:72px;font-size:16px}
+#touch .s2{width:50px;height:50px;right:96px;bottom:100px;font-size:16px}
+#touch .s3{width:50px;height:50px;right:40px;bottom:128px;font-size:16px}
+#touch .tops{position:absolute;top:28%;right:max(12px,env(safe-area-inset-right));display:flex;gap:10px}
+#touch .tops button{width:44px;height:44px;font-size:16px;border-radius:12px}
+#rotate{display:none}
+@media (orientation:portrait) and (pointer:coarse){
+  #rotate{display:flex;position:fixed;inset:0;z-index:9;background:#0b0d17;color:#ffd23f;font-size:22px;font-weight:bold;
+    align-items:center;justify-content:center;text-align:center;padding:24px}
+}
+@media (max-height:430px){ #touch .dpad{transform:scale(.82);transform-origin:bottom left} #touch .acts{transform:scale(.82);transform-origin:bottom right} }
+@media (max-height:340px){ #touch .dpad{transform:scale(.7)} #touch .acts{transform:scale(.7)} }
