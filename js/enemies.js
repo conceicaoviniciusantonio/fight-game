@@ -60,7 +60,7 @@ function spawnEnemy(type,x,y=-40-rand(0,120),id){
 // Authoritative damage (single player or co-op host)
 function damageEnemy(e,dmg,dir,kb,up,crit,src){
   if (e.hp<=0) return;
-  e.hp-=dmg; e.flash=6;
+  e.hp-=dmg; e.flash=6; spark(e.x-dir*e.w*0.3,e.y-e.h*0.55,crit?'#ffe066':'#fff7d6');
   addText(e.x,e.y-e.h-8,crit?dmg+'!':dmg,crit?'#ffd23f':'#ffffff',crit);
   burst(e.x-dir*e.w*0.2,e.y-e.h*0.55,crit?'#ffd23f':'#fff3c4',crit?14:8,6);
   SFX.hit(crit);
@@ -323,9 +323,9 @@ function drawBat(e,T,c,F,sx){
   if (e.hp>0 && e.state==='windup' && (e.anim>>2)%2) txt('!',sx,y-26,20,'#ff4040');
   if (e.hp>0 && e.hp<e.maxHp){ ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(sx-18,y-24,36,4); ctx.fillStyle='#ff4d5e'; ctx.fillRect(sx-18,y-24,36*e.hp/e.maxHp,4); }
 }
-function drawScorpion(e,T,c,F,sx){
+function drawScorpion(e,T,c,F,sx,noShadow){
   const boss=!!T.boss, s=c.s;
-  if (e.state!=='dying') shadow(sx,boss?GROUND:surfaceBelow(e.x,e.y),e.w*0.55);
+  if (!noShadow && e.state!=='dying') shadow(sx,boss?GROUND:surfaceBelow(e.x,e.y),e.w*0.55);
   ctx.save(); ctx.translate(sx,e.y); ctx.scale(e.face*s,s);
   if (e.state==='dying'){ ctx.globalAlpha=Math.max(0,1-e.t/45); ctx.rotate(-Math.min(1,e.t/12)*0.6); }
   const st=e.state, moving=Math.abs(e.vx)>0.3, ph=moving?Math.sin(e.anim*0.5):0, wind=WIND.includes(st);
@@ -346,18 +346,27 @@ function drawScorpion(e,T,c,F,sx){
   if (e.hp>0 && wind && (e.anim>>2)%2) txt('!',sx,e.y-e.h-18,22,'#ff4040');
   if (!boss && e.hp>0 && e.hp<e.maxHp){ ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(sx-20,e.y-e.h-10,40,5); ctx.fillStyle='#ff4d5e'; ctx.fillRect(sx-20,e.y-e.h-10,40*e.hp/e.maxHp,5); }
 }
-function drawMonster(e){
+function drawMonsterShadow(e){
+  const T=ENEMY_TYPES[e.type], sx=e.x-cam.x;
+  if (T.look.kind==='bat' || e.state==='dying') return;
+  const s=T.boss?GROUND:surfaceBelow(e.x,e.y), d=clamp((s-e.y)/250,0,0.7);
+  shadow(sx,s,(T.look.kind==='scorpion'?e.w*0.55:e.w*0.6)*(1-d));
+}
+function drawMonster(e,noShadow){
   const T=ENEMY_TYPES[e.type], c=T.look, fl=e.flash>0, F=col=>fl?'#ffffff':col, sx=e.x-cam.x;
   if (sx<-200||sx>W+200) return;
   if (c.kind==='bat') return drawBat(e,T,c,F,sx);
-  if (c.kind==='scorpion') return drawScorpion(e,T,c,F,sx);
-  if (e.state!=='dying'){ const s=T.boss?GROUND:surfaceBelow(e.x,e.y), d=clamp((s-e.y)/250,0,0.7); shadow(sx,s,e.w*0.6*(1-d)); }
+  if (c.kind==='scorpion') return drawScorpion(e,T,c,F,sx,noShadow);
+  if (!noShadow && e.state!=='dying'){ const s=T.boss?GROUND:surfaceBelow(e.x,e.y), d=clamp((s-e.y)/250,0,0.7); shadow(sx,s,e.w*0.6*(1-d)); }
   ctx.save(); ctx.translate(sx,e.y);
   if (T.boss && e.hp>0 && e.hp<e.maxHp*0.5){
     const gl=ctx.createRadialGradient(0,-65,10,0,-65,110), a=0.25+Math.sin(e.anim*0.15)*0.1;
     gl.addColorStop(0,`rgba(255,60,40,${a})`); gl.addColorStop(1,'rgba(255,60,40,0)'); ctx.fillStyle=gl; circle(0,-65,110);
   }
-  ctx.scale(e.face*c.s,c.s);
+  if (e.onGround && e._air) e._land=8;
+  e._air=!e.onGround; if (e._land>0) e._land--;
+  const sq=e._land>0 ? e._land/8*0.14 : 0;
+  ctx.scale(e.face*c.s*(1+sq*0.8),c.s*(1-sq));
   if (e.state==='dying'){ ctx.globalAlpha=Math.max(0,1-e.t/45)*(e.t%4<2?1:0.5); ctx.rotate(-Math.min(1,e.t/12)*1.2); }
   if (e.state==='teleportWind') ctx.globalAlpha=Math.max(0.05,1-e.t/16);
   if (c.cape){ ctx.fillStyle=F(c.cape); ctx.beginPath(); ctx.moveTo(-8,-32); ctx.quadraticCurveTo(-18,-18,-20+Math.sin(e.anim*0.15)*2,-2); ctx.lineTo(2,-6); ctx.closePath(); ctx.fill(); }

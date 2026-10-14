@@ -109,6 +109,14 @@ const SCENERY = {
 const THEMES = {
   forest: {
     platform:{post:'#5d4632', body:'#8d7458', line:'#6f5a44', top:'#6cc24f', vine:'#3f8a30'},
+    darkness:cx => clamp((cx-2300)/900,0,1)*0.3,   // the sun sets near the boss
+    ambient(cx){ // falling leaves
+      for (let i=0;i<16;i++){
+        const x=((i*233-cx*0.9+clock*0.7)%(W+80)+W+80)%(W+80)-40, y=((i*131+clock*(0.8+(i%3)*0.3))%(H+40))-20;
+        ctx.save(); ctx.translate(x+Math.sin(clock*0.03+i)*12,y); ctx.rotate(clock*0.04+i);
+        ctx.fillStyle=i%3?'rgba(120,190,80,0.75)':'rgba(230,170,70,0.75)'; ctx.beginPath(); ctx.ellipse(0,0,5,2.5,0,0,Math.PI*2); ctx.fill(); ctx.restore();
+      }
+    },
     draw(cx){
       const S=SCENERY, t=clamp(cx/(worldW-W),0,1);
       const g=ctx.createLinearGradient(0,0,0,GROUND);
@@ -152,6 +160,13 @@ const THEMES = {
   },
   cave: {
     platform:{post:'#2b2440', body:'#4a3d6b', line:'#3a3058', top:'#6a5a9a', vine:'#7ff0ff'},
+    darkness:() => 0.55,
+    lights(cx){
+      const L=[];
+      for (const r of SCENERY.ruins){ const x=r.x-cx; if (x>-200 && x<W+200) L.push({x,y:GROUND-r.h*0.6,r:170,c:'127,240,255'}); }
+      SCENERY.farTrees.forEach((f,i)=>{ if (i%4) return; const x=f.x-cx*0.35; if (x>-100 && x<W+100) L.push({x,y:GROUND-40,r:90,c:f.h>90?'255,123,216':'127,240,255'}); });
+      return L;
+    },
     draw(cx){
       const S=SCENERY;
       const g=ctx.createLinearGradient(0,0,0,GROUND); g.addColorStop(0,'#0c0818'); g.addColorStop(1,'#2a1f45');
@@ -183,6 +198,14 @@ const THEMES = {
   },
   desert: {
     platform:{post:'#a0703a', body:'#c99554', line:'#a87a40', top:'#f0c47a', vine:'#8a5a2a'},
+    darkness:cx => clamp((cx-2300)/900,0,1)*0.22,
+    ambient(cx){ // sand blown by the wind
+      ctx.strokeStyle='rgba(255,230,170,0.35)'; ctx.lineWidth=1.5;
+      for (let i=0;i<22;i++){
+        const x=((i*197-cx*1.1-clock*6)%(W+120)+W+120)%(W+120)-60, y=GROUND-10-((i*53)%300);
+        ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+18+(i%4)*6,y-1); ctx.stroke();
+      }
+    },
     draw(cx){
       const S=SCENERY, t=clamp(cx/(worldW-W),0,1);
       const g=ctx.createLinearGradient(0,0,0,GROUND);
@@ -220,6 +243,18 @@ const THEMES = {
   },
   castle: {
     platform:{post:'#2b2636', body:'#4a4458', line:'#3a3448', top:'#6a6380', vine:'#7a1f2f'},
+    darkness:() => 0.5,
+    lights(cx){ // wall torches (same spacing as in draw)
+      const L=[], off=((-cx*0.6)%240+240)%240;
+      for (let x=off-240;x<W+240;x+=240) L.push({x:x-80,y:292,r:150+Math.sin(clock*0.3+x)*6,c:'255,150,60'});
+      return L;
+    },
+    ambient(cx){ // embers floating up
+      for (let i=0;i<14;i++){
+        const x=((i*271-cx*0.7)%(W+60)+W+60)%(W+60)-30+Math.sin(clock*0.02+i)*10, y=H-((i*97+clock*(0.6+(i%3)*0.25))%(H+40));
+        ctx.fillStyle=`rgba(255,${140+(i%3)*30},60,${0.5+0.3*Math.sin(clock*0.1+i)})`; circle(x,y,1.6+(i%2));
+      }
+    },
     draw(cx){
       const S=SCENERY;
       const g=ctx.createLinearGradient(0,0,0,GROUND); g.addColorStop(0,'#07061a'); g.addColorStop(1,'#2b1d3d');

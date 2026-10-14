@@ -1,7 +1,18 @@
 'use strict';
 // ===================== Canvas, constants and small helpers =====================
-const cv = document.getElementById('game'), ctx = cv.getContext('2d');
+const cv = document.getElementById('game');
+let ctx = cv.getContext('2d'); // `let`: drawing helpers can be pointed at an offscreen canvas (see withOutline)
 const W = 960, H = 540, GROUND = 462, G = 0.6, MAXMP = 300;
+
+// Draw at the screen's real resolution: the game keeps using 960x540 coordinates,
+// the backing canvas is scaled by DPR so shapes and text stay sharp.
+let DPR = 1;
+function resizeCanvas(){
+  const w=cv.getBoundingClientRect().width || W;
+  DPR=clamp(w/W*(window.devicePixelRatio||1),1,2.5);
+  cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR);
+}
+addEventListener('resize',()=>resizeCanvas());
 const FONT = '"Trebuchet MS","Segoe UI",system-ui,sans-serif';
 
 const rand = (a, b) => a + Math.random() * (b - a);

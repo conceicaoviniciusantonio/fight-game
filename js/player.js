@@ -105,7 +105,7 @@ function strikeEnemy(p,e,base,dir,kb,up){
   if (p.local){ hitFeedback(p,crit); score+=Math.round(dmg*(1+Math.min(combo,50)/25)); }
   if (isGuest()){
     // the host owns enemies: show the hit right away and report it
-    e.flash=6; addText(e.x,e.y-e.h-8,crit?dmg+'!':dmg,crit?'#ffd23f':'#ffffff',crit);
+    e.flash=6; spark(e.x-dir*e.w*0.3,e.y-e.h*0.55,crit?'#ffe066':'#fff7d6'); addText(e.x,e.y-e.h-8,crit?dmg+'!':dmg,crit?'#ffd23f':'#ffffff',crit);
     burst(e.x-dir*e.w*0.2,e.y-e.h*0.55,crit?'#ffd23f':'#fff3c4',crit?14:8,6); SFX.hit(crit);
     netSend({type:'ehit',id:e.id,dmg,dir,kb,up,crit});
     return true;
@@ -153,7 +153,7 @@ function applyHurt(p,h){
   if (p.inv>0 || !isAlive(p) || !canFight()) return;
   if (!h.pvp && p.def) h={...h, dmg:Math.max(1,Math.round(h.dmg*(1-p.def)))};
   if (guardsAgainst(p,h.fromX)){ blockHit(p,h); return; }
-  p.hp-=h.dmg; p.mp=Math.min(MAXMP,p.mp+h.dmg*0.2);
+  p.hp-=h.dmg; p.mp=Math.min(MAXMP,p.mp+h.dmg*0.2); spark(p.x,p.y-44,'#ffb0b0');
   addText(p.x,p.y-p.h-10,h.crit?h.dmg+'!':h.dmg,h.crit?'#ffd23f':'#ff5a5a',h.crit);
   burst(p.x,p.y-40,'#ff6b6b',10,5);
   addShake(h.pvp?(h.crit?8:5):8); hitstop=Math.max(hitstop,h.pvp?3:4);

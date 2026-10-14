@@ -110,6 +110,12 @@ function drawParts(){
       ctx.beginPath(); ctx.moveTo(q.x1-cam.x,q.y+20); ctx.lineTo(q.x2-cam.x,q.y-20); ctx.stroke();
       ctx.globalAlpha=1; continue;
     }
+    if (q.spark){
+      const k=1-a, sx=q.x-cam.x; ctx.strokeStyle=q.color; ctx.lineWidth=3*a+0.5; ctx.lineCap='round';
+      for (let i=0;i<6;i++){ const an=q.ang+i*Math.PI/3, r1=6+k*10, r2=r1+10+k*16*(i%2?0.6:1);
+        ctx.beginPath(); ctx.moveTo(sx+Math.cos(an)*r1,q.y+Math.sin(an)*r1); ctx.lineTo(sx+Math.cos(an)*r2,q.y+Math.sin(an)*r2); ctx.stroke(); }
+      ctx.globalAlpha=1; continue;
+    }
     if (q.ring){ ctx.strokeStyle=q.color; ctx.lineWidth=q.lw*a+1; ctx.beginPath(); ctx.arc(q.x-cam.x,q.y,q.r,0,Math.PI*2); ctx.stroke(); }
     else { ctx.fillStyle=q.color; circle(q.x-cam.x,q.y,q.size*(0.4+a*0.6)); }
   }
@@ -123,15 +129,100 @@ function drawTexts(){
   }
   ctx.globalAlpha=1;
 }
+// ----- outlines: draw a figure offscreen, then stamp a dark silhouette around it -----
+const OUT_A=document.createElement('canvas'), OUT_B=document.createElement('canvas');
+const outA=OUT_A.getContext('2d'), outB=OUT_B.getContext('2d');
+// (sx,sy) is the figure's feet on screen; bw×bh is a box around it, feet at 80% of its height
+function withOutline(sx,sy,bw,bh,draw,color='rgba(18,12,30,0.92)',th=1.6){
+  const k=DPR, pw=Math.ceil(bw*k), ph=Math.ceil(bh*k), ox=bw/2, oy=bh*0.8;
+  if (OUT_A.width<pw || OUT_A.height<ph){
+    OUT_A.width=OUT_B.width=Math.max(OUT_A.width,pw); OUT_A.height=OUT_B.height=Math.max(OUT_A.height,ph);
+  }
+  outA.setTransform(1,0,0,1,0,0); outA.clearRect(0,0,pw,ph);
+  outA.setTransform(k,0,0,k,(ox-sx)*k,(oy-sy)*k);
+  const main=ctx; ctx=outA;
+  try { draw(); } finally { ctx=main; }
+  outB.setTransform(1,0,0,1,0,0); outB.clearRect(0,0,pw,ph);
+  outB.globalCompositeOperation='source-over'; outB.drawImage(OUT_A,0,0,pw,ph,0,0,pw,ph);
+  outB.globalCompositeOperation='source-in'; outB.fillStyle=color; outB.fillRect(0,0,pw,ph);
+  outB.globalCompositeOperation='source-over';
+  const dx=sx-ox, dy=sy-oy;
+  for (const [ax,ay] of [[-th,0],[th,0],[0,-th],[0,th]]) ctx.drawImage(OUT_B,0,0,pw,ph,dx+ax,dy+ay,bw,bh);
+  ctx.drawImage(OUT_A,0,0,pw,ph,dx,dy,bw,bh);
+}
+function drawHeroOutlined(p){
+  const sx=p.x-cam.x;
+  if (sx<-200 || sx>W+200) return;
+  const s=surfaceBelow(p.x,p.y), d=clamp((s-p.y)/220,0,0.7); shadow(sx,s,20*(1-d));
+  withOutline(sx,p.y,320,240,()=>drawHero(p,1,false,true));
+}
+function drawMonsterOutlined(e){
+  const T=ENEMY_TYPES[e.type], s=T.look.s||1, sx=e.x-cam.x;
+  if (sx<-260 || sx>W+260) return;
+  const bw=T.look.kind==='bat'?90:Math.max(170,130*s), bh=T.look.kind==='bat'?120:Math.max(150,108*s);
+  drawMonsterShadow(e);
+  withOutline(sx,e.y,bw,bh,()=>drawMonster(e,true));
+}
+
+// ----- lighting: darkness with holes punched by light sources, plus a soft additive glow -----
+const LIGHT=document.createElement('canvas'), lightCtx=LIGHT.getContext('2d');
+const PROJ_LIGHT = { fireball:['255,150,60',120], meteor:['255,140,50',220], orb:['190,140,255',90], bolt:['190,140,255',60],
+  wave:['140,220,255',90], eorb:['127,240,255',60], pshock:['255,210,110',70], swave:['255,92,240',80], spike:['127,240,255',60] };
+function sceneLights(){
+  const L=[];
+  for (const p of players) if (p.hp>0) L.push({x:p.x-cam.x,y:p.y-40,r:170});
+  for (const pr of projs){ const l=PROJ_LIGHT[pr.type]; if (l) L.push({x:pr.x-cam.x,y:pr.y,r:l[1],c:l[0]}); }
+  for (const q of parts) if (q.beam) L.push({x:q.x-cam.x+q.face*q.len/2,y:q.y,r:260,c:'255,240,180'});
+  if (boss && boss.hp>0 && boss.hp<boss.maxHp*0.5) L.push({x:boss.x-cam.x,y:boss.y-60,r:150,c:'255,60,40'});
+  const th=THEMES[stage.theme];
+  if (th.lights) L.push(...th.lights(cam.x));
+  return L;
+}
+function drawLighting(){
+  const th=THEMES[stage.theme], dark=th.darkness ? th.darkness(cam.x) : 0;
+  const L=sceneLights();
+  if (dark>0.01){
+    const pw=Math.round(W*DPR), ph=Math.round(H*DPR);
+    if (LIGHT.width!==pw || LIGHT.height!==ph){ LIGHT.width=pw; LIGHT.height=ph; }
+    const c=lightCtx;
+    c.setTransform(1,0,0,1,0,0); c.globalCompositeOperation='source-over'; c.clearRect(0,0,pw,ph);
+    c.setTransform(DPR,0,0,DPR,0,0);
+    c.fillStyle=`rgba(6,4,18,${dark})`; c.fillRect(0,0,W,H);
+    c.globalCompositeOperation='destination-out';
+    for (const l of L){
+      const g=c.createRadialGradient(l.x,l.y,0,l.x,l.y,l.r); g.addColorStop(0,'rgba(0,0,0,1)'); g.addColorStop(1,'rgba(0,0,0,0)');
+      c.fillStyle=g; c.beginPath(); c.arc(l.x,l.y,l.r,0,Math.PI*2); c.fill();
+    }
+    ctx.drawImage(LIGHT,0,0,W,H);
+  }
+  // colored glow on top (a cheap bloom)
+  ctx.globalCompositeOperation='lighter';
+  for (const l of L) if (l.c){
+    const g=ctx.createRadialGradient(l.x,l.y,0,l.x,l.y,l.r*0.8); g.addColorStop(0,`rgba(${l.c},0.32)`); g.addColorStop(1,`rgba(${l.c},0)`);
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(l.x,l.y,l.r*0.8,0,Math.PI*2); ctx.fill();
+  }
+  ctx.globalCompositeOperation='source-over';
+}
+function drawVignette(){
+  const g=ctx.createRadialGradient(W/2,H/2,H*0.45,W/2,H/2,H*1.05);
+  g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(0,0,0,0.38)');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+}
+// Short star-shaped flash where a hit lands
+function spark(x,y,color='#fff7d6'){ parts.push({spark:true,x,y,vx:0,vy:0,life:9,max:9,color,ang:Math.random()*Math.PI}); }
+
 function nameTag(p,label,color){ if (p) txt(label,p.x-cam.x,p.y-p.h-30,12,color); }
 
 function drawWorld(){
   drawBG(); drawPlatforms(); drawItems();
-  for (const e of enemies) drawMonster(e);
+  for (const e of enemies) drawMonsterOutlined(e);
   drawParts();
-  for (const p of players) if (p!==me) drawHero(p);
-  if (me) drawHero(me);
-  drawProjs(); drawTexts();
+  for (const p of players) if (p!==me) drawHeroOutlined(p);
+  if (me) drawHeroOutlined(me);
+  drawProjs();
+  const th=THEMES[stage.theme]; if (th.ambient) th.ambient(cam.x);
+  drawLighting();
+  drawTexts();
   for (const p of players) drawEmote(p);
 }
 

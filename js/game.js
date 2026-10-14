@@ -284,12 +284,14 @@ function endAction(verb){
   return 'ENTER '+verb;
 }
 function draw(){
+  ctx.setTransform(DPR,0,0,DPR,0,0);
   const inGame = ['play','over','win','pvp','pvpEnd'].includes(mode) || ((mode==='options'||mode==='keys') && optionsFrom==='pause');
   ctx.save();
   if (shake>0) ctx.translate(rand(-shake,shake),rand(-shake,shake)*0.6);
   if (inGame) drawWorld();
   else { cam.x=(Math.sin(clock*0.002)*0.5+0.5)*(worldW-W); drawBG(); drawPlatforms(); }
   ctx.restore();
+  if (inGame) drawVignette();
   if (flashScreen>0){ ctx.fillStyle=`rgba(255,255,255,${flashScreen})`; ctx.fillRect(0,0,W,H); }
   if (mode==='pvp' || mode==='pvpEnd'){
     nameTag(remotePlayer(),'RIVAL','#ff6b6b'); nameTag(me,'VOCÊ','#ffd23f');
@@ -322,5 +324,6 @@ function loop(now){
   draw();
   requestAnimationFrame(loop);
 }
+resizeCanvas();
 goTitle();
 requestAnimationFrame(loop);
