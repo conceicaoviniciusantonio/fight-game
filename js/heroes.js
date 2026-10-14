@@ -62,8 +62,8 @@ const HEROES = {
     ],
   },
   archer: {
-    name:'SYLVIE', title:'Arqueira', desc:'Ágil, ataca de longe com o arco',
-    hp:420, speed:4.7, jump:-12.8, weapon:'bow', ghost:['#6aff8a','#9affb0'], aura:'rgba(170,255,140,0.55)',
+    name:'SYLVIE', title:'Arqueira', desc:'Ataca de longe; mira com ↑ e ↓',
+    hp:420, speed:4.7, jump:-12.8, weapon:'bow', aim:true, ghost:['#6aff8a','#9affb0'], aura:'rgba(170,255,140,0.55)',
     stats:{vida:3, ataque:3, velocidade:4, alcance:5},
     look:{cape:'short', pony:16, quiver:true, skirt:'#00897b', ear:true, leaf:'#ba68c8'},
     col:{cape:'#00796b',pants:'#4e3b5c',boots:'#3e2f45',body:'#26a69a',chest:'#b2dfdb',belt:'#8d5a2b',hair:'#e6ebf2',band:'#ba68c8',eye:'#5e35b1'},
@@ -79,13 +79,15 @@ const HEROES = {
       { name:'Leque de Flechas', mp:100, inv:30, color:'#b6ff9e',
         update(p){
           if (p.t===12){
-            for (const a of [-0.32,-0.16,0,0.16,0.32])
+            for (const d of [-0.32,-0.16,0,0.16,0.32]){
+              const a=d+(p.aim||0);
               fireArrow(p,p.x+p.face*22,p.y-46,Math.cos(a)*16*p.face,Math.sin(a)*16,{dmg:30,pierce:true,big:true,kb:5,up:-5});
+            }
             addShake(4); psfx('wave'); psfx('bow');
           }
           return p.t>=26;
         },
-        angle:() => 0, pull:p => p.t<12 ? p.t : 0 },
+        angle:p => p.aim||0, pull:p => p.t<12 ? p.t : 0 },
       { name:'Chuva de Flechas', mp:200, inv:75, freeze:true, cry:'CHUVA DE FLECHAS!', color:'#b6ff9e',
         update(p){
           gatherSparks(p,'#b6ff9e',34);
@@ -232,7 +234,8 @@ function weaponAngle(p){
   switch (p.state){
     case 'attack': {
       const a=p.atk;
-      if (a.shot || a.blast) return (a.shot && a.shot.ang) || a.ang || 0;
+      if (a.shot) return aimedAngle(p,a.shot);
+      if (a.blast) return a.ang || 0;
       if (a.plunge) return 1.35;
       if (a.thrust) return Hh.weapon==='spear' ? 0 : -0.08;
       if (p.t<a.act[0]) return a.arc[0];
@@ -347,6 +350,11 @@ function drawBow(p,ghost,gc2){
     ctx.strokeStyle='#f0f0f0'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(sx0,-ey); ctx.lineTo(sx0-pull,0); ctx.lineTo(sx0,ey); ctx.stroke();
     if (pull>0){ ctx.strokeStyle='#e8d5a8'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(sx0-pull,0); ctx.lineTo(sx0-pull+30,0); ctx.stroke();
       ctx.fillStyle='#f5f5f5'; tri(sx0-pull+30,-3,sx0-pull+36,0,sx0-pull+30,3); }
+    // aim guide while the bow is raised or lowered
+    if ((p.state==='attack' || p.state==='skill') && Math.abs(p.aim||0)>0.08){
+      ctx.strokeStyle='rgba(255,255,255,0.45)'; ctx.lineWidth=2; ctx.setLineDash([6,8]);
+      ctx.beginPath(); ctx.moveTo(44,0); ctx.lineTo(130,0); ctx.stroke(); ctx.setLineDash([]);
+    }
   }
   ctx.restore();
 }

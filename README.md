@@ -19,7 +19,7 @@ Derrotar inimigos dá XP (até o nível 20, cada nível aumenta vida e ataque) e
 | Herói | Estilo | Especiais (1, 2 e 3 barras de MP) |
 |---|---|---|
 | Kaira, cavaleira | combos de espada | Onda de Espada, Giga Slash, Corte Relâmpago |
-| Sylvie, arqueira | ataques de longe | Leque de Flechas, Chuva de Flechas, Flecha Estelar |
+| Sylvie, arqueira | ataques de longe; segure ↑ ou ↓ enquanto atira para levantar ou abaixar o arco | Leque de Flechas, Chuva de Flechas, Flecha Estelar |
 | Mirela, maga | magia e teleporte | Bola de Fogo, Nevasca, Meteoro |
 | Dario, lanceiro | alcance longo e mergulho | Investida, Redemoinho, Lança Celestial |
 

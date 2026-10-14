@@ -11,7 +11,7 @@ function makePlayer(hero,opts={}){
     state:'free', t:0, sk:0, atk:null, queued:false, hitIds:new Set(),
     jumps:0, airAtk:0, inv:0, anim:0, dropThrough:0, onGround:true,
     lastTap:{dir:0,t:-99}, localInv:0, tx:0, ty:GROUND, guardHp:100, rollCd:0, rollDir:1,
-    base:!!opts.base || opts.local===false, def:0, lvl:1, tier:0,
+    base:!!opts.base || opts.local===false, def:0, lvl:1, tier:0, aim:0,
   };
   applyStats(p); p.hp=p.maxHp;
   return p;
@@ -46,12 +46,15 @@ function addPlayerProj(p,o){
 function fireArrow(p,x,y,vx,vy,s){
   return addPlayerProj(p,{type:'parrow',x,y,vx,vy,life:s.life||60,dmg:s.dmg,pierce:!!s.pierce,big:!!s.big,kb:s.kb||2,up:s.up||0,deco:!!s.deco});
 }
+// Shot angle: the attack's own angle plus the archer's aim (negative = up)
+function aimedAngle(p,s){ return clamp((s.ang||0)+(p.aim||0),-1.2,1.25); }
+const AIM_UP=-1.1, AIM_DOWN=0.9, AIM_DOWN_GROUND=0.22, AIM_SPEED=0.05;
 function shoot(p,s){
   const n=s.count||1, magic=s.type && s.type!=='parrow';
   for (let i=0;i<n;i++){
-    const a=(s.ang||0)+i*0.18, vx=Math.cos(a)*s.spd*p.face, vy=Math.sin(a)*s.spd;
+    const a=aimedAngle(p,s)+i*0.18, vx=Math.cos(a)*s.spd*p.face, vy=Math.sin(a)*s.spd;
     if (magic) addPlayerProj(p,{type:s.type,x:p.x+p.face*30,y:p.y-46,vx,vy,life:s.life||45,dmg:s.dmg,pierce:!!s.pierce,big:!!s.big,kb:s.kb||2,up:s.up||0,r:s.r||12});
-    else fireArrow(p,p.x+p.face*22,p.y-46,vx,vy,s);
+    else fireArrow(p,p.x+p.face*Math.cos(a)*24,p.y-46+Math.sin(a)*24,vx,vy,s);
   }
   if (magic){ psfx('zap'); if (s.big) burst(p.x+p.face*34,p.y-46,'#d4b8ff',8,3,0); }
   else { psfx('bow'); if (s.big){ psfx('shoot'); burst(p.x+p.face*30,p.y-46,'#c8ffb0',6,3,0); } }
@@ -245,6 +248,14 @@ function updatePlayer(p){
   if (p.state!=='guard') p.guardHp=Math.min(100,p.guardHp+0.5);
   if (p.emoteCd>0) p.emoteCd--;
   if (p.state==='dead'){ p.t++; p.vx*=0.92; physics(p); tryRevive(p); return; }
+  // archer aim: holding ↑/↓ while shooting raises/lowers the bow little by little
+  if (Hh.aim){
+    if (p.state==='attack' || (p.state==='skill' && p.sk===0)){
+      if (I.up && !I.down) p.aim=Math.max(AIM_UP,p.aim-AIM_SPEED);
+      else if (I.down && !I.up) p.aim=Math.min(AIM_DOWN,p.aim+AIM_SPEED);
+      if (p.onGround) p.aim=Math.min(p.aim,AIM_DOWN_GROUND); // on the ground, low shots would just hit the floor
+    } else if (p.state!=='skill') p.aim*=0.85;
+  }
 
   for (const [act,dir] of [['left',-1],['right',1]]){
     if (P[act]){
