@@ -41,6 +41,24 @@ const HEROES = {
           return p.t>=54;
         },
         angle:p => p.t<36 ? -Math.PI/2-0.1 : 1.3 },
+      { name:'Corte Relâmpago', mp:300, inv:90, hover:true, ult:true, cry:'CORTE RELÂMPAGO!', color:'#9fe3ff',
+        update(p){
+          if (p.t<18){ gatherSparks(p,'#9fe3ff',18); p.vx=0; return false; }
+          if (p.t===18){ p.ultX0=p.x; psfx('dash'); }
+          if (p.t<40){
+            const [l,r]=bounds(); p.x=clamp(p.x+p.face*24,l+16,r-16);
+            if (p.t%2===0) parts.push({ghost:true,hero:p.hero,x:p.x,y:p.y,face:p.face,anim:p.anim,life:14,max:14});
+            if (p.t%4===2){ rectHit(p,p.x-70,p.x+70,p.y-110,p.y+10,26,1,-2); psfx('swing',false); }
+          } else if (p.t===48){
+            const x1=Math.min(p.ultX0,p.x)-40, x2=Math.max(p.ultX0,p.x)+40;
+            for (let x=x1;x<x2;x+=60) burst(x,p.y-50,'#bff0ff',5,6,0.1);
+            ring(p.x,p.y-45,'#e8fbff',14,22,10); flashScreen=0.6; addShake(16); psfx('boom');
+            rectHit(p,x1,x2,p.y-130,p.y+10,120,6,-10);
+            netSend({type:'fx',k:'slashline',x1,x2,y:p.y-50});
+          }
+          return p.t>=66;
+        },
+        angle:p => p.t<18 ? -2.6 : p.t<40 ? 0.05 : p.t<48 ? -2.5 : 1.25 },
     ],
   },
   archer: {
@@ -83,6 +101,19 @@ const HEROES = {
           return p.t>=80;
         },
         angle:() => -1.35, pull:p => p.t<28 ? 12 : 0 },
+      { name:'Flecha Estelar', mp:300, inv:90, hover:true, ult:true, cry:'FLECHA ESTELAR!', color:'#ffe28a',
+        update(p){
+          if (p.t<30){ gatherSparks(p,'#ffe28a',30); return false; }
+          const len=1000, x1=p.face>0?p.x:p.x-len, x2=p.face>0?p.x+len:p.x;
+          if (p.t===30){
+            const b={type:'fx',k:'beam',x:p.x+p.face*30,y:p.y-46,face:p.face,len};
+            FX_HANDLERS.beam(b); netSend(b);
+            psfx('wave'); psfx('boom'); flashScreen=0.4; addShake(10);
+          }
+          if (p.t<62 && p.t%4===2) rectHit(p,x1,x2,p.y-84,p.y-8,24,2,-1);
+          return p.t>=74;
+        },
+        angle:() => 0, pull:p => p.t<30 ? Math.min(14,p.t/2) : 0 },
     ],
   },
 };
@@ -102,6 +133,8 @@ function weaponAngle(p){
     }
     case 'skill': { const s=Hh.skills[p.sk]; return s && s.angle ? s.angle(p) : 0; }
     case 'dash': return bow ? -0.1 : -0.15;
+    case 'guard': return bow ? -1.2 : -1.45;
+    case 'roll': return bow ? 0.6 : 0.9;
     case 'hurt': return bow ? 0.9 : -2.1;
     case 'dead': return bow ? 0.9 : 0.8;
     default:
@@ -119,6 +152,7 @@ function drawHero(p,alpha=1,ghost=false,noShadow=false){
   ctx.globalAlpha = alpha * (!ghost && p.inv>0 && p.state!=='skill' && (p.inv>>2)%2 ? 0.45 : 1);
   if (ghost) ctx.globalCompositeOperation='lighter';
   if (p.state==='dead') ctx.rotate(-Math.PI/2*Math.min(1,p.t/15));
+  if (p.state==='roll'){ ctx.translate(0,-30); ctx.rotate(Math.min(1,p.t/20)*Math.PI*2); ctx.translate(0,30); }
   if (big){ const gl=ctx.createRadialGradient(0,-45,5,0,-45,90); gl.addColorStop(0,Hh.aura); gl.addColorStop(1,'rgba(255,150,50,0)'); ctx.fillStyle=gl; circle(0,-45,90); }
   if (p.state==='skill' && !big && p.t<12){ ctx.strokeStyle=Hh.skills[p.sk].color; ctx.globalAlpha*=0.6; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(0,-45,40-p.t*2,0,Math.PI*2); ctx.stroke(); ctx.globalAlpha/=0.6; }
   const run = p.state==='free' && p.onGround && Math.abs(p.vx)>0.5;
@@ -164,6 +198,12 @@ function drawHero(p,alpha=1,ghost=false,noShadow=false){
     if (p.state==='hurt'||p.state==='dead'){ ctx.fillStyle='#ffd9b8'; ctx.fillRect(7,-75,5,6); ctx.strokeStyle='#2a2a3a'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(7,-74); ctx.lineTo(11,-71); ctx.moveTo(11,-74); ctx.lineTo(7,-71); ctx.stroke(); }
   }
   if (Hh.weapon==='bow') drawBow(p,ghost,gc2); else drawSword(p,ghost,gc2);
+  if (p.state==='guard' && !ghost){
+    const perfect=p.t<=PERFECT_GUARD, k=clamp((p.guardHp??100)/100,0.2,1);
+    ctx.strokeStyle=perfect?'rgba(255,255,255,0.95)':`rgba(140,220,255,${0.35+0.4*k})`; ctx.lineWidth=perfect?5:3+3*k;
+    ctx.beginPath(); ctx.arc(4,-42,34,-1.25,1.25); ctx.stroke();
+    ctx.fillStyle=`rgba(140,220,255,${0.08+0.1*k})`; ctx.beginPath(); ctx.arc(4,-42,34,-1.25,1.25); ctx.closePath(); ctx.fill();
+  }
   ctx.restore();
 }
 

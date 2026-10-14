@@ -4,7 +4,7 @@ let players = [], me = null;            // every fighter on screen; `me` is the 
 let enemies = [], projs = [], parts = [], texts = [], items = [];
 let platforms = [], stage = null, worldW = 4000;
 let cam = { x:0 }, locked = false, lockL = 0, lockR = 4000;
-let frame = 0, hitstop = 0, shake = 0, flashScreen = 0, banner = null;
+let frame = 0, hitstop = 0, shake = 0, flashScreen = 0, banner = null, cutin = null;
 let combo = 0, comboTimer = 0, maxCombo = 0, score = 0;
 let nextId = 1, pidSeq = 0;
 
@@ -12,7 +12,7 @@ const bounds = () => locked ? [lockL, lockR] : [0, worldW];
 
 function resetWorld(){
   enemies=[]; projs=[]; parts=[]; texts=[]; items=[];
-  frame=0; hitstop=0; shake=0; flashScreen=0; banner=null;
+  frame=0; hitstop=0; shake=0; flashScreen=0; banner=null; cutin=null;
   combo=0; comboTimer=0; maxCombo=0; score=0;
   locked=false; lockL=0; lockR=worldW; cam.x=0;
 }
@@ -49,6 +49,7 @@ function updateFx(){
   shake*=0.86; if (shake<0.4) shake=0;
   flashScreen=Math.max(0,flashScreen-0.04);
   if (banner && --banner.t<=0) banner=null;
+  if (cutin && --cutin.t<=0) cutin=null;
 }
 
 // ----- helpers over fighters -----

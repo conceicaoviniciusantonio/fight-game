@@ -111,7 +111,7 @@ function drawPvpHUD(){
   const secs=Math.ceil(pvp.timer/60);
   txt(String(secs),W/2,52,40,secs<=10&&pvp.phase==='fight'?'#ff6b6b':'#ffffff');
   drawCombo(W/2,130);
-  muteBadge(); drawBanner();
+  muteBadge(); drawCutin(); drawBanner();
 }
 function drawPvpOverlay(){
   ctx.fillStyle=`rgba(0,8,25,${Math.min(0.75,endTimer/50)})`; ctx.fillRect(0,0,W,H);

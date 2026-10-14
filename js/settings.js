@@ -4,11 +4,12 @@
 const ACTIONS = [
   ['left','Esquerda'], ['right','Direita'], ['up','Cima'], ['down','Baixo / descer'],
   ['jump','Pular'], ['attack','Atacar'], ['skill1','Especial 1'], ['skill2','Especial 2'],
-  ['pause','Pausar'],
+  ['skill3','Especial 3'], ['dodge','Esquiva'], ['guard','Defesa'], ['pause','Pausar'],
 ];
 const DEFAULT_BINDS = {
   left:'ArrowLeft', right:'ArrowRight', up:'ArrowUp', down:'ArrowDown',
-  jump:'ArrowUp', attack:'KeyZ', skill1:'KeyX', skill2:'KeyC', pause:'KeyP',
+  jump:'ArrowUp', attack:'KeyZ', skill1:'KeyX', skill2:'KeyC', skill3:'KeyV',
+  dodge:'KeyA', guard:'KeyS', pause:'KeyP',
 };
 // Extra keys that always work besides the remappable one
 const EXTRA_BINDS = { jump:['Space'], pause:['Escape'] };

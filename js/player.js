@@ -10,7 +10,7 @@ function makePlayer(hero,opts={}){
     hp:Hh.hp, maxHp:Hh.hp, mp:100, atkMul:1, defMul:1,
     state:'free', t:0, sk:0, atk:null, queued:false, hitIds:new Set(),
     jumps:0, airAtk:0, inv:0, anim:0, dropThrough:0, onGround:true,
-    lastTap:{dir:0,t:-99}, localInv:0, tx:0, ty:GROUND,
+    lastTap:{dir:0,t:-99}, localInv:0, tx:0, ty:GROUND, guardHp:100, rollCd:0, rollDir:1,
   };
 }
 
@@ -68,14 +68,22 @@ function strikePlayer(p,t,base,dir,kb,up,pid){
   if (t.inv>0 || t.localInv>0 || !isAlive(t) || !canFight()) return false;
   let {dmg,crit}=rollDamage(p,base*PVP_DMG);
   t.localInv = up ? 45 : 6;
-  addText(t.x,t.y-t.h-8,crit?dmg+'!':dmg,crit?'#ffd23f':'#ffffff',crit);
-  burst(t.x-dir*8,t.y-40,crit?'#ffd23f':'#fff3c4',crit?14:8,6);
-  hitFeedback(p,crit,5); SFX.hit(crit);
-  hurtPlayer(t,{dmg,dir,kb,up,crit,pvp:true,fromX:p.x,pid});
+  if (guardsAgainst(t,p.x)){ addText(t.x,t.y-t.h-8,'DEFESA','#8fe6ff',false); SFX.block(); }
+  else {
+    addText(t.x,t.y-t.h-8,crit?dmg+'!':dmg,crit?'#ffd23f':'#ffffff',crit);
+    burst(t.x-dir*8,t.y-40,crit?'#ffd23f':'#fff3c4',crit?14:8,6);
+    hitFeedback(p,crit,4); SFX.hit(crit);
+  }
+  hurtPlayer(t,{dmg,dir,kb,up,crit,pvp:true,fromX:p.x,pid,srcId:p.id});
   return true;
 }
 function playerHitbox(p,a){
   return {x1:p.face>0?p.x-12:p.x-a.range, x2:p.face>0?p.x+a.range:p.x+12, y1:p.y-98, y2:p.y+(a.air?34:10)};
+}
+// Hits every target overlapping a world-space rectangle (multi-hit friendly: no per-target memory)
+function rectHit(p,x1,x2,y1,y2,dmg,kb,up){
+  const b={x1,x2,y1,y2};
+  for (const t of targetsOf(p)) if (boxHits(b,t)) strike(p,t,dmg,p.face,kb,up);
 }
 // Hits every target whose body is inside an ellipse-ish box around (cx,cy)
 function areaHit(p,cx,cy,rx,ry,dmg,kb,up){
@@ -88,9 +96,12 @@ function hurtPlayer(p,h){
   if (!p.local){ netSend({type:'hurt',id:p.id,h}); return; }
   applyHurt(p,h);
 }
+const PERFECT_GUARD = 9; // frames after raising the guard that count as a perfect block
+function guardsAgainst(p,fromX){ return p.state==='guard' && fromX!=null && (fromX-p.x)*p.face>=-4; }
 function applyHurt(p,h){
   if (p.inv>0 || !isAlive(p) || !canFight()) return;
-  p.hp-=h.dmg;
+  if (guardsAgainst(p,h.fromX)){ blockHit(p,h); return; }
+  p.hp-=h.dmg; p.mp=Math.min(MAXMP,p.mp+h.dmg*0.2);
   addText(p.x,p.y-p.h-10,h.crit?h.dmg+'!':h.dmg,h.crit?'#ffd23f':'#ff5a5a',h.crit);
   burst(p.x,p.y-40,'#ff6b6b',10,5);
   addShake(h.pvp?(h.crit?8:5):8); hitstop=Math.max(hitstop,h.pvp?3:4);
@@ -105,6 +116,36 @@ function applyHurt(p,h){
   }
 }
 
+function blockHit(p,h){
+  const sx=p.x+p.face*26, sy=p.y-46;
+  if (p.t<=PERFECT_GUARD){
+    p.mp=Math.min(MAXMP,p.mp+30); p.inv=Math.max(p.inv,20);
+    bigText(p.x,p.y-p.h-14,'DEFESA PERFEITA!','#ffffff'); ring(sx,sy,'#ffffff',6,16,5,8); burst(sx,sy,'#e8fbff',14,6,0);
+    SFX.parry(); hitstop=Math.max(hitstop,8); flashScreen=Math.max(flashScreen,0.25);
+    if (h.srcId) stunAttacker(h.srcId);
+    return;
+  }
+  const chip=Math.max(1,Math.round(h.dmg*0.15));
+  p.hp-=chip; p.guardHp-=h.dmg*(h.pvp?0.9:0.7); p.vx=h.dir*3;
+  addText(p.x,p.y-p.h-10,chip,'#9fb4c9',false); burst(sx,sy,'#8fe6ff',8,4,0); SFX.block(); addShake(3);
+  if (p.hp<=0){ p.hp=0; p.state='dead'; p.t=0; p.vy=-8; p.vx=h.dir*4; onPlayerDown(p); return; }
+  if (p.guardHp<=0){
+    p.guardHp=0; p.state='hurt'; p.t=50; p.vx=h.dir*4; p.vy=-3;
+    bigText(p.x,p.y-p.h-14,'DEFESA QUEBRADA!','#ff8a8a'); SFX.guardBreak();
+  }
+}
+// A perfect block staggers whoever attacked (enemy or rival player)
+function stunAttacker(id){
+  const e=enemies.find(o=>o.id===id);
+  if (e){ if (Net.mode==='coop' && !Net.host) netSend({type:'stun',id}); else stunEnemy(e); return; }
+  if (Net.mode==='pvp') netSend({type:'stagger'});
+}
+function stagger(p){
+  if (!isAlive(p)) return;
+  p.state='hurt'; p.t=40; p.vx=-p.face*3;
+  bigText(p.x,p.y-p.h-14,'ATORDOADO!','#ffd23f'); SFX.guardBreak();
+}
+
 // ----- actions -----
 function startAttack(p,a){
   const I=p.inp.held;
@@ -116,6 +157,12 @@ function startDash(p,dir){
   p.state='dash'; p.t=14; p.face=dir; p.inv=Math.max(p.inv,8);
   psfx('dash'); dust(p.x,p.y,5);
 }
+function startRoll(p){
+  const I=p.inp.held;
+  p.rollDir = I.left && !I.right ? -1 : I.right && !I.left ? 1 : p.face;
+  p.face=p.rollDir; p.state='roll'; p.t=0; p.inv=Math.max(p.inv,16);
+  psfx('roll'); dust(p.x,p.y,5);
+}
 function noMp(p){ addText(p.x,p.y-95,'Sem MP','#9fb4c9',false); SFX.noMp(); }
 function trySkills(p){
   const skills=HEROES[p.hero].skills, P=p.inp.pressed;
@@ -124,7 +171,8 @@ function trySkills(p){
   const s=skills[idx];
   if (p.mp<s.mp){ noMp(p); return false; }
   p.mp-=s.mp; p.state='skill'; p.sk=idx; p.t=0; p.hitIds=new Set(); p.inv=Math.max(p.inv,s.inv||0);
-  if (s.cry){ flashScreen=Math.max(flashScreen,0.3); bigText(p.x,p.y-110,s.cry,'#ffcf5a'); psfx('gigaCharge'); }
+  if (s.ult){ const m={type:'fx',k:'cutin',hero:p.hero,name:s.cry}; FX_HANDLERS.cutin(m); netSend(m); psfx('ult'); }
+  else if (s.cry){ flashScreen=Math.max(flashScreen,0.3); bigText(p.x,p.y-110,s.cry,'#ffcf5a'); psfx('gigaCharge'); }
   else { psfx('charge'); burst(p.x,p.y-45,s.color,14,4,0); }
   return true;
 }
@@ -135,6 +183,8 @@ function updatePlayer(p){
   if (p.inv>0) p.inv--;
   if (p.dropThrough>0) p.dropThrough--;
   p.mp=Math.min(MAXMP,p.mp+0.1);
+  if (p.rollCd>0) p.rollCd--;
+  if (p.state!=='guard') p.guardHp=Math.min(100,p.guardHp+0.5);
   if (p.state==='dead'){ p.t++; p.vx*=0.92; physics(p); return; }
 
   for (const [act,dir] of [['left',-1],['right',1]]){
@@ -155,9 +205,22 @@ function updatePlayer(p){
         else if (p.jumps<2){ p.vy=-10.5; p.jumps=2; psfx('djump'); ring(p.x,p.y,'#ffffff',2.5,14,3,6); }
       }
       if (P.attack){ if (p.onGround) startAttack(p,Hh.atk.c1); else if (p.airAtk<2) startAttack(p,Hh.atk.air); }
+      else if (P.dodge && p.onGround && p.rollCd<=0) startRoll(p);
+      else if (I.guard && p.onGround){ p.state='guard'; p.t=0; p.vx=0; }
       trySkills(p);
       break;
     }
+    case 'guard':
+      p.t++; p.vx*=0.5;
+      if (P.left) p.face=-1; else if (P.right) p.face=1;
+      if (P.dodge && p.rollCd<=0) startRoll(p);
+      else if (!I.guard || !p.onGround) p.state='free';
+      break;
+    case 'roll':
+      p.t++; p.vx=p.rollDir*Math.max(2,8.5-p.t*0.3);
+      if (p.t%3===0) dust(p.x,p.y,1);
+      if (p.t>=22){ p.state='free'; p.rollCd=18; }
+      break;
     case 'attack': {
       const a=p.atk; p.t++;
       if (a.air) p.vx*=0.95;
@@ -172,7 +235,8 @@ function updatePlayer(p){
         for (const pr of projs) if (pr.owner==='e' && pr.type==='arrow' && pr.x>b.x1 && pr.x<b.x2 && pr.y>b.y1 && pr.y<b.y2){
           pr.life=0; burst(pr.x,pr.y,'#ffe08a',6,4); psfx('deflect'); }
       }
-      if (a.next && p.queued && p.t>a.act[1]) startAttack(p,Hh.atk[a.next]);
+      if (P.dodge && p.onGround && p.t>a.act[1] && p.rollCd<=0) startRoll(p);
+      else if (a.next && p.queued && p.t>a.act[1]) startAttack(p,Hh.atk[a.next]);
       else if (p.t>=a.dur || (a.air && p.onGround && p.t>3)) p.state='free';
       else trySkills(p);
       break;
@@ -192,6 +256,7 @@ function updatePlayer(p){
       const s=Hh.skills[p.sk];
       p.t++;
       if (s.freeze){ doPhysics=false; p.vx=0; p.vy=0; if (p.t<22) p.y-=2.2; }
+      else if (s.hover){ doPhysics=false; p.vx=0; p.vy=0; }
       else { p.vx*=0.8; if (!p.onGround) p.vy*=0.6; }
       if (s.update(p)) p.state='free';
       break;

@@ -19,10 +19,13 @@ Teclado (as teclas podem ser trocadas em **Opções → Configurar teclas**):
 | Z | atacar |
 | X | especial de 1 barra de MP |
 | C | especial de 2 barras de MP |
+| V | especial de 3 barras de MP |
+| A | esquiva (rolamento) |
+| S (segurar) | defesa; no instante certo vira defesa perfeita |
 | P / Esc | pausar |
 | M | ligar/desligar o som |
 
-Controle de Xbox ou PlayStation: analógico ou direcional para andar, A pula, X ataca, Y e B são os especiais, Start pausa.
+Controle de Xbox ou PlayStation: analógico ou direcional para andar, A pula, X ataca, Y, B e RB são os especiais, LB defende, LT/RT esquivam, Start pausa.
 
 No celular aparecem botões na tela (jogue com o aparelho na horizontal).
 

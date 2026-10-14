@@ -11,10 +11,10 @@ Cada fase termina com um commit próprio.
 - [x] Opções salvas no navegador
 
 ## Fase 2: Combate mais profundo
-- [ ] Esquiva (rolamento com invencibilidade)
-- [ ] Defesa, com defesa perfeita no momento certo
-- [ ] Especial de 3 barras de MP para cada herói
-- [ ] Ajuste de equilíbrio do PvP
+- [x] Esquiva (rolamento com invencibilidade)
+- [x] Defesa, com defesa perfeita no momento certo e quebra de defesa
+- [x] Especial de 3 barras de MP para cada herói, com animação de destaque
+- [x] Ajuste de equilíbrio do PvP (tomar dano dá MP, defesa perfeita atordoa o rival)
 
 ## Fase 3: Online cooperativo
 - [ ] Modo história em dupla

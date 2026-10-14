@@ -50,12 +50,18 @@ function killEnemy(e,dir){
     if (Math.random()<0.22) dropItem(e.x,e.y-20,Math.random()<0.6?'hp':'mp');
   }
 }
+function stunEnemy(e){
+  if (e.hp<=0) return;
+  if (ENEMY_TYPES[e.type].boss){ e.state='recover'; e.t=-30; e.vx=0; }
+  else { e.state='hurt'; e.t=45; e.vx=0; }
+  e.flash=8; addText(e.x,e.y-e.h-24,'ATORDOADO!','#ffd23f',false);
+}
 function dropItem(x,y,type,vy=-6){ items.push({x,y,vx:0,vy,type,t:0,onGround:false,id:'i'+nextId++}); }
 
 // ----- AI -----
 function enemyHitPlayers(e,x1,x2,y1,y2,dmg,dir){
   for (const p of alivePlayers())
-    if (p.x+p.w/2>x1 && p.x-p.w/2<x2 && p.y>y1 && p.y-p.h<y2) hurtPlayer(p,{dmg,dir:dir??(p.x>e.x?1:-1),fromX:e.x});
+    if (p.x+p.w/2>x1 && p.x-p.w/2<x2 && p.y>y1 && p.y-p.h<y2) hurtPlayer(p,{dmg,dir:dir??(p.x>e.x?1:-1),fromX:e.x,srcId:e.id});
 }
 function meleeAI(e,tg,dx,adx){
   const T=ENEMY_TYPES[e.type], reach=T.reach;
@@ -98,7 +104,7 @@ function addEnemyProj(o){ o.owner='e'; o.local=true; o.pid=++pidSeq; projs.push(
 function doSlam(e){
   e.state='recover'; e.t=0; e.vx=0; addShake(14);
   SFX.slam(); dust(e.x-50,e.y,10); dust(e.x+50,e.y,10);
-  for (const p of alivePlayers()) if (Math.abs(p.x-e.x)<150 && p.y>e.y-110) hurtPlayer(p,{dmg:e.dmg,dir:p.x>e.x?1:-1,fromX:e.x});
+  for (const p of alivePlayers()) if (Math.abs(p.x-e.x)<150 && p.y>e.y-110) hurtPlayer(p,{dmg:e.dmg,dir:p.x>e.x?1:-1,fromX:e.x,srcId:e.id});
   for (const d of [-1,1]) addEnemyProj({type:'shock',x:e.x+d*70,y:e.y,vx:d*7.5,vy:0,life:75,dmg:30});
 }
 function bossAI(e,tg,dx,adx){
@@ -133,7 +139,7 @@ function bossAI(e,tg,dx,adx){
       e.t++; e.vx=e.face*(enr?12:10);
       if (e.t%3===0) dust(e.x-e.face*30,e.y,2);
       for (const p of alivePlayers())
-        if (!e.hitIds.has(p.id) && Math.abs(p.x-e.x)<e.w/2+p.w/2 && p.y>e.y-e.h && p.y-p.h<e.y){ e.hitIds.add(p.id); hurtPlayer(p,{dmg:e.dmg,dir:e.face,fromX:e.x}); }
+        if (!e.hitIds.has(p.id) && Math.abs(p.x-e.x)<e.w/2+p.w/2 && p.y>e.y-e.h && p.y-p.h<e.y){ e.hitIds.add(p.id); hurtPlayer(p,{dmg:e.dmg,dir:e.face,fromX:e.x,srcId:e.id}); }
       const [l,r]=bounds();
       if (e.t>70 || (e.face<0 && e.x<=l+e.w/2+4) || (e.face>0 && e.x>=r-e.w/2-4)){
         e.state='recover'; e.t=0; e.vx=-e.face*3; addShake(10); SFX.thud();

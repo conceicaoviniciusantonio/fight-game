@@ -174,9 +174,9 @@ function tick(){
 
 // ----- drawing -----
 function hintLine(){
-  const Hh=HEROES[me.hero], sk=Hh.skills.map((s,i)=>`${bindLabel('skill'+(i+1))} ${s.name} (${s.mp/100} MP)`).join('   ');
-  if (Input.device==='gamepad') return 'Analógico mover · A pular · X atacar · Y / B especiais · ↓ descer';
-  return `${bindLabel('left')} ${bindLabel('right')} mover   ${bindLabel('right')}${bindLabel('right')} dash   ${bindLabel('jump')} pular   ${bindLabel('down')} descer   ${bindLabel('attack')} atacar   ${sk}`;
+  const Hh=HEROES[me.hero], sk=Hh.skills.map((s,i)=>`${bindLabel('skill'+(i+1))} ${s.name.split(' ')[0]} (${s.mp/100})`).join('  ');
+  if (Input.device==='gamepad') return 'Analógico mover · A pular · X atacar · Y / B / RB especiais · LB defesa · LT/RT esquiva';
+  return `${bindLabel('left')}${bindLabel('right')} mover  ${bindLabel('jump')} pular  ${bindLabel('attack')} atacar  ${bindLabel('dodge')} esquiva  ${bindLabel('guard')} defesa  ${sk}`;
 }
 function drawStoryHUD(){
   heroPanel(me,14,12);
@@ -192,7 +192,7 @@ function drawStoryHUD(){
     txt(line,W/2,H-26,13,'#ffffff','center',false);
     ctx.globalAlpha=1;
   }
-  muteBadge(); drawBanner();
+  muteBadge(); drawCutin(); drawBanner();
 }
 function drawEndOverlay(){
   if (mode==='over'){

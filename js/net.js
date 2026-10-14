@@ -94,15 +94,21 @@ function onNet(m){
   }
   if (NET_HANDLERS[m.type]) NET_HANDLERS[m.type](m);
 }
-const FX_HANDLERS = {};
+const FX_HANDLERS = {
+  cutin: m => { cutin={hero:m.hero,name:m.name,t:70}; },
+  beam: m => { parts.push({beam:true,x:m.x,y:m.y,face:m.face,len:m.len,life:36,max:36}); },
+  slashline: m => { parts.push({slash:true,x1:m.x1,x2:m.x2,y:m.y,life:18,max:18}); },
+};
+NET_HANDLERS.stagger = () => { if (me) stagger(me); };
+NET_HANDLERS.stun = m => { const e=enemies.find(o=>o.id===m.id); if (e) stunEnemy(e); };
 
 function sendSnap(p){
   netSend({type:'s',x:Math.round(p.x*10)/10,y:Math.round(p.y*10)/10,vx:p.vx,vy:p.vy,f:p.face,st:p.state,t:p.t,sk:p.sk,
-    ak:p.atk?p.atk.name:null,an:p.anim,og:p.onGround,inv:p.inv,hp:p.hp,mhp:p.maxHp,mp:Math.round(p.mp),h:p.hero,g:p.guard||0});
+    ak:p.atk?p.atk.name:null,an:p.anim,og:p.onGround,inv:p.inv,hp:p.hp,mhp:p.maxHp,mp:Math.round(p.mp),h:p.hero,g:Math.round(p.guardHp)});
 }
 function applySnap(r,m){
   Object.assign(r,{tx:m.x,ty:m.y,vx:m.vx,vy:m.vy,face:m.f,state:m.st,t:m.t,sk:m.sk,anim:m.an,onGround:m.og,inv:m.inv,
-    hp:m.hp,maxHp:m.mhp,mp:m.mp,hero:m.h,guard:m.g});
+    hp:m.hp,maxHp:m.mhp,mp:m.mp,hero:m.h,guardHp:m.g});
   r.atk = m.ak ? HEROES[m.h].atk[m.ak] : null;
   if (r.state==='attack' && !r.atk) r.state='free';
 }

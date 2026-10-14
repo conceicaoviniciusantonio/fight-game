@@ -166,7 +166,7 @@ function drawKeys(){
     txt(it.label,x+16,y,16,sel?'#ffd23f':'#e6ebf5','left',false);
     if (it.id) txt(sel&&keyWaiting?'pressione…':bindLabel(it.id)+(EXTRA_BINDS[it.id]?' / '+EXTRA_BINDS[it.id].map(keyLabel).join(' / '):''),x+w-16,y,16,sel&&keyWaiting?'#9fe3a8':'#ffffff','right',false);
   });
-  txt('Controle (Xbox/PlayStation): A pular · X atacar · Y e B especiais · Start pausa',W/2,H-56,13,'#cfe3ff','center',false);
+  txt('Controle (Xbox/PlayStation): A pular · X atacar · Y, B e RB especiais · LB defesa · LT/RT esquiva · Start pausa',W/2,H-56,13,'#cfe3ff','center',false);
   txt(keyWaiting?'Pressione a nova tecla · ESC cancela':confirmHint('trocar'),W/2,H-26,15,'#ffffff');
 }
 
