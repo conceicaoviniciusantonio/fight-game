@@ -30,8 +30,13 @@
     <button data-act="jump" class="jmp" aria-label="Pular">⤒</button>
   </div>
   <div class="tops">
+    <button id="emoteToggle" aria-label="Emotes">💬</button>
     <button data-act="back" aria-label="Voltar">✕</button>
     <button data-act="pause" aria-label="Pausar">II</button>
+  </div>
+  <div class="emotes" id="emoteBar" hidden>
+    <button data-act="emote1">GG!</button><button data-act="emote2">Valeu!</button>
+    <button data-act="emote3">Cuidado!</button><button data-act="emote4">Haha!</button>
   </div>
 </div>
 
@@ -45,6 +50,10 @@
       <div class="code" id="roomCode">····</div>
       <small>Envie este código para seu amigo e aguarde…</small>
     </div>
+  </div>
+  <div class="opts" id="pvpOpts">
+    <label>Partida <select id="optRounds"><option value="1">Melhor de 1</option><option value="3" selected>Melhor de 3</option><option value="5">Melhor de 5</option></select></label>
+    <label>Tempo <select id="optTime"><option value="60">60 s</option><option value="99" selected>99 s</option><option value="0">Sem limite</option></select></label>
   </div>
   <div class="or" id="orSep">— ou entre na sala de um amigo —</div>
   <div class="row" id="joinRow"><input id="joinCode" maxlength="4" placeholder="CÓDIGO" autocomplete="off" aria-label="Código da sala"><button id="btnJoin">Entrar</button></div>
@@ -66,6 +75,7 @@
 <script src="js/render.js"></script>
 <script src="js/net.js"></script>
 <script src="js/pvp.js"></script>
+<script src="js/coop.js"></script>
 <script src="js/menus.js"></script>
 <script src="js/game.js"></script>
 </body>

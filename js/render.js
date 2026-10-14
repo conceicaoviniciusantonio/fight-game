@@ -80,6 +80,7 @@ function drawWorld(){
   for (const p of players) if (p!==me) drawHero(p);
   if (me) drawHero(me);
   drawProjs(); drawTexts();
+  for (const p of players) drawEmote(p);
 }
 
 // ----- HUD -----

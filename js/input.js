@@ -3,8 +3,9 @@
 // Game code only reads Input.held[action] / Input.pressed[action].
 // `pressed` accumulates until consumeInput(), so presses made during hitstop are buffered.
 const Input = { held:{}, pressed:{}, prev:{}, capture:null, device:'keyboard' };
-const FIXED_BINDS = { confirm:['Enter','NumpadEnter','Space'], back:['Escape','Backspace'], mute:['KeyM'] };
-const MENU_ACTS = ['confirm','back','mute'];
+const FIXED_BINDS = { confirm:['Enter','NumpadEnter','Space'], back:['Escape','Backspace'], mute:['KeyM'],
+  emote1:['Digit1'], emote2:['Digit2'], emote3:['Digit3'], emote4:['Digit4'] };
+const MENU_ACTS = ['confirm','back','mute','emote1','emote2','emote3','emote4'];
 const kb = { held:{}, hit:{} };
 const touch = { held:{}, hit:{} };
 
@@ -90,6 +91,10 @@ touchEl.addEventListener('pointermove', e => {
 for (const ev of ['pointerup','pointercancel','lostpointercapture'])
   touchEl.addEventListener(ev, e => { touchPointers.delete(e.pointerId); recomputeTouch(); });
 touchEl.addEventListener('contextmenu', e => e.preventDefault());
+// the 💬 button just opens/closes the row of emote buttons
+const emoteBar=document.getElementById('emoteBar');
+document.getElementById('emoteToggle').addEventListener('pointerdown', e => { e.stopPropagation(); e.preventDefault(); emoteBar.hidden=!emoteBar.hidden; });
+emoteBar.addEventListener('pointerup', () => setTimeout(()=>{ emoteBar.hidden=true; },150));
 
 const coarse = matchMedia('(pointer: coarse)');
 let sawTouch = coarse.matches;

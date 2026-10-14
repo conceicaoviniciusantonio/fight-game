@@ -3,28 +3,33 @@
 // The host runs the round flow (timer, K.O., score) and tells the guest.
 const PVP_DMG = 0.8;
 const pvp = { round:1, wins:[0,0], timer:0, phase:'wait', phaseT:0, rivalKo:false, disc:false,
-  wantRematch:false, rivalRematch:false, matchWinner:0 };
+  wantRematch:false, rivalRematch:false, matchWinner:0, bestOf:3, time:99 };
+const winsNeeded = () => Math.ceil(pvp.bestOf/2);
 const myIdx = () => Net.host ? 0 : 1;
 
-NET_HANDLERS.hello = m => {
-  if (Net.mode!=='pvp') return;
+function pvpHello(m){
   const rival=makePlayer(m.hero,{id:Net.host?'guest':'host',local:false});
   players=[me=makePlayer(selHero,{id:Net.host?'host':'guest'}), rival];
   if (Net.host) startMatch();
-};
+}
 NET_HANDLERS.dead = () => { pvp.rivalKo=true; };
 NET_HANDLERS.ko = m => onRoundEnd(m);
 NET_HANDLERS.round = m => onRound(m);
 NET_HANDLERS.match = m => onMatchEnd(m);
 NET_HANDLERS.rematch = () => { pvp.rivalRematch=true; if (Net.host && pvp.wantRematch) startMatch(); };
-NET_HANDLERS.disconnect = () => {
+function pvpDisconnect(){
   if (mode==='pvp'||mode==='pvpEnd'){ pvp.disc=true; mode='pvpEnd'; endTimer=0; playMusic(null); }
-};
+}
 
-function startMatch(){ const m={type:'round',n:1,wins:[0,0]}; netSend(m); onRound(m); }
+function startMatch(){
+  const m={type:'round',n:1,wins:[0,0],bestOf:+$('optRounds').value,time:+$('optTime').value};
+  netSend(m); onRound(m);
+}
 function onRound(m){
   closeLobby();
-  pvp.round=m.n; pvp.wins=m.wins.slice(); pvp.disc=false; pvp.wantRematch=false; pvp.rivalRematch=false;
+  pvp.round=m.n; pvp.wins=m.wins.slice(); pvp.disc=false;
+  if (m.bestOf) pvp.bestOf=m.bestOf;
+  if (m.time!=null) pvp.time=m.time; pvp.wantRematch=false; pvp.rivalRematch=false;
   loadStage('forest'); resetWorld();
   const ar=stage.arena; platforms=[...stage.platforms, ...ar.extra];
   locked=true; lockL=ar.left; lockR=ar.left+W; cam.x=ar.left;
@@ -32,7 +37,7 @@ function onRound(m){
   const left=Net.host, rival=remotePlayer();
   Object.assign(me,{x:left?lockL+170:lockR-170,y:GROUND,vx:0,vy:0,face:left?1:-1,hp:me.maxHp,mp:100,state:'free',t:0,inv:0});
   if (rival){ Object.assign(rival,{x:left?lockR-170:lockL+170,y:GROUND,hp:rival.maxHp,state:'free',localInv:0,inv:0,face:left?-1:1}); rival.tx=rival.x; rival.ty=rival.y; }
-  pvp.phase='intro'; pvp.phaseT=0; pvp.timer=99*60; pvp.rivalKo=false;
+  pvp.phase='intro'; pvp.phaseT=0; pvp.timer=pvp.time?pvp.time*60:Infinity; pvp.rivalKo=false;
   banner={txt:'ROUND '+m.n,sub:`${pvp.wins[0]}  ×  ${pvp.wins[1]}`,t:90,max:90};
   SFX.select();
 }
@@ -59,6 +64,7 @@ function tickPvp(){
     if (pvp.phaseT>=100) pvp.phase='fight';
   } else updatePlayer(me);
   if (rival) updatePuppet(rival);
+  checkEmotes();
   updateProjs(); updateFx();
   if (comboTimer>0 && --comboTimer===0) combo=0;
   if (pvp.phase==='fight' && pvp.timer>0) pvp.timer--;
@@ -72,7 +78,8 @@ function tickPvp(){
       }
     } else if (pvp.phase==='ko' && pvp.phaseT>=180){
       pvp.phase='wait';
-      const m = pvp.wins[0]>=2||pvp.wins[1]>=2 ? {type:'match',w:pvp.wins[0]>=2?0:1} : {type:'round',n:pvp.round+1,wins:pvp.wins.slice()};
+      const need=winsNeeded();
+      const m = pvp.wins[0]>=need||pvp.wins[1]>=need ? {type:'match',w:pvp.wins[0]>=need?0:1} : {type:'round',n:pvp.round+1,wins:pvp.wins.slice()};
       netSend(m); if (m.type==='match') onMatchEnd(m); else onRound(m);
     }
   }
@@ -101,7 +108,7 @@ function drawPvpHUD(){
     bar(x0+10,34,310,16,Math.max(0,p.hp)/p.maxHp,'#ff6b7a','#b3122a');
     txt(`${Math.ceil(Math.max(0,p.hp))} / ${p.maxHp}`,x0+165,42,12,'#ffffff');
     mpBars(x0+10,60,98,9,p.mp);
-    for (let k=0;k<2;k++){
+    for (let k=0;k<winsNeeded();k++){
       const cx=right?x0+320-k*20:x0+10+k*20;
       ctx.fillStyle=pvp.wins[i]>k?'#ffd23f':'rgba(0,0,0,0.5)'; circle(cx,96,7);
       ctx.strokeStyle='#ffd23f'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(cx,96,7,0,Math.PI*2); ctx.stroke();
@@ -109,7 +116,7 @@ function drawPvpHUD(){
   });
   txt(`ROUND ${pvp.round}`,W/2,22,13,'#cfe3ff');
   const secs=Math.ceil(pvp.timer/60);
-  txt(String(secs),W/2,52,40,secs<=10&&pvp.phase==='fight'?'#ff6b6b':'#ffffff');
+  txt(pvp.time?String(secs):'∞',W/2,52,40,secs<=10&&pvp.phase==='fight'?'#ff6b6b':'#ffffff');
   drawCombo(W/2,130);
   muteBadge(); drawCutin(); drawBanner();
 }

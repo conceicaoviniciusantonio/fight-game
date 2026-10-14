@@ -26,11 +26,18 @@ function startStory(stageId='forest'){
   banner={txt:stage.name,sub:stage.sub,t:150,max:150};
   playMusic(stage.music); SFX.select();
 }
+const currentStageId = () => STAGE_IDS.find(k=>STAGES[k]===stage) || 'forest';
 function onBossDefeated(e){
+  celebrateBoss(e);
+  for (const o of enemies) if (o!==e && o.hp>0) killEnemy(o,o.x>e.x?1:-1);
+  if (Net.mode==='coop') netSend({type:'win'});
+}
+function celebrateBoss(e){
+  if (winTimer) return;
   winTimer=1; hitstop=40; flashScreen=0.9; addShake(20);
   SFX.boom(); playMusic('victory');
-  banner={txt:'VITÓRIA!',sub:ENEMY_TYPES[e.type].name.split(',')[0]+' foi derrotado',t:150,max:150};
-  for (const o of enemies) if (o!==e && o.hp>0) killEnemy(o,o.x>e.x?1:-1);
+  const name=e ? ENEMY_TYPES[e.type].name.split(',')[0] : 'O chefe';
+  banner={txt:'VITÓRIA!',sub:name+' foi derrotado',t:150,max:150};
 }
 function updateZones(){
   const zones=stage.zones;
@@ -124,21 +131,39 @@ function followCamera(){
 }
 
 function tickPlay(){
-  const P=Input.pressed;
-  if (paused){ tickPause(); return; }
-  if (P.pause){ setPaused(true); consumeInput(); return; }
+  const P=Input.pressed, online=Net.mode==='coop';
+  // online the world keeps running while the pause menu is open
+  if (paused){ tickPause(); if (!online) return; }
+  else if (P.pause){ setPaused(true); consumeInput(); if (!online) return; }
+  if (online){
+    if (++Net.sendT%2===0) sendSnap(me);
+    if (Net.host && Net.sendT%3===0) sendWorld();
+    checkTimeout();
+  }
   if (hitstop>0){ hitstop--; return; } // presses stay buffered
   frame++;
+  checkEmotes();
+  const inp=me.inp; if (paused) me.inp=NO_INPUT;
   for (const p of players) if (p.local) updatePlayer(p); else updatePuppet(p);
-  for (const e of enemies) updateEnemy(e);
-  separate();
-  enemies=enemies.filter(e=>!e.dead);
-  updateProjs(); updateItems(); updateZones(); updateFx();
+  me.inp=inp;
+  if (isGuest()){
+    for (const e of enemies) updateEnemyPuppet(e);
+    for (const it of items) it.t++;
+  } else {
+    for (const e of enemies) updateEnemy(e);
+    separate();
+    enemies=enemies.filter(e=>!e.dead);
+    updateItems(); updateZones();
+    if (goTimer>0) goTimer--;
+  }
+  updateProjs(); updateFx();
   if (comboTimer>0 && --comboTimer===0) combo=0;
-  if (goTimer>0) goTimer--;
   if (boss) boss.dispHp+=(Math.max(0,boss.hp)-boss.dispHp)*0.05;
   followCamera();
-  if (players.length && !alivePlayers().length && ++loseTimer>110){ mode='over'; endTimer=0; playMusic('gameover'); }
+  if (!isGuest() && players.length && !alivePlayers().length && ++loseTimer>110){
+    if (online) netSend({type:'lose'});
+    mode='over'; endTimer=0; playMusic('gameover');
+  }
   if (winTimer>0 && ++winTimer>170){
     const secs=frame/60, hpB=Math.round(me.hp*4), timeB=Math.max(0,Math.round((300-secs)*15));
     const total=score+hpB+timeB;
@@ -150,8 +175,13 @@ function tickPlay(){
 function tickEnd(){
   endTimer++; updateFx();
   const P=Input.pressed;
-  if (endTimer>40 && P.confirm) startStory(stage ? STAGE_IDS.find(k=>STAGES[k]===stage) : 'forest');
-  else if (endTimer>40 && P.back) goTitle();
+  if (Net.mode==='coop'){ if (Net.sendT++%30===0) netSend({type:'ping'}); checkTimeout(); }
+  if (endTimer>40 && P.confirm){
+    if (Net.mode!=='coop') startStory(currentStageId());
+    else if (Net.host) coopStart(currentStageId());
+    else coop.waiting=true;
+  }
+  else if (endTimer>40 && P.back){ if (Net.mode) leaveOnline(); else goTitle(); }
   consumeInput();
 }
 
@@ -167,6 +197,7 @@ function tick(){
     case 'lobby': if (Input.pressed.back) leaveOnline(); consumeInput(); break;
     case 'play': tickPlay(); break;
     case 'over': case 'win': tickEnd(); break;
+    case 'netLost': endTimer++; if (endTimer>30 && (Input.pressed.confirm||Input.pressed.back)) leaveOnline(); consumeInput(); break;
     case 'pvp': tickPvp(); break;
     case 'pvpEnd': tickPvpEnd(); break;
   }
@@ -180,6 +211,10 @@ function hintLine(){
 }
 function drawStoryHUD(){
   heroPanel(me,14,12);
+  const partner=players.find(p=>p!==me);
+  if (partner) drawPartnerPanel(partner,14,96);
+  if (me.state==='dead' && partner && isAlive(partner) && Net.mode==='coop')
+    txt(`Você caiu! Voltando em ${Math.ceil((REVIVE_TIME-(me.reviveT||0))/60)}s`,W/2,150,22,'#ffd23f');
   txt(`PONTOS ${score}`,W-20,26,20,'#ffffff','right');
   const s=Math.floor(frame/60); txt(`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`,W-20,50,16,'#cfe3ff','right');
   drawCombo(W-90,130);
@@ -198,7 +233,7 @@ function drawEndOverlay(){
   if (mode==='over'){
     ctx.fillStyle=`rgba(30,0,0,${Math.min(0.7,endTimer/60)})`; ctx.fillRect(0,0,W,H);
     txt('GAME OVER',W/2,H/2-30,72,'#ff4d5e');
-    if (endTimer>40){ txt('ENTER tentar de novo',W/2,H/2+40,22,'#ffffff'); txt('ESC voltar ao menu',W/2,H/2+72,16,'#cfe3ff'); }
+    if (endTimer>40){ txt(endAction('tentar de novo'),W/2,H/2+40,22,'#ffffff'); txt('ESC voltar ao menu',W/2,H/2+72,16,'#cfe3ff'); }
   } else if (mode==='win' && result){
     ctx.fillStyle=`rgba(0,10,30,${Math.min(0.75,endTimer/60)})`; ctx.fillRect(0,0,W,H);
     txt('FASE CONCLUÍDA!',W/2,90,56,'#ffd23f');
@@ -210,8 +245,12 @@ function drawEndOverlay(){
       const pop=Math.max(1,3-(endTimer-110)*0.15);
       txt('RANK',W/2+250,190,22,'#ffffff'); txt(result.rank,W/2+250,260,110*pop,rc);
     }
-    if (endTimer>140) txt('ENTER jogar de novo   ·   ESC menu',W/2,H-50,22,'#ffffff');
+    if (endTimer>140) txt(endAction('jogar de novo')+'   ·   ESC menu',W/2,H-50,22,'#ffffff');
   }
+}
+function endAction(verb){
+  if (Net.mode==='coop' && !Net.host) return coop.waiting ? 'Aguardando o anfitrião…' : 'ENTER pronto para '+verb;
+  return 'ENTER '+verb;
 }
 function draw(){
   const inGame = ['play','over','win','pvp','pvpEnd'].includes(mode) || ((mode==='options'||mode==='keys') && optionsFrom==='pause');
@@ -224,13 +263,21 @@ function draw(){
   if (mode==='pvp' || mode==='pvpEnd'){
     nameTag(remotePlayer(),'RIVAL','#ff6b6b'); nameTag(me,'VOCÊ','#ffd23f');
     drawPvpHUD(); if (mode==='pvpEnd') drawPvpOverlay();
-  } else if (inGame){ drawStoryHUD(); drawEndOverlay(); if (paused && mode==='play') drawPause(); }
+  } else if (inGame){
+    if (players.length>1){ nameTag(me,'VOCÊ','#ffd23f'); for (const p of players) if (p!==me) nameTag(p,'PARCEIRO','#9fe3a8'); }
+    drawStoryHUD(); drawEndOverlay(); if (paused && mode==='play') drawPause();
+  }
   switch (mode){
     case 'title': drawTitle(); break;
     case 'heroSelect': drawHeroSelect(); break;
     case 'options': drawOptions(); break;
     case 'keys': drawKeys(); break;
     case 'lobby': ctx.fillStyle='rgba(8,10,30,0.6)'; ctx.fillRect(0,0,W,H); txt('CRÔNICAS DE VALLEN',W/2,50,38,'#ffd23f'); break;
+    case 'netLost':
+      ctx.fillStyle='rgba(0,8,25,0.8)'; ctx.fillRect(0,0,W,H);
+      txt('O anfitrião saiu da partida',W/2,H/2-20,34,'#ff9a8a');
+      if (endTimer>30) txt('ENTER voltar ao menu',W/2,H/2+30,20,'#ffffff');
+      break;
   }
 }
 

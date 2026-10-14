@@ -19,6 +19,7 @@ function spawnEnemy(type,x,y=-40-rand(0,120),id){
   const T=ENEMY_TYPES[type];
   const e={isEnemy:true,type,x,y,vx:0,vy:0,w:T.w,h:T.h,hp:T.hp,maxHp:T.hp,speed:T.speed*rand(0.85,1.15),dmg:T.dmg,
     face:-1,state:'walk',t:0,cd:rand(50,110),flash:0,id:id||('e'+nextId++),anim:rand(0,100),onGround:false,dead:false};
+  if (players.length>1 && !id){ e.hp=e.maxHp=Math.round(T.hp*(T.boss?1.6:1.5)); } // tougher in co-op
   if (T.boss){ e.cd=120; e.dispHp=e.hp; boss=e; }
   enemies.push(e);
   return e;

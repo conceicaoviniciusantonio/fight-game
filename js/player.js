@@ -14,6 +14,23 @@ function makePlayer(hero,opts={}){
   };
 }
 
+// ----- emotes (keys 1-4) -----
+const EMOTES = ['GG!','Valeu!','Cuidado!','Haha!'];
+function checkEmotes(){ for (let i=0;i<4;i++) if (Input.pressed['emote'+(i+1)]) showEmote(me,i,true); }
+function showEmote(p,i,send){
+  if (!p) return;
+  if (send){ if (p.emoteCd>0) return; p.emoteCd=40; netSend({type:'emote',i}); }
+  p.emote={i,t:120}; SFX.move();
+}
+function drawEmote(p){
+  if (!p || !p.emote || p.emote.t<=0) return;
+  p.emote.t--;
+  const s=EMOTES[p.emote.i], x=p.x-cam.x, y=p.y-p.h-58, a=Math.min(1,p.emote.t/15);
+  ctx.globalAlpha=a; ctx.font=`bold 16px ${FONT}`; const w=ctx.measureText(s).width+20;
+  ctx.fillStyle='#ffffff'; ctx.beginPath(); ctx.roundRect(x-w/2,y-15,w,30,10); ctx.fill(); tri(x-6,y+14,x+6,y+14,x,y+22);
+  txt(s,x,y,16,'#1b1b2e','center',false); ctx.globalAlpha=1;
+}
+
 // Plays a sound and, when online, asks the other browser to play it too
 function psfx(n,arg){ SFX[n](arg); netSend({type:'sfx',n,a:arg}); }
 
@@ -61,6 +78,13 @@ function hitFeedback(p,crit,mpGain=4){
 function strikeEnemy(p,e,base,dir,kb,up){
   const {dmg,crit}=rollDamage(p,base);
   if (p.local){ hitFeedback(p,crit); score+=Math.round(dmg*(1+Math.min(combo,50)/25)); }
+  if (isGuest()){
+    // the host owns enemies: show the hit right away and report it
+    e.flash=6; addText(e.x,e.y-e.h-8,crit?dmg+'!':dmg,crit?'#ffd23f':'#ffffff',crit);
+    burst(e.x-dir*e.w*0.2,e.y-e.h*0.55,crit?'#ffd23f':'#fff3c4',crit?14:8,6); SFX.hit(crit);
+    netSend({type:'ehit',id:e.id,dmg,dir,kb,up,crit});
+    return true;
+  }
   damageEnemy(e,dmg,dir,kb,up,crit,p);
   return true;
 }
@@ -185,7 +209,8 @@ function updatePlayer(p){
   p.mp=Math.min(MAXMP,p.mp+0.1);
   if (p.rollCd>0) p.rollCd--;
   if (p.state!=='guard') p.guardHp=Math.min(100,p.guardHp+0.5);
-  if (p.state==='dead'){ p.t++; p.vx*=0.92; physics(p); return; }
+  if (p.emoteCd>0) p.emoteCd--;
+  if (p.state==='dead'){ p.t++; p.vx*=0.92; physics(p); tryRevive(p); return; }
 
   for (const [act,dir] of [['left',-1],['right',1]]){
     if (P[act]){

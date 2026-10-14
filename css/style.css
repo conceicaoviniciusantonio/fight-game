@@ -17,6 +17,9 @@ canvas{display:block;width:100%;height:100%;background:#000;border-radius:6px;bo
 #lobby input{font:inherit;font-size:20px;font-weight:bold;letter-spacing:6px;text-transform:uppercase;text-align:center;width:150px;padding:8px;border-radius:10px;border:2px solid #4e5a8a;background:#0b0d17;color:#fff}
 #lobby .code{font-size:40px;font-weight:bold;letter-spacing:10px;color:#ffd23f;margin:6px 0 2px}
 #lobby small{color:#cfe3ff}
+#lobby .opts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px 0 0;font-size:13px;color:#cfe3ff}
+#lobby .opts label{display:flex;flex-direction:column;gap:4px;align-items:center}
+#lobby select{font:inherit;font-size:14px;font-weight:bold;padding:6px 8px;border-radius:8px;border:2px solid #4e5a8a;background:#0b0d17;color:#fff}
 #lobbyStatus{min-height:20px;margin:14px 0 0;font-size:14px;color:#9fe3a8}
 #lobbyStatus.err{color:#ff8a8a}
 [hidden]{display:none!important}
@@ -42,6 +45,8 @@ canvas{display:block;width:100%;height:100%;background:#000;border-radius:6px;bo
 #touch .gd{width:44px;height:44px;right:10px;bottom:0;font-size:20px}
 #touch .tops{position:absolute;top:28%;right:max(12px,env(safe-area-inset-right));display:flex;gap:10px}
 #touch .tops button{width:44px;height:44px;font-size:16px;border-radius:12px}
+#touch .emotes{position:absolute;top:calc(28% + 54px);right:max(12px,env(safe-area-inset-right));display:flex;gap:6px}
+#touch .emotes button{border-radius:10px;padding:0 10px;height:38px;font-size:14px}
 #rotate{display:none}
 @media (orientation:portrait) and (pointer:coarse){
   #rotate{display:flex;position:fixed;inset:0;z-index:9;background:#0b0d17;color:#ffd23f;font-size:22px;font-weight:bold;

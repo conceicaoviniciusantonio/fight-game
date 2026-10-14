@@ -17,9 +17,9 @@ Cada fase termina com um commit próprio.
 - [x] Ajuste de equilíbrio do PvP (tomar dano dá MP, defesa perfeita atordoa o rival)
 
 ## Fase 3: Online cooperativo
-- [ ] Modo história em dupla
-- [ ] Emotes rápidos
-- [ ] Opções de partida PvP (rounds e tempo)
+- [x] Modo história em dupla (o anfitrião controla o mundo; quem cai volta em 10 s se o parceiro estiver de pé)
+- [x] Emotes rápidos (teclas 1 a 4 ou botão 💬 no celular)
+- [x] Opções de partida PvP (melhor de 1/3/5 e tempo de 60 s, 99 s ou sem limite)
 
 ## Fase 4: Novos personagens
 - [ ] Mago

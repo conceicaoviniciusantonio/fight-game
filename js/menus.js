@@ -4,6 +4,7 @@ let selMode='story', selHero='knight', menuSel=0, optSel=0, keySel=0, keyWaiting
 
 const TITLE_ITEMS = [
   {id:'story', label:'HISTÓRIA',   hint:'Atravesse o Bosque de Vallen e derrote o chefe'},
+  {id:'coop',  label:'CO-OP ONLINE', hint:'Jogue a história com um amigo em outro navegador'},
   {id:'pvp',   label:'PVP ONLINE', hint:'Lute contra um amigo em outro navegador'},
   {id:'options', label:'OPÇÕES',   hint:'Som, tela e controles'},
 ];
@@ -35,12 +36,12 @@ function drawTitle(){
   drawHeroAt(ids[0],170,430,2.1,{anim:clock});
   drawHeroAt(ids[1%ids.length],W-170,430,2.1,{anim:clock+40,face:-1});
   TITLE_ITEMS.forEach((it,i)=>{
-    const y=210+i*62, sel=i===menuSel;
+    const y=196+i*56, sel=i===menuSel;
     panel(W/2-150,y-24,300,48,24,sel?'#ffd23f':'rgba(0,0,0,0.5)');
     if (!sel){ ctx.strokeStyle='rgba(255,255,255,0.25)'; ctx.lineWidth=2; ctx.stroke(); }
     txt(it.label,W/2,y,22,sel?'#1b1b2e':'#e6ebf5','center',!sel);
   });
-  txt(TITLE_ITEMS[menuSel].hint,W/2,210+TITLE_ITEMS.length*62-6,15,'#cfe3ff','center',false);
+  txt(TITLE_ITEMS[menuSel].hint,W/2,196+TITLE_ITEMS.length*56-8,15,'#cfe3ff','center',false);
   txt(confirmHint('escolher'),W/2,H-28,15,'#ffffff');
 }
 function confirmHint(verb){

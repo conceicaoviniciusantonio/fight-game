@@ -20,6 +20,7 @@ function openLobby(netMode){
   $('lobbySub').textContent = netMode==='pvp' ? 'Lute contra um amigo em outro navegador' : 'Jogue a história com um amigo em outro navegador';
   $('lobby').hidden=false; $('hostInfo').hidden=true; $('btnHost').hidden=false; $('joinRow').hidden=false; $('orSep').hidden=false;
   $('joinCode').value=''; lobbyStatus('');
+  $('pvpOpts').hidden = netMode!=='pvp';
   if (typeof Peer==='undefined') lobbyStatus('Não foi possível carregar a parte online (precisa de internet).',true);
 }
 function closeLobby(){ $('lobby').hidden=true; if (document.activeElement) document.activeElement.blur(); }
@@ -50,6 +51,7 @@ function joinRoom(){
   if (Net.peer) Net.peer.destroy();
   Net.host=false; lobbyStatus('Conectando…');
   const peer=Net.peer=new Peer();
+  $('pvpOpts').hidden=true;
   peer.on('open',()=>setupConn(peer.connect(peerId(code),{reliable:true})));
   peer.on('error',e=>{ Net.conn=null; lobbyStatus(e.type==='peer-unavailable'?'Sala não encontrada. Confira o código e o modo de jogo.':'Erro de conexão: '+e.type,true); });
 }
@@ -64,7 +66,8 @@ function onDisconnect(){
   if (!Net.conn) return;
   Net.conn=null;
   if (mode==='lobby') lobbyStatus('A conexão caiu. Tente de novo.',true);
-  else if (NET_HANDLERS.disconnect) NET_HANDLERS.disconnect();
+  else if (Net.mode==='pvp') pvpDisconnect();
+  else if (Net.mode==='coop') coopDisconnect();
 }
 $('btnHost').onclick=hostRoom;
 $('btnJoin').onclick=joinRoom;
@@ -86,6 +89,8 @@ function onNet(m){
     case 'proj': projs.push({...m.o,owner:'p',local:false}); return;
     case 'eproj': projs.push({...m.o,local:false}); return;
     case 'sfx': if (SFX[m.n] && mode!=='lobby') SFX[m.n](m.a); return;
+    case 'emote': showEmote(remotePlayer(),m.i,false); return;
+    case 'hello': if (Net.mode==='pvp') pvpHello(m); else coopHello(m); return;
     case 'hurt': if (me && m.id===me.id){ applyHurt(me,m.h); if (m.h.pvp) projs=projs.filter(q=>!(q.owner==='p' && !q.local && q.pid===m.h.pid && q.type==='parrow' && !q.big)); } return;
     case 'fx':
       if (m.k==='giga'){ ring(m.x,m.y,'#fff2b0',15,24,14); ring(m.x,m.y,'#ff8a3d',9,30,8); burst(m.x,m.y,'#ffd36b',40,10,0.1); flashScreen=0.6; addShake(14); }

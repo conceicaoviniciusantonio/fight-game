@@ -5,7 +5,10 @@ Jogo de ação 2D feito com HTML, CSS e JavaScript puro, sem etapa de build. Bas
 ## Modos
 
 - **História**: atravesse o Bosque de Vallen e derrote Gorgo, o Rei Orc.
-- **PvP Online**: um jogador cria uma sala e o outro entra com o código de 4 letras. Precisa de internet.
+- **Co-op Online**: a história em dupla, cada jogador no seu navegador. Os inimigos ficam mais fortes, e quem cai volta depois de 10 segundos se o parceiro continuar de pé.
+- **PvP Online**: luta na arena, com melhor de 1, 3 ou 5 rounds e tempo configurável.
+
+Nos modos online, um jogador cria a sala e o outro entra com o código de 4 letras. Precisa de internet.
 
 ## Controles
 
@@ -24,6 +27,7 @@ Teclado (as teclas podem ser trocadas em **Opções → Configurar teclas**):
 | S (segurar) | defesa; no instante certo vira defesa perfeita |
 | P / Esc | pausar |
 | M | ligar/desligar o som |
+| 1 a 4 | emotes (GG!, Valeu!, Cuidado!, Haha!) |
 
 Controle de Xbox ou PlayStation: analógico ou direcional para andar, A pula, X ataca, Y, B e RB são os especiais, LB defende, LT/RT esquivam, Start pausa.
 
@@ -45,5 +49,6 @@ No celular aparecem botões na tela (jogue com o aparelho na horizontal).
 | `js/render.js` | desenho do mundo e do HUD |
 | `js/net.js` | conexão online (PeerJS) |
 | `js/pvp.js` | regras do PvP |
+| `js/coop.js` | modo cooperativo (sincronização do mundo) |
 | `js/menus.js` | menus, opções e pausa |
 | `js/game.js` | fluxo do jogo e loop principal |
