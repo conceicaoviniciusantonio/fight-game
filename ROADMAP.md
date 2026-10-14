@@ -38,3 +38,16 @@ Cada fase termina com um commit próprio.
 - [x] Ouro (moedas dos inimigos e bônus por rank) e loja do ferreiro com 3 níveis de arma e armadura por herói
 - [x] Progresso salvo no navegador, com opção de apagar em Opções
 - [x] PvP continua justo: usa os atributos base, sem nível nem equipamento
+
+## Fase 7: Ajustes e polimento visual
+- [x] Mira da arqueira: segurar ↑ ou ↓ enquanto atira levanta ou abaixa o arco aos poucos, com linha de mira (vale no chão, no ar, no Leque de Flechas e aparece para o outro jogador online)
+- [x] Nitidez: o jogo desenha na resolução real da tela (Retina, 2K, 4K e celulares)
+- [x] Contorno escuro em heróis e monstros, estilo desenho animado
+- [x] Animação de amassar ao aterrissar e esticar ao pular
+- [x] Iluminação: caverna e castelo escuros, iluminados por heróis, magias, cristais e tochas; pôr do sol no fim do bosque e do deserto
+- [x] Atmosfera: folhas, areia ao vento, brasas, faíscas nos acertos e vinheta nas bordas
+
+## Próximas ideias
+- [ ] Arte em sprites (personagens desenhados quadro a quadro)
+- [ ] Mais fases, chefes ou um quinto herói
+- [ ] Ajustes de equilíbrio de dano, vida e dificuldade depois de mais partidas
