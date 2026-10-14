@@ -7,10 +7,11 @@ const STAGES = {
     diff:{hp:1, dmg:1}, // regular enemies' toughness on this stage
     name:'Bosque de Vallen', sub:'Fase 1', theme:'forest', worldW:4000, music:'stage', bossMusic:'boss',
     platforms:[
-      {x:600,y:360,w:180},{x:880,y:285,w:160},
-      {x:1450,y:350,w:220},{x:1750,y:270,w:200},{x:2040,y:350,w:150},
-      {x:2480,y:340,w:240},{x:2840,y:262,w:170},
-      {x:3240,y:330,w:170},{x:3700,y:330,w:170},
+      // low steps ~90px up (one jump); high steps ~82px above a low step beside them
+      {x:420,y:372,w:200},{x:560,y:290,w:160},{x:800,y:372,w:200},
+      {x:1380,y:372,w:200},{x:1540,y:290,w:180},{x:1820,y:372,w:200},{x:1990,y:296,w:130},
+      {x:2400,y:372,w:220},{x:2580,y:292,w:170},{x:2850,y:372,w:180},
+      {x:3180,y:372,w:170},{x:3750,y:372,w:170},
     ],
     zones:[
       {at:330, left:100, waves:[
@@ -24,16 +25,17 @@ const STAGES = {
         [['orc',2300],['orc',2950],['archer',2560],['archer',2880],['goblin',2650]]]},
       {at:3150, left:3040, boss:true, waves:[[['gorgo',3760]]]},
     ],
-    arena:{left:3040, extra:[{x:3470,y:235,w:100}]},
+    arena:{left:3040, extra:[{x:3470,y:296,w:110}]},
   },
   cave: {
     diff:{hp:1.2, dmg:1.15}, // regular enemies' toughness on this stage
     name:'Caverna de Cristal', sub:'Fase 2', theme:'cave', worldW:4000, music:'cave', bossMusic:'boss',
     platforms:[
-      {x:520,y:350,w:200},{x:820,y:270,w:150},
-      {x:1380,y:330,w:180},{x:1650,y:250,w:220},{x:1980,y:340,w:160},
-      {x:2420,y:300,w:200},{x:2760,y:360,w:180},
-      {x:3220,y:320,w:170},{x:3720,y:320,w:170},
+      // low steps ~90px up (one jump); high steps ~82px above a low step beside them
+      {x:460,y:372,w:190},{x:620,y:296,w:150},{x:840,y:372,w:180},
+      {x:1340,y:372,w:180},{x:1500,y:296,w:200},{x:1780,y:372,w:220},{x:1960,y:300,w:130},
+      {x:2380,y:372,w:200},{x:2560,y:296,w:180},{x:2820,y:372,w:200},
+      {x:3200,y:372,w:170},{x:3720,y:372,w:170},
     ],
     zones:[
       {at:330, left:100, waves:[
@@ -47,16 +49,17 @@ const STAGES = {
         [['kobold',2300],['kobold',2900],['shaman',2500],['bat',2700],['bat',2400]]]},
       {at:3150, left:3040, boss:true, waves:[[['golem',3760]]]},
     ],
-    arena:{left:3040, extra:[{x:3470,y:235,w:100}]},
+    arena:{left:3040, extra:[{x:3470,y:296,w:110}]},
   },
   desert: {
     diff:{hp:1.4, dmg:1.3}, // regular enemies' toughness on this stage
     name:'Deserto Escaldante', sub:'Fase 3', theme:'desert', worldW:4000, music:'desert', bossMusic:'boss',
     platforms:[
-      {x:640,y:340,w:220},{x:960,y:270,w:140},
-      {x:1420,y:350,w:200},{x:1720,y:280,w:180},{x:2010,y:350,w:160},
-      {x:2460,y:330,w:220},{x:2820,y:270,w:160},
-      {x:3250,y:330,w:160},{x:3690,y:330,w:160},
+      // low steps ~90px up (one jump); high steps ~82px above a low step beside them
+      {x:500,y:376,w:240},{x:700,y:300,w:150},{x:900,y:376,w:160},
+      {x:1400,y:376,w:220},{x:1600,y:298,w:170},{x:1860,y:376,w:200},{x:2040,y:300,w:120},
+      {x:2420,y:376,w:240},{x:2620,y:298,w:160},{x:2880,y:376,w:170},
+      {x:3230,y:376,w:160},{x:3700,y:376,w:160},
     ],
     zones:[
       {at:330, left:100, waves:[
@@ -70,16 +73,17 @@ const STAGES = {
         [['mummy',2300],['mummy',2900],['nomad',2550],['nomad',2850],['scorpion',2650]]]},
       {at:3150, left:3040, boss:true, waves:[[['scorpking',3760]]]},
     ],
-    arena:{left:3040, extra:[{x:3470,y:240,w:100}]},
+    arena:{left:3040, extra:[{x:3470,y:298,w:110}]},
   },
   castle: {
     diff:{hp:1.6, dmg:1.45}, // regular enemies' toughness on this stage
     name:'Castelo Sombrio', sub:'Fase 4', theme:'castle', worldW:4000, music:'castle', bossMusic:'boss',
     platforms:[
-      {x:560,y:340,w:200},{x:880,y:270,w:160},
-      {x:1400,y:340,w:200},{x:1700,y:260,w:200},{x:2000,y:340,w:160},
-      {x:2440,y:320,w:200},{x:2800,y:250,w:180},
-      {x:3230,y:320,w:180},{x:3700,y:320,w:180},
+      // low steps ~90px up (one jump); high steps ~82px above a low step beside them
+      {x:440,y:370,w:200},{x:600,y:288,w:170},{x:860,y:370,w:180},
+      {x:1360,y:370,w:200},{x:1520,y:288,w:190},{x:1800,y:370,w:200},{x:1990,y:296,w:130},
+      {x:2380,y:370,w:200},{x:2560,y:288,w:200},{x:2860,y:370,w:180},
+      {x:3200,y:370,w:180},{x:3720,y:370,w:180},
     ],
     zones:[
       {at:330, left:100, waves:[
@@ -93,7 +97,7 @@ const STAGES = {
         [['blackknight',2300],['blackknight',2900],['darkmage',2550],['darkmage',2850],['skeleton',2650]]]},
       {at:3150, left:3040, boss:true, waves:[[['darklord',3760]]]},
     ],
-    arena:{left:3040, extra:[{x:3470,y:230,w:100}]},
+    arena:{left:3040, extra:[{x:3470,y:290,w:110}]},
   },
 };
 const STAGE_IDS = Object.keys(STAGES);
