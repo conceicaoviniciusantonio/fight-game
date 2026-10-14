@@ -4,6 +4,7 @@
 // and a theme that paints the background. The last zone holds the boss.
 const STAGES = {
   forest: {
+    diff:{hp:1, dmg:1}, // regular enemies' toughness on this stage
     name:'Bosque de Vallen', sub:'Fase 1', theme:'forest', worldW:4000, music:'stage', bossMusic:'boss',
     platforms:[
       {x:600,y:360,w:180},{x:880,y:285,w:160},
@@ -26,6 +27,7 @@ const STAGES = {
     arena:{left:3040, extra:[{x:3470,y:235,w:100}]},
   },
   cave: {
+    diff:{hp:1.2, dmg:1.15}, // regular enemies' toughness on this stage
     name:'Caverna de Cristal', sub:'Fase 2', theme:'cave', worldW:4000, music:'cave', bossMusic:'boss',
     platforms:[
       {x:520,y:350,w:200},{x:820,y:270,w:150},
@@ -48,6 +50,7 @@ const STAGES = {
     arena:{left:3040, extra:[{x:3470,y:235,w:100}]},
   },
   desert: {
+    diff:{hp:1.4, dmg:1.3}, // regular enemies' toughness on this stage
     name:'Deserto Escaldante', sub:'Fase 3', theme:'desert', worldW:4000, music:'desert', bossMusic:'boss',
     platforms:[
       {x:640,y:340,w:220},{x:960,y:270,w:140},
@@ -70,6 +73,7 @@ const STAGES = {
     arena:{left:3040, extra:[{x:3470,y:240,w:100}]},
   },
   castle: {
+    diff:{hp:1.6, dmg:1.45}, // regular enemies' toughness on this stage
     name:'Castelo Sombrio', sub:'Fase 4', theme:'castle', worldW:4000, music:'castle', bossMusic:'boss',
     platforms:[
       {x:560,y:340,w:200},{x:880,y:270,w:160},

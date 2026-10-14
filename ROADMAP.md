@@ -46,6 +46,7 @@ Cada fase termina com um commit próprio.
 - [x] Animação de amassar ao aterrissar e esticar ao pular
 - [x] Iluminação: caverna e castelo escuros, iluminados por heróis, magias, cristais e tochas; pôr do sol no fim do bosque e do deserto
 - [x] Atmosfera: folhas, areia ao vento, brasas, faíscas nos acertos e vinheta nas bordas
+- [x] Dificuldade em escadinha: cada chefe tem vida, dano, tempo de aviso e ritmo próprios (Gorgo o mais fácil, Lorde Sombrio o mais difícil), e os inimigos comuns ficam mais fortes a cada fase
 
 ## Próximas ideias
 - [ ] Arte em sprites (personagens desenhados quadro a quadro)

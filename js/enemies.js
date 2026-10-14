@@ -8,8 +8,11 @@ const ENEMY_TYPES = {
     look:{s:1,   skin:'#8bc34a',body:'#4a2f6e',cloth:'#5b3c88',eye:'#ff5544',weapon:'bow',hood:'#5b3c88'}},
   orc:   {hp:170, w:44, h:78,  speed:1.25, dmg:40, ai:'melee', reach:62, windup:34, score:250,
     look:{s:1.45,skin:'#4e8a3e',body:'#5d4037',cloth:'#3e2723',eye:'#ff3b30',weapon:'club',tusk:true}},
-  gorgo: {hp:1800,w:84, h:130, speed:1.7,  dmg:55, ai:'boss', boss:true, score:3000, name:'Gorgo, o Rei Orc',
+  // `tune` sets each boss's place on the difficulty ladder: windup/recovery length (higher = slower and
+  // easier to read), pause between attacks, when it gets enraged, charge speed and how many summons
+  gorgo: {hp:1300,w:84, h:130, speed:1.5,  dmg:40, ai:'boss', boss:true, score:3000, name:'Gorgo, o Rei Orc',
     moves:['slam','charge','leap'], summon:['goblin','goblin','archer'],
+    tune:{wind:1.35, rec:1.35, cd:[85,140], enrage:0.35, rage:1.15, charge:8.5, summons:1},
     look:{s:2.4, skin:'#6b8f62',body:'#4a4a58',cloth:'#7b1f1f',eye:'#ff2a2a',weapon:'axe',tusk:true,helmet:true}},
 
   // ----- Caverna de Cristal -----
@@ -18,8 +21,9 @@ const ENEMY_TYPES = {
     look:{s:1.05,skin:'#7c8fb0',body:'#4b5a78',cloth:'#2f3a52',eye:'#9ff8ff',weapon:'pick'}},
   shaman:{hp:70,  w:28, h:56,  speed:1.4,  dmg:20, ai:'archer', shot:'eorb', score:140,
     look:{s:1,   skin:'#8aa0c8',body:'#2e4a7a',cloth:'#1d2f52',eye:'#7ff0ff',weapon:'staff',hood:'#21436e',orb:'#7ff0ff'}},
-  golem: {hp:2300,w:96, h:140, speed:1.3,  dmg:58, ai:'boss', boss:true, score:3500, name:'Golem de Cristal',
+  golem: {hp:2400,w:96, h:140, speed:1.3,  dmg:52, ai:'boss', boss:true, score:3500, name:'Golem de Cristal',
     moves:['slam','leap','rocks','spikes'], summon:['kobold','kobold','shaman'],
+    tune:{wind:1.15, rec:1.15, cd:[65,115], enrage:0.45, rage:1.25, charge:9.5, summons:2},
     look:{s:2.6, skin:'#8a8f9c',body:'#6b7080',cloth:'#4d5260',eye:'#7ff0ff',weapon:'fist',crystal:'#7ff0ff'}},
 
   // ----- Deserto Escaldante -----
@@ -28,8 +32,9 @@ const ENEMY_TYPES = {
     look:{s:1.1, skin:'#d9cfb0',body:'#cfc4a2',cloth:'#a89b78',eye:'#66ff66',weapon:'fist',wrap:true}},
   nomad: {hp:65,  w:28, h:56,  speed:1.6,  dmg:20, ai:'archer', score:130,
     look:{s:1,   skin:'#c8956b',body:'#b5803e',cloth:'#7a4f22',eye:'#2a1a0a',weapon:'bow',hood:'#d9b26a'}},
-  scorpking:{hp:2600,w:120,h:90, speed:1.9,  dmg:56, ai:'boss', boss:true, score:4000, name:'Rei Escorpião',
+  scorpking:{hp:3500,w:120,h:90, speed:1.9,  dmg:62, ai:'boss', boss:true, score:4000, name:'Rei Escorpião',
     moves:['charge','leap','spit','slam'], summon:['scorpion','scorpion','nomad'],
+    tune:{wind:1.0, rec:1.0, cd:[50,95], enrage:0.5, rage:1.3, charge:10.5, summons:2},
     look:{kind:'scorpion', s:3.2, body:'#b8862f', dark:'#6e4a14', eye:'#ff3030', crown:true}},
 
   // ----- Castelo Sombrio -----
@@ -39,8 +44,9 @@ const ENEMY_TYPES = {
     look:{s:1,   skin:'#b9a8c9',body:'#2a1d3d',cloth:'#160f22',eye:'#ff5cf0',weapon:'staff',hood:'#2a1d3d',orb:'#ff5cf0'}},
   blackknight:{hp:240,w:46,h:82, speed:1.15, dmg:44, ai:'melee', reach:66, windup:32, score:300,
     look:{s:1.5, skin:'#3a3f4d',body:'#2b2f3a',cloth:'#5b0f1f',eye:'#ff3030',weapon:'sword',helmet:true,closed:true}},
-  darklord:{hp:3000,w:80, h:132, speed:2.0, dmg:60, ai:'boss', boss:true, score:5000, name:'Lorde Sombrio',
+  darklord:{hp:4700,w:80, h:132, speed:2.0, dmg:66, ai:'boss', boss:true, score:5000, name:'Lorde Sombrio',
     moves:['charge','wave','teleport','slam'], summon:['skeleton','skeleton','darkmage'],
+    tune:{wind:0.85, rec:0.85, cd:[38,75], enrage:0.55, rage:1.4, charge:12, summons:2},
     look:{s:2.3, skin:'#4a3f5c',body:'#1f1a2b',cloth:'#6a0f2a',eye:'#ff2a6a',weapon:'greatsword',helmet:true,closed:true,cape:'#4a0f22'}},
 };
 const WIND = ['windup','slamWind','leapWind','chargeWind','rocksWind','spikesWind','spitWind','waveWind','teleportWind','slashWind'];
@@ -51,7 +57,10 @@ function spawnEnemy(type,x,y=-40-rand(0,120),id){
   const T=ENEMY_TYPES[type];
   const e={isEnemy:true,type,x,y,vx:0,vy:0,w:T.w,h:T.h,hp:T.hp,maxHp:T.hp,speed:T.speed*rand(0.85,1.15),dmg:T.dmg,
     face:-1,state:'walk',t:0,cd:rand(50,110),flash:0,id:id||('e'+nextId++),anim:rand(0,100),onGround:false,dead:false};
-  if (players.length>1 && !id){ e.hp=e.maxHp=Math.round(T.hp*(T.boss?1.6:1.5)); } // tougher in co-op
+  // regular enemies get tougher stage by stage (bosses are tuned one by one above)
+  const D=(!T.boss && stage && stage.diff) || {hp:1,dmg:1};
+  if (!id){ e.hp=e.maxHp=Math.round(T.hp*D.hp); e.dmg=Math.round(T.dmg*D.dmg); }
+  if (players.length>1 && !id){ e.hp=e.maxHp=Math.round(e.hp*(T.boss?1.6:1.5)); } // tougher in co-op
   if (T.boss){ e.cd=120; e.dispHp=e.hp; boss=e; }
   enemies.push(e);
   return e;
@@ -145,15 +154,17 @@ function doSlam(e){
   e.state='recover'; e.t=0; e.vx=0; addShake(14);
   SFX.slam(); dust(e.x-50,e.y,10); dust(e.x+50,e.y,10);
   for (const p of alivePlayers()) if (Math.abs(p.x-e.x)<150 && p.y>e.y-110) hurtPlayer(p,{dmg:e.dmg,dir:p.x>e.x?1:-1,fromX:e.x,srcId:e.id});
-  for (const d of [-1,1]) addEnemyProj({type:'shock',x:e.x+d*70,y:e.y,vx:d*7.5,vy:0,life:75,dmg:30});
+  for (const d of [-1,1]) addEnemyProj({type:'shock',x:e.x+d*70,y:e.y,vx:d*7.5,vy:0,life:75,dmg:Math.round(e.dmg*0.55)});
 }
 function bossAI(e,tg,dx,adx){
-  const T=ENEMY_TYPES[e.type], enr=e.hp<e.maxHp*0.5, spd=enr?1.3:1;
+  const T=ENEMY_TYPES[e.type], U=T.tune||{}, enr=e.hp<e.maxHp*(U.enrage??0.5), spd=enr?(U.rage||1.3):1;
+  const wnd=n=>n*(U.wind||1), rec=n=>n*(U.rec||1), cdR=U.cd||[40,90];
   if (e.wasAir && e.onGround && e.state!=='leap'){ addShake(12); SFX.thud(); dust(e.x,e.y,16); }
   e.wasAir=!e.onGround;
   if (e.state==='walk'){
-    if (!e.summon1 && e.hp<e.maxHp*0.6){ e.summon1=true; e.state='roar'; e.t=0; }
-    else if (!e.summon2 && e.hp<e.maxHp*0.3){ e.summon2=true; e.state='roar'; e.t=0; }
+    const many=(U.summons??2)>=2;
+    if (!e.summon1 && e.hp<e.maxHp*(many?0.6:0.5)){ e.summon1=true; e.state='roar'; e.t=0; }
+    else if (many && !e.summon2 && e.hp<e.maxHp*0.3){ e.summon2=true; e.state='roar'; e.t=0; }
   }
   switch (e.state){
     case 'walk': {
@@ -166,15 +177,15 @@ function bossAI(e,tg,dx,adx){
       break;
     }
     case 'slamWind':
-      e.vx*=0.8; e.t++; if (e.t>=(enr?32:44)) doSlam(e);
+      e.vx*=0.8; e.t++; if (e.t>=wnd(enr?32:44)) doSlam(e);
       break;
     case 'chargeWind':
       e.vx*=0.8; e.t++; if (e.t<20) e.face=dx>0?1:-1;
       if (e.t%6===0) dust(e.x-e.face*30,e.y,2);
-      if (e.t>=40){ e.state='charge'; e.t=0; e.hitIds=new Set(); SFX.roar(); }
+      if (e.t>=wnd(40)){ e.state='charge'; e.t=0; e.hitIds=new Set(); SFX.roar(); }
       break;
     case 'charge': {
-      e.t++; e.vx=e.face*(enr?12:10);
+      e.t++; e.vx=e.face*(U.charge||10)*(enr?1.2:1);
       if (e.t%3===0) dust(e.x-e.face*30,e.y,2);
       for (const p of alivePlayers())
         if (!e.hitIds.has(p.id) && Math.abs(p.x-e.x)<e.w/2+p.w/2 && p.y>e.y-e.h && p.y-p.h<e.y){ e.hitIds.add(p.id); hurtPlayer(p,{dmg:e.dmg,dir:e.face,fromX:e.x,srcId:e.id}); }
@@ -186,41 +197,41 @@ function bossAI(e,tg,dx,adx){
     }
     case 'leapWind':
       e.vx*=0.8; e.t++;
-      if (e.t>=24){ e.state='leap'; e.t=0; e.vy=-15; e.vx=clamp(dx/50,-9,9); SFX.jump(); }
+      if (e.t>=wnd(24)){ e.state='leap'; e.t=0; e.vy=-15; e.vx=clamp(dx/50,-9,9); SFX.jump(); }
       break;
     case 'leap':
       e.t++; if (e.onGround && e.t>5) doSlam(e);
       break;
     case 'recover':
-      e.vx*=0.85; e.t++; if (e.t>=(enr?35:55)){ e.state='walk'; e.cd=rand(40,90)/spd; }
+      e.vx*=0.85; e.t++; if (e.t>=rec(enr?35:55)){ e.state='walk'; e.cd=rand(cdR[0],cdR[1])/spd; }
       break;
     case 'rocksWind':
       e.vx*=0.8; e.t++; e.face=dx>0?1:-1;
-      if (e.t>=(enr?24:32)){
+      if (e.t>=wnd(enr?24:32)){
         for (let k=0;k<(enr?4:3);k++){
           const tgx=tg.x+rand(-90,90), flight=44+k*6;
-          addEnemyProj({type:'boulder',x:e.x+e.face*40,y:e.y-e.h*0.8,vx:(tgx-e.x)/flight,vy:-12+k*0.5,grav:0.5,life:160,dmg:32,r:22});
+          addEnemyProj({type:'boulder',x:e.x+e.face*40,y:e.y-e.h*0.8,vx:(tgx-e.x)/flight,vy:-12+k*0.5,grav:0.5,life:160,dmg:Math.round(e.dmg*0.6),r:22});
         }
         SFX.thud(); e.state='recover'; e.t=10;
       }
       break;
     case 'spikesWind':
       e.vx*=0.8; e.t++;
-      if (e.t===12) for (const p of alivePlayers()) addEnemyProj({type:'spike',x:p.x,y:surfaceBelow(p.x,p.y),vx:0,vy:0,life:64,dmg:36});
+      if (e.t===12) for (const p of alivePlayers()) addEnemyProj({type:'spike',x:p.x,y:surfaceBelow(p.x,p.y),vx:0,vy:0,life:64,dmg:Math.round(e.dmg*0.65)});
       if (e.t>=24){ e.state='recover'; e.t=0; SFX.freeze(); }
       break;
     case 'spitWind':
       e.vx*=0.8; e.t++; e.face=dx>0?1:-1;
-      if (e.t>=(enr?20:28)){
-        for (let k=-1;k<=1;k++) addEnemyProj({type:'glob',x:e.x+e.face*50,y:e.y-e.h*0.7,vx:clamp(dx/40,-9,9)+k*1.6,vy:-9-Math.abs(k),grav:0.45,life:150,dmg:24,r:16});
+      if (e.t>=wnd(enr?20:28)){
+        for (let k=-1;k<=1;k++) addEnemyProj({type:'glob',x:e.x+e.face*50,y:e.y-e.h*0.7,vx:clamp(dx/40,-9,9)+k*1.6,vy:-9-Math.abs(k),grav:0.45,life:150,dmg:Math.round(e.dmg*0.45),r:16});
         SFX.blast(); e.state='recover'; e.t=15;
       }
       break;
     case 'waveWind':
       e.vx*=0.8; e.t++; e.face=dx>0?1:-1;
-      if (e.t>=(enr?22:30)){
-        addEnemyProj({type:'swave',x:e.x+e.face*60,y:e.y,vx:e.face*9.5,vy:0,life:95,dmg:38});
-        if (enr) addEnemyProj({type:'swave',x:e.x-e.face*60,y:e.y,vx:-e.face*9.5,vy:0,life:95,dmg:38});
+      if (e.t>=wnd(enr?22:30)){
+        addEnemyProj({type:'swave',x:e.x+e.face*60,y:e.y,vx:e.face*9.5,vy:0,life:95,dmg:Math.round(e.dmg*0.62)});
+        if (enr) addEnemyProj({type:'swave',x:e.x-e.face*60,y:e.y,vx:-e.face*9.5,vy:0,life:95,dmg:Math.round(e.dmg*0.62)});
         SFX.wave(); addShake(6); e.state='recover'; e.t=15;
       }
       break;
@@ -236,7 +247,7 @@ function bossAI(e,tg,dx,adx){
       break;
     case 'slashWind':
       e.vx*=0.8; e.t++;
-      if (e.t>=(enr?12:18)){
+      if (e.t>=wnd(enr?12:18)){
         const x1=e.face>0?e.x:e.x-150, x2=e.face>0?e.x+150:e.x;
         enemyHitPlayers(e,x1,x2,e.y-e.h-10,e.y,e.dmg,e.face);
         ring(e.x+e.face*70,e.y-60,'#ff5cf0',10,14,8,20); SFX.swing(true);
@@ -359,7 +370,7 @@ function drawMonster(e,noShadow){
   if (c.kind==='scorpion') return drawScorpion(e,T,c,F,sx,noShadow);
   if (!noShadow && e.state!=='dying'){ const s=T.boss?GROUND:surfaceBelow(e.x,e.y), d=clamp((s-e.y)/250,0,0.7); shadow(sx,s,e.w*0.6*(1-d)); }
   ctx.save(); ctx.translate(sx,e.y);
-  if (T.boss && e.hp>0 && e.hp<e.maxHp*0.5){
+  if (T.boss && e.hp>0 && e.hp<e.maxHp*((T.tune&&T.tune.enrage)??0.5)){
     const gl=ctx.createRadialGradient(0,-65,10,0,-65,110), a=0.25+Math.sin(e.anim*0.15)*0.1;
     gl.addColorStop(0,`rgba(255,60,40,${a})`); gl.addColorStop(1,'rgba(255,60,40,0)'); ctx.fillStyle=gl; circle(0,-65,110);
   }
