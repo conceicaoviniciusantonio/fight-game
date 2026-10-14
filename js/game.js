@@ -81,15 +81,18 @@ function updateProjs(){
         if (pr.type==='parrow' && pr.big) parts.push({x:pr.x,y:pr.y,vx:0,vy:0,life:10,max:10,color:'#c8ffb0',size:3,grav:0});
         else if (pr.type==='wave') parts.push({x:pr.x-pr.vx,y:pr.y+rand(-20,20),vx:-pr.vx*0.1,vy:0,life:14,max:14,color:'#9fe3ff',size:3,grav:0});
       }
+      if (PROJ_TRAIL[pr.type] && frame%2===0) PROJ_TRAIL[pr.type](pr);
       if (!pr.local || pr.deco) continue;
       const owner=players.find(p=>p.id===pr.pl) || me;
-      for (const t of targetsOf(owner)){
+      let struck=false;
+      if (pr.dmg) for (const t of targetsOf(owner)){
         if (pr.hit.has(t.id) || !projNear(pr,t)) continue;
         if (strike(owner,t,pr.dmg,Math.sign(pr.vx)||owner.face,pr.kb??6,pr.up??-6,pr.pid)){
-          pr.hit.add(t.id);
+          pr.hit.add(t.id); struck=true;
           if (!pr.pierce){ pr.life=0; break; }
         }
       }
+      if (pr.explode && (struck && !pr.pierce || pr.life<=1 || pr.y>=GROUND-6)){ explodeProj(owner,pr); pr.life=0; }
     } else {
       if (pr.type==='shock' && frame%3===0) dust(pr.x,pr.y,1);
       if (!pr.local) continue;

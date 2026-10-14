@@ -72,6 +72,10 @@ const SFX = {
   block:()=>{ tone(900,0.06,'square',0.04,0.7); noise(0.08,0.14,'highpass',2500,0,900); },
   parry:()=>{ tone(1320,0.1,'square',0.045); tone(1980,0.22,'triangle',0.04,1,0.05); tone(2640,0.25,'sine',0.03,1,0.1); },
   guardBreak:()=>{ tone(400,0.3,'sawtooth',0.06,0.3); noise(0.25,0.2,'lowpass',1600,0,200); },
+  zap:()=>{ tone(880,0.1,'sine',0.04,0.5); tone(1320,0.08,'triangle',0.02,0.6); },
+  blink:()=>{ tone(500,0.12,'sine',0.04,3); noise(0.1,0.06,'highpass',4000); },
+  blast:()=>{ noise(0.3,0.25,'bandpass',900,0,200); tone(160,0.3,'sawtooth',0.05,0.4); },
+  freeze:()=>{ tone(1600,0.4,'sine',0.03,0.5); noise(0.5,0.08,'highpass',5000,0,2000); },
   ult:()=>{ tone(220,0.9,'sawtooth',0.05,4); tone(330,0.9,'square',0.03,4); noise(0.8,0.1,'highpass',2000,0,8000); },
 };
 

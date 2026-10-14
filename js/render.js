@@ -37,8 +37,35 @@ function drawProjs(){
     ctx.restore();
   }
 }
-// Extra projectile painters registered by other modules (new heroes, bosses)
-const PROJ_DRAW = {};
+// Extra projectile painters (magic, bosses)
+function glowOrb(r,core,edge){
+  const g=ctx.createRadialGradient(0,0,1,0,0,r); g.addColorStop(0,'#ffffff'); g.addColorStop(0.35,core); g.addColorStop(1,edge);
+  ctx.fillStyle=g; circle(0,0,r);
+}
+const PROJ_DRAW = {
+  bolt: pr => glowOrb(13,'#c79bff','rgba(140,90,255,0)'),
+  orb:  pr => { glowOrb(24,'#b388ff','rgba(120,70,255,0)'); ctx.strokeStyle='rgba(255,255,255,0.7)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(0,0,12,clock*0.3,clock*0.3+4); ctx.stroke(); },
+  fireball: pr => { glowOrb(26,'#ffb347','rgba(255,80,20,0)'); ctx.fillStyle='rgba(255,240,180,0.9)'; circle(0,0,8); },
+  meteor: pr => {
+    ctx.rotate(Math.atan2(pr.vy,pr.vx));
+    const g=ctx.createLinearGradient(-110,0,0,0); g.addColorStop(0,'rgba(255,120,40,0)'); g.addColorStop(1,'rgba(255,190,90,0.9)');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.moveTo(-110,-20); ctx.lineTo(0,-34); ctx.lineTo(0,34); ctx.lineTo(-110,20); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#6d4c41'; circle(0,0,32); ctx.fillStyle='#8d6e63'; circle(-8,-8,14); ctx.fillStyle='#ffcc80'; circle(10,6,8);
+  },
+  pshock: pr => {
+    const f=(frame>>1)%2;
+    ctx.fillStyle='#ffd36b'; tri(-14,0,-4,-34-f*6,6,0);
+    ctx.fillStyle='#fff3c4'; tri(-4,0,4,-22-(1-f)*8,12,0);
+  },
+};
+// Little particle trails for some projectiles
+const PROJ_TRAIL = {
+  bolt: pr => parts.push({x:pr.x,y:pr.y,vx:0,vy:0,life:10,max:10,color:'#c79bff',size:3,grav:0}),
+  orb: pr => parts.push({x:pr.x,y:pr.y+rand(-8,8),vx:0,vy:0,life:12,max:12,color:'#d4b8ff',size:4,grav:0}),
+  fireball: pr => parts.push({x:pr.x,y:pr.y+rand(-8,8),vx:-pr.vx*0.1,vy:-0.5,life:16,max:16,color:pick(['#ff9d4d','#ffd36b','#ff6b3d']),size:5,grav:0}),
+  meteor: pr => parts.push({x:pr.x-pr.vx*2,y:pr.y-pr.vy*2,vx:rand(-1,1),vy:rand(-1,1),life:20,max:20,color:pick(['#ff9d4d','#ffd36b','#6d4c41']),size:7,grav:0}),
+  pshock: pr => dust(pr.x,pr.y,1),
+};
 
 function drawParts(){
   for (const q of parts){
@@ -128,9 +155,10 @@ function drawBanner(){
   ctx.globalAlpha=1;
 }
 // Ultimate "cut-in": a slanted band with the hero and the skill name
+const CUTIN_T = 55;
 function drawCutin(){
   if (!cutin) return;
-  const k=cutin.t/70, slide=Math.min(1,(70-cutin.t)/8), out=Math.min(1,cutin.t/10), a=Math.min(slide,out);
+  const k=cutin.t/CUTIN_T, slide=Math.min(1,(CUTIN_T-cutin.t)/8), out=Math.min(1,cutin.t/10), a=Math.min(slide,out);
   ctx.save(); ctx.globalAlpha=a;
   ctx.fillStyle='rgba(10,12,30,0.78)';
   ctx.beginPath(); ctx.moveTo(0,190); ctx.lineTo(W,150); ctx.lineTo(W,280); ctx.lineTo(0,320); ctx.closePath(); ctx.fill();

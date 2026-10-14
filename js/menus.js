@@ -31,10 +31,11 @@ function tickTitle(){
 function drawTitle(){
   ctx.fillStyle='rgba(8,10,30,0.5)'; ctx.fillRect(0,0,W,H);
   txt('CRÔNICAS DE VALLEN',W/2,82+Math.sin(clock*0.05)*4,58,'#ffd23f');
-  txt('uma aventura de espada e flecha',W/2,130,18,'#ffffff');
-  const ids=HERO_IDS;
-  drawHeroAt(ids[0],170,430,2.1,{anim:clock});
-  drawHeroAt(ids[1%ids.length],W-170,430,2.1,{anim:clock+40,face:-1});
+  txt('uma aventura de espada, flecha, magia e lança',W/2,130,18,'#ffffff');
+  // the heroes take turns in pairs on both sides of the menu
+  const ids=HERO_IDS, k=Math.floor(clock/360), fade=Math.min(1,(clock%360)/30,(360-clock%360)/30);
+  drawHeroAt(ids[(k*2)%ids.length],170,430,2.1,{anim:clock,alpha:fade});
+  drawHeroAt(ids[(k*2+1)%ids.length],W-170,430,2.1,{anim:clock+40,face:-1,alpha:fade});
   TITLE_ITEMS.forEach((it,i)=>{
     const y=196+i*56, sel=i===menuSel;
     panel(W/2-150,y-24,300,48,24,sel?'#ffd23f':'rgba(0,0,0,0.5)');

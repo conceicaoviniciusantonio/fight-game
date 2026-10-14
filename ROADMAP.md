@@ -22,8 +22,8 @@ Cada fase termina com um commit próprio.
 - [x] Opções de partida PvP (melhor de 1/3/5 e tempo de 60 s, 99 s ou sem limite)
 
 ## Fase 4: Novos personagens
-- [ ] Mago
-- [ ] Lanceiro
+- [x] Mirela, a maga: projéteis mágicos, explosão arcana, teleporte no lugar do dash; Bola de Fogo, Nevasca e Meteoro
+- [x] Dario, o lanceiro: estocadas longas, giro, mergulho do alto; Investida, Redemoinho e Lança Celestial
 
 ## Fase 5: Novas fases
 - [ ] Mapa de fases

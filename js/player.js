@@ -44,9 +44,28 @@ function fireArrow(p,x,y,vx,vy,s){
   return addPlayerProj(p,{type:'parrow',x,y,vx,vy,life:s.life||60,dmg:s.dmg,pierce:!!s.pierce,big:!!s.big,kb:s.kb||2,up:s.up||0,deco:!!s.deco});
 }
 function shoot(p,s){
-  const n=s.count||1;
-  for (let i=0;i<n;i++){ const a=(s.ang||0)+i*0.18; fireArrow(p,p.x+p.face*22,p.y-46,Math.cos(a)*s.spd*p.face,Math.sin(a)*s.spd,s); }
-  psfx('bow'); if (s.big){ psfx('shoot'); burst(p.x+p.face*30,p.y-46,'#c8ffb0',6,3,0); }
+  const n=s.count||1, magic=s.type && s.type!=='parrow';
+  for (let i=0;i<n;i++){
+    const a=(s.ang||0)+i*0.18, vx=Math.cos(a)*s.spd*p.face, vy=Math.sin(a)*s.spd;
+    if (magic) addPlayerProj(p,{type:s.type,x:p.x+p.face*30,y:p.y-46,vx,vy,life:s.life||45,dmg:s.dmg,pierce:!!s.pierce,big:!!s.big,kb:s.kb||2,up:s.up||0,r:s.r||12});
+    else fireArrow(p,p.x+p.face*22,p.y-46,vx,vy,s);
+  }
+  if (magic){ psfx('zap'); if (s.big) burst(p.x+p.face*34,p.y-46,'#d4b8ff',8,3,0); }
+  else { psfx('bow'); if (s.big){ psfx('shoot'); burst(p.x+p.face*30,p.y-46,'#c8ffb0',6,3,0); } }
+}
+// Short-range arcane explosion in front of the caster
+function magicBlast(p,b){
+  const cx=p.x+p.face*b.dx, cy=p.y-40;
+  const m={type:'fx',k:'blast',x:cx,y:cy,r:b.r}; FX_HANDLERS.blast(m); netSend(m);
+  psfx('blast');
+  areaHit(p,cx,cy,b.r,b.r,b.dmg,b.kb,b.up);
+}
+// Projectiles with `explode` burst in an area when they hit or run out
+function explodeProj(owner,pr){
+  const x=pr.x, y=Math.min(pr.y,GROUND-10), ex=pr.explode;
+  const m={type:'fx',k:'boom',x,y,r:ex.r,big:!!ex.big,pid:pr.pid}; FX_HANDLERS.boom(m); netSend(m);
+  psfx('boom');
+  if (owner) areaHit(owner,x,y-20,ex.r,ex.r*0.8,ex.dmg,ex.kb,ex.up);
 }
 function gatherSparks(p,color,until){
   if (p.t<until && p.t%2===0){
@@ -102,6 +121,8 @@ function strikePlayer(p,t,base,dir,kb,up,pid){
   return true;
 }
 function playerHitbox(p,a){
+  if (a.plunge) return {x1:p.x-38,x2:p.x+38,y1:p.y-34,y2:p.y+46};
+  if (a.both) return {x1:p.x-a.range,x2:p.x+a.range,y1:p.y-98,y2:p.y+10};
   return {x1:p.face>0?p.x-12:p.x-a.range, x2:p.face>0?p.x+a.range:p.x+12, y1:p.y-98, y2:p.y+(a.air?34:10)};
 }
 // Hits every target overlapping a world-space rectangle (multi-hit friendly: no per-target memory)
@@ -178,7 +199,15 @@ function startAttack(p,a){
   if (a.air){ p.airAtk++; p.vy=Math.min(p.vy,-2); }
 }
 function startDash(p,dir){
-  p.state='dash'; p.t=14; p.face=dir; p.inv=Math.max(p.inv,8);
+  p.face=dir;
+  if (HEROES[p.hero].blink){
+    // the mage teleports instead of dashing
+    const [l,r]=bounds(), x0=p.x;
+    p.x=clamp(p.x+dir*170,l+16,r-16); p.state='dash'; p.t=8; p.vx=0; p.inv=Math.max(p.inv,14);
+    burst(x0,p.y-40,'#d4b8ff',12,4,0); burst(p.x,p.y-40,'#ffffff',12,4,0); ring(p.x,p.y-40,'#c79bff',5,14,4,6);
+    psfx('blink'); return;
+  }
+  p.state='dash'; p.t=14; p.inv=Math.max(p.inv,8);
   psfx('dash'); dust(p.x,p.y,5);
 }
 function startRoll(p){
@@ -195,6 +224,7 @@ function trySkills(p){
   const s=skills[idx];
   if (p.mp<s.mp){ noMp(p); return false; }
   p.mp-=s.mp; p.state='skill'; p.sk=idx; p.t=0; p.hitIds=new Set(); p.inv=Math.max(p.inv,s.inv||0);
+  p.diving=false; p.landT=0;
   if (s.ult){ const m={type:'fx',k:'cutin',hero:p.hero,name:s.cry}; FX_HANDLERS.cutin(m); netSend(m); psfx('ult'); }
   else if (s.cry){ flashScreen=Math.max(flashScreen,0.3); bigText(p.x,p.y-110,s.cry,'#ffcf5a'); psfx('gigaCharge'); }
   else { psfx('charge'); burst(p.x,p.y-45,s.color,14,4,0); }
@@ -248,11 +278,17 @@ function updatePlayer(p){
       break;
     case 'attack': {
       const a=p.atk; p.t++;
-      if (a.air) p.vx*=0.95;
+      if (a.plunge){ p.vy=Math.max(p.vy,12); p.vx*=0.9; }
+      else if (a.air) p.vx*=0.95;
       else p.vx = p.t<=a.act[0]+1 ? p.face*a.lunge : p.vx*0.75;
       if (P.attack) p.queued=true;
-      if (p.t===a.act[0]){ if (a.shot) shoot(p,a.shot); else psfx('swing',a.heavy); }
-      if (!a.shot && p.t>=a.act[0] && p.t<=a.act[1]){
+      if (p.t===a.act[0]){ if (a.shot) shoot(p,a.shot); else if (a.blast) magicBlast(p,a.blast); else psfx('swing',a.heavy); }
+      if (a.plunge && p.onGround && p.t>2){
+        rectHit(p,p.x-85,p.x+85,p.y-50,p.y+10,22,5,-6);
+        dust(p.x-30,p.y,8); dust(p.x+30,p.y,8); ring(p.x,p.y-6,'#ffe0a0',6,14,5,10); psfx('thud'); addShake(5);
+        p.state='free'; break;
+      }
+      if (!a.shot && !a.blast && p.t>=a.act[0] && p.t<=a.act[1]){
         const b=playerHitbox(p,a);
         for (const t of targetsOf(p)){
           if (!p.hitIds.has(t.id) && boxHits(b,t) && strike(p,t,a.dmg,p.face,a.kb,a.up)) p.hitIds.add(t.id);
@@ -267,7 +303,7 @@ function updatePlayer(p){
       break;
     }
     case 'dash': {
-      p.t--; p.vx=p.face*(5+p.t*0.45);
+      p.t--; p.vx=Hh.blink ? 0 : p.face*(5+p.t*0.45);
       if (p.t%2===0) parts.push({ghost:true,hero:p.hero,x:p.x,y:p.y,face:p.face,anim:p.anim,life:12,max:12});
       if (P.attack) startAttack(p,Hh.atk.dash);
       else if (P.jump){ p.state='free'; p.vy=Hh.jump; p.jumps=1; }
@@ -282,7 +318,7 @@ function updatePlayer(p){
       p.t++;
       if (s.freeze){ doPhysics=false; p.vx=0; p.vy=0; if (p.t<22) p.y-=2.2; }
       else if (s.hover){ doPhysics=false; p.vx=0; p.vy=0; }
-      else { p.vx*=0.8; if (!p.onGround) p.vy*=0.6; }
+      else if (!s.free){ p.vx*=0.8; if (!p.onGround) p.vy*=0.6; }
       if (s.update(p)) p.state='free';
       break;
     }

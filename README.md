@@ -10,6 +10,15 @@ Jogo de ação 2D feito com HTML, CSS e JavaScript puro, sem etapa de build. Bas
 
 Nos modos online, um jogador cria a sala e o outro entra com o código de 4 letras. Precisa de internet.
 
+## Personagens
+
+| Herói | Estilo | Especiais (1, 2 e 3 barras de MP) |
+|---|---|---|
+| Kaira, cavaleira | combos de espada | Onda de Espada, Giga Slash, Corte Relâmpago |
+| Sylvie, arqueira | ataques de longe | Leque de Flechas, Chuva de Flechas, Flecha Estelar |
+| Mirela, maga | magia e teleporte | Bola de Fogo, Nevasca, Meteoro |
+| Dario, lanceiro | alcance longo e mergulho | Investida, Redemoinho, Lança Celestial |
+
 ## Controles
 
 Teclado (as teclas podem ser trocadas em **Opções → Configurar teclas**):

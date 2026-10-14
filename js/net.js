@@ -100,7 +100,19 @@ function onNet(m){
   if (NET_HANDLERS[m.type]) NET_HANDLERS[m.type](m);
 }
 const FX_HANDLERS = {
-  cutin: m => { cutin={hero:m.hero,name:m.name,t:70}; },
+  blast: m => { ring(m.x,m.y,'#e2c6ff',8,18,8,m.r*0.3); burst(m.x,m.y,'#c79bff',16,6,0.05); },
+  boom: m => {
+    projs=projs.filter(q=>!(q.pid===m.pid && !q.local));
+    ring(m.x,m.y,'#fff2b0',m.big?16:10,m.big?28:20,m.big?14:8); ring(m.x,m.y,'#ff8a3d',m.big?10:7,m.big?34:24,8);
+    burst(m.x,m.y,'#ffb347',m.big?50:22,m.big?12:8,0.12);
+    if (m.big){ flashScreen=Math.max(flashScreen,0.7); addShake(18); for (let i=0;i<14;i++) parts.push({x:m.x+rand(-m.r,m.r),y:GROUND-4,vx:0,vy:-rand(0.5,2),life:60,max:60,color:pick(['#ff9d4d','#ffd36b']),size:rand(3,6),grav:0}); }
+    else addShake(6);
+  },
+  blizzard: m => {
+    ring(m.x,m.y-40,'#e6f7ff',12,26,8,20);
+    for (let i=0;i<80;i++) parts.push({x:m.x+rand(-300,300),y:rand(-60,260),vx:rand(-1,0.5),vy:rand(3,6),life:rand(30,60)|0,max:60,color:pick(['#ffffff','#cdeeff','#a8dcff']),size:rand(2,5),grav:0});
+  },
+  cutin: m => { cutin={hero:m.hero,name:m.name,t:CUTIN_T}; },
   beam: m => { parts.push({beam:true,x:m.x,y:m.y,face:m.face,len:m.len,life:36,max:36}); },
   slashline: m => { parts.push({slash:true,x1:m.x1,x2:m.x2,y:m.y,life:18,max:18}); },
 };
