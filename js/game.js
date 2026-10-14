@@ -235,7 +235,7 @@ function tick(){
 function hintLine(){
   const Hh=HEROES[me.hero], sk=Hh.skills.map((s,i)=>`${bindLabel('skill'+(i+1))} ${s.name.split(' ')[0]} (${s.mp/100})`).join('  ');
   if (Input.device==='gamepad') return 'Analógico mover · A pular · X atacar · Y / B / RB especiais · LB defesa · LT/RT esquiva';
-  return `${bindLabel('left')}${bindLabel('right')} mover  ${bindLabel('jump')} pular  ${bindLabel('attack')} atacar  ${bindLabel('dodge')} esquiva  ${bindLabel('guard')} defesa  ${sk}`;
+  return `${bindLabel('left')}${bindLabel('right')} mover  ${bindLabel('jump')} pular (2x no ar)  ${bindLabel('attack')} atacar  ${bindLabel('dodge')} esquiva  ${bindLabel('guard')} defesa  ${sk}`;
 }
 function drawStoryHUD(){
   heroPanel(me,14,12);

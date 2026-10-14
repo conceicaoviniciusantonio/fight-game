@@ -223,6 +223,7 @@ function startRoll(p){
   p.face=p.rollDir; p.state='roll'; p.t=0; p.inv=Math.max(p.inv,16);
   psfx('roll'); dust(p.x,p.y,5);
 }
+const FLIP_T = 18; // frames of the double-jump somersault
 function noMp(p){ addText(p.x,p.y-95,'Sem MP','#9fb4c9',false); SFX.noMp(); }
 function trySkills(p){
   const skills=HEROES[p.hero].skills, P=p.inp.pressed;
@@ -245,6 +246,7 @@ function updatePlayer(p){
   if (p.dropThrough>0) p.dropThrough--;
   p.mp=Math.min(MAXMP,p.mp+0.1);
   if (p.rollCd>0) p.rollCd--;
+  if (p.flip>0) p.flip--;
   if (p.state!=='guard') p.guardHp=Math.min(100,p.guardHp+0.5);
   if (p.emoteCd>0) p.emoteCd--;
   if (p.state==='dead'){ p.t++; p.vx*=0.92; physics(p); tryRevive(p); return; }
@@ -272,7 +274,7 @@ function updatePlayer(p){
       if (P.down && p.onGround && p.y<GROUND-1){ p.dropThrough=12; }
       else if (P.jump){
         if (p.onGround){ p.vy=Hh.jump; p.jumps=1; psfx('jump'); dust(p.x,p.y,4); }
-        else if (p.jumps<2){ p.vy=-10.5; p.jumps=2; psfx('djump'); ring(p.x,p.y,'#ffffff',2.5,14,3,6); }
+        else if (p.jumps<2){ p.vy=-10.5; p.jumps=2; p.flip=FLIP_T; psfx('djump'); ring(p.x,p.y,'#ffffff',2.5,14,3,6); burst(p.x,p.y-10,'#ffffff',6,2,0); }
       }
       if (P.attack){ if (p.onGround) startAttack(p,Hh.atk.c1); else if (p.airAtk<2) startAttack(p,Hh.atk.air); }
       else if (P.dodge && p.onGround && p.rollCd<=0) startRoll(p);

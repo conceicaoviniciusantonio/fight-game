@@ -274,6 +274,8 @@ function drawHero(p,alpha=1,ghost=false,noShadow=false){
   if (!p.onGround && p.state!=='skill' && p.state!=='dead'){ const s=clamp(Math.abs(p.vy)*0.011,0,0.12); ky=1+s; kx=1-s*0.6; }
   if (p._land>0){ const s=p._land/8*0.15; ky=1-s; kx=1+s*0.8; }
   ctx.scale(kx,ky);
+  // double jump: a quick forward somersault around the body's center
+  if (p.flip>0 && p.state==='free' && !p.onGround){ ctx.translate(0,-36); ctx.rotate((1-p.flip/FLIP_T)*Math.PI*2); ctx.translate(0,36); }
   if (p.state==='roll'){ ctx.translate(0,-30); ctx.rotate(Math.min(1,p.t/20)*Math.PI*2); ctx.translate(0,30); }
   if (big){ const gl=ctx.createRadialGradient(0,-45,5,0,-45,90); gl.addColorStop(0,Hh.aura); gl.addColorStop(1,'rgba(255,150,50,0)'); ctx.fillStyle=gl; circle(0,-45,90); }
   if (p.state==='skill' && !big && p.t<12){ ctx.strokeStyle=Hh.skills[p.sk].color; ctx.globalAlpha*=0.6; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(0,-45,40-p.t*2,0,Math.PI*2); ctx.stroke(); ctx.globalAlpha/=0.6; }

@@ -48,6 +48,7 @@ Cada fase termina com um commit próprio.
 - [x] Atmosfera: folhas, areia ao vento, brasas, faíscas nos acertos e vinheta nas bordas
 - [x] Dificuldade em escadinha: cada chefe tem vida, dano, tempo de aviso e ritmo próprios (Gorgo o mais fácil, Lorde Sombrio o mais difícil), e os inimigos comuns ficam mais fortes a cada fase
 - [x] Plataformas em degraus em todas as fases e arenas: degrau baixo alcançável com um pulo simples e degrau alto logo ao lado, para qualquer herói conseguir subir
+- [x] Pulo duplo com cambalhota (mais fácil de perceber) e versão nos arquivos para o navegador sempre carregar a atualização mais recente
 
 ## Próximas ideias
 - [ ] Arte em sprites (personagens desenhados quadro a quadro)
