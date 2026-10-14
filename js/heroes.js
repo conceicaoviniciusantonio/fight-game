@@ -341,7 +341,7 @@ function drawBow(p,ghost,gc2){
   ctx.fillStyle=ghost?gc2:'#ffd9b8'; ctx.fillRect(0,-3,16,6);
   if (!ghost){
     const bx=16, r=22, e=1.2, ey=r*Math.sin(e);
-    ctx.strokeStyle='#8d5a2b'; ctx.lineWidth=3.5; ctx.beginPath(); ctx.arc(bx-r*0.55,0,r,-e,e); ctx.stroke();
+    ctx.strokeStyle=['#8d5a2b','#a0a8b4','#5fc9d9','#e0b028'][p.tier||0]; ctx.lineWidth=3.5; ctx.beginPath(); ctx.arc(bx-r*0.55,0,r,-e,e); ctx.stroke();
     ctx.fillStyle='#ffd34d'; ctx.fillRect(bx-r*0.55+r-2,-3,4,6);
     const sx0=bx-r*0.55+r*Math.cos(e);
     ctx.strokeStyle='#f0f0f0'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(sx0,-ey); ctx.lineTo(sx0-pull,0); ctx.lineTo(sx0,ey); ctx.stroke();
@@ -359,7 +359,7 @@ function drawStaff(p,ghost,gc2){
   if (!ghost){
     ctx.strokeStyle='#6d4c41'; ctx.lineWidth=4; ctx.lineCap='round';
     ctx.beginPath(); ctx.moveTo(-22,0); ctx.lineTo(50,0); ctx.stroke();
-    ctx.strokeStyle='#ffd34d'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(55,0,8,0,Math.PI*2); ctx.stroke();
+    ctx.strokeStyle=WEAPON_TIERS[p.tier||0].tint||'#ffd34d'; ctx.lineWidth=p.tier>1?3:2; ctx.beginPath(); ctx.arc(55,0,8,0,Math.PI*2); ctx.stroke();
     const r=casting?18:11, g=ctx.createRadialGradient(55,0,1,55,0,r);
     g.addColorStop(0,'#ffffff'); g.addColorStop(0.4,Hh.look.orb); g.addColorStop(1,'rgba(160,110,255,0)');
     ctx.fillStyle=g; circle(55,0,r);
@@ -379,7 +379,7 @@ function drawSpear(p,ghost,gc2){
   if (!ghost){
     ctx.strokeStyle='#8d6e63'; ctx.lineWidth=4; ctx.lineCap='round';
     ctx.beginPath(); ctx.moveTo(-34,0); ctx.lineTo(96,0); ctx.stroke();
-    ctx.fillStyle='#cfd8dc'; ctx.beginPath(); ctx.moveTo(94,-6); ctx.lineTo(120,0); ctx.lineTo(94,6); ctx.closePath(); ctx.fill();
+    ctx.fillStyle=WEAPON_TIERS[p.tier||0].tint||'#cfd8dc'; ctx.beginPath(); ctx.moveTo(94,-6); ctx.lineTo(120,0); ctx.lineTo(94,6); ctx.closePath(); ctx.fill();
     ctx.fillStyle='#ffd34d'; ctx.fillRect(90,-4,4,8);
     ctx.fillStyle=Hh.col.chest; tri(88,3,84,13,92,4);
   }
@@ -399,7 +399,8 @@ function drawSword(p,ghost,gc2){
   ctx.fillStyle=ghost?gc2:'#c9d3e0'; ctx.fillRect(0,-3,14,7);
   if (!ghost){
     ctx.fillStyle='#d4a017'; ctx.fillRect(12,-8,5,16); ctx.fillStyle='#6b3d1f'; ctx.fillRect(6,-2,7,4);
-    const bg=ctx.createLinearGradient(17,0,78,0); bg.addColorStop(0,'#ffffff'); bg.addColorStop(1,'#9fb8d4');
+    const tint=WEAPON_TIERS[p.tier||0].tint;
+    const bg=ctx.createLinearGradient(17,0,78,0); bg.addColorStop(0,'#ffffff'); bg.addColorStop(1,tint||'#9fb8d4');
     ctx.fillStyle=p.state==='skill'&&p.sk===1?'#ffe9a8':bg;
     ctx.beginPath(); ctx.moveTo(17,-4); ctx.lineTo(70,-3); ctx.lineTo(80,0); ctx.lineTo(70,3); ctx.lineTo(17,4); ctx.closePath(); ctx.fill();
     ctx.strokeStyle='rgba(80,100,130,0.6)'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(19,0); ctx.lineTo(70,0); ctx.stroke();
@@ -433,7 +434,7 @@ function drawSwoosh(p,a,cy){
 // A standing hero for menus and portraits (screen coordinates)
 function drawHeroAt(hero,x,y,scale=1,opts={}){
   ctx.save(); ctx.translate(x,y); ctx.scale(scale,scale);
-  const fake={hero,x:cam.x,y:0,face:opts.face||1,state:opts.state||'free',atk:opts.atk||null,t:opts.t||0,sk:0,
+  const fake={hero,x:cam.x,y:0,face:opts.face||1,state:opts.state||'free',atk:opts.atk||null,t:opts.t||0,sk:0,tier:opts.tier||0,
     anim:opts.anim||0,onGround:true,vx:0,inv:0};
   drawHero(fake,opts.alpha??1,false,true);
   ctx.restore();

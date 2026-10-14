@@ -72,6 +72,8 @@ const SFX = {
   block:()=>{ tone(900,0.06,'square',0.04,0.7); noise(0.08,0.14,'highpass',2500,0,900); },
   parry:()=>{ tone(1320,0.1,'square',0.045); tone(1980,0.22,'triangle',0.04,1,0.05); tone(2640,0.25,'sine',0.03,1,0.1); },
   guardBreak:()=>{ tone(400,0.3,'sawtooth',0.06,0.3); noise(0.25,0.2,'lowpass',1600,0,200); },
+  coin:()=>{ tone(1568,0.06,'square',0.03); tone(2093,0.12,'square',0.03,1,0.05); },
+  levelUp:()=>{ [523,659,784,1046].forEach((f,i)=>tone(f,0.16,'square',0.04,1,i*0.08)); },
   zap:()=>{ tone(880,0.1,'sine',0.04,0.5); tone(1320,0.08,'triangle',0.02,0.6); },
   blink:()=>{ tone(500,0.12,'sine',0.04,3); noise(0.1,0.06,'highpass',4000); },
   blast:()=>{ noise(0.3,0.25,'bandpass',900,0,200); tone(160,0.3,'sawtooth',0.05,0.4); },

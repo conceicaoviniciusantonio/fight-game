@@ -70,7 +70,8 @@ NET_HANDLERS.ehit = m => {
   const e=enemies.find(o=>o.id===m.id);
   if (e && Net.host){ damageEnemy(e,m.dmg,m.dir,m.kb,m.up,m.crit,null); score+=m.dmg; }
 };
-NET_HANDLERS.pickup = m => { if (me && m.id===me.id) applyPickup(me,m.it); };
+NET_HANDLERS.pickup = m => { if (me && m.id===me.id) applyPickup(me,m.it,m.val); };
+NET_HANDLERS.xp = m => { if (Net.mode==='coop' && mode==='play') gainXp(me,m.xp); };
 NET_HANDLERS.win = () => { if (isGuest()) celebrateBoss(boss); };
 NET_HANDLERS.lose = () => { if (isGuest()){ mode='over'; endTimer=0; playMusic('gameover'); } };
 function coopDisconnect(){
@@ -97,7 +98,7 @@ function tryRevive(p){
 function drawPartnerPanel(p,x,y){
   panel(x,y,230,48,12);
   portrait(p,x+24,y+24,18);
-  txt(HEROES[p.hero].name+' (parceiro)',x+48,y+11,11,'#9fe3a8','left');
+  txt(HEROES[p.hero].name+' Nv '+(p.lvl||1)+' (parceiro)',x+48,y+11,11,'#9fe3a8','left');
   bar(x+48,y+20,170,10,Math.max(0,p.hp)/p.maxHp,'#ff6b7a','#b3122a');
   mpBars(x+48,y+36,52,6,p.mp,7);
   if (!isAlive(p)) txt('CAÍDO',x+133,y+25,12,'#ff8a8a');

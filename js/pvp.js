@@ -8,8 +8,9 @@ const winsNeeded = () => Math.ceil(pvp.bestOf/2);
 const myIdx = () => Net.host ? 0 : 1;
 
 function pvpHello(m){
-  const rival=makePlayer(m.hero,{id:Net.host?'guest':'host',local:false});
-  players=[me=makePlayer(selHero,{id:Net.host?'host':'guest'}), rival];
+  // PvP is fair: everyone fights with base stats, without levels or gear
+  const rival=makePlayer(m.hero,{id:Net.host?'guest':'host',local:false,base:true});
+  players=[me=makePlayer(selHero,{id:Net.host?'host':'guest',base:true}), rival];
   if (Net.host) startMatch();
 }
 NET_HANDLERS.dead = () => { pvp.rivalKo=true; };

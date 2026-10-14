@@ -78,7 +78,7 @@ function drawHeroSelect(){
     drawHeroAt(id,cx,y+194-(sel?Math.abs(Math.sin(clock*0.08))*6:0),1.5,
       {anim:clock,state:demo?'attack':'free',atk:demo?Hh.atk.c3:null,t:demo?Math.min(clock%120,Hh.atk.c3.act[1]+2):0,alpha:sel?1:0.6});
     txt(Hh.name,cx,y+222,24,sel?'#ffd23f':'#cfd6e6');
-    txt(Hh.title,cx,y+244,14,'#ffffff','center',false);
+    txt(Hh.title+(selMode==='pvp'?'':' · Nv '+heroProg(id).lvl),cx,y+244,14,'#ffffff','center',false);
     STAT_NAMES.forEach(([k,label],j)=>{
       const sy=y+268+j*18;
       txt(label,x+16,sy,12,'#cfe3ff','left',false);
@@ -99,11 +99,15 @@ function openMap(){
   const open=STAGE_IDS.filter(stageUnlocked), next=open.find(id=>!Progress.cleared.includes(id));
   mapSel=STAGE_IDS.indexOf(next||open[open.length-1]);
 }
+let mapLastStage=0;
 function tickMap(){
-  const P=Input.pressed;
-  mapSel=menuNav(STAGE_IDS.length,mapSel,true);
+  const P=Input.pressed, shopSelected=mapSel===STAGE_IDS.length;
+  if (!shopSelected){ mapSel=menuNav(STAGE_IDS.length,mapSel,true); mapLastStage=mapSel; }
+  if (P.down && !shopSelected){ mapSel=STAGE_IDS.length; SFX.move(); }
+  else if (P.up && shopSelected){ mapSel=mapLastStage; SFX.move(); }
   const id=STAGE_IDS[mapSel];
-  if (P.confirm || P.attack){
+  if ((P.confirm || P.attack) && shopSelected){ SFX.select(); openShop(); }
+  else if (P.confirm || P.attack){
     if (!stageUnlocked(id)) SFX.noMp();
     else if (Net.mode==='coop') coopStart(id);
     else startStory(id);
@@ -136,7 +140,7 @@ function drawMap(){
   }
   ctx.setLineDash([]);
   STAGE_IDS.forEach((id,i)=>{
-    const n=MAP_NODES[id], open=stageUnlocked(id), done=Progress.cleared.includes(id), sel=i===mapSel;
+    const n=MAP_NODES[id], open=stageUnlocked(id), done=Progress.cleared.includes(id), sel=i===mapSel, shopSel=mapSel===STAGE_IDS.length;
     if (sel){ ctx.strokeStyle=`rgba(255,180,40,${0.5+0.4*Math.sin(clock*0.12)})`; ctx.lineWidth=5; ctx.beginPath(); ctx.arc(n.x,n.y,44,0,Math.PI*2); ctx.stroke(); }
     ctx.fillStyle=done?'#ffd23f':open?'#fff6dc':'#b9ad98'; circle(n.x,n.y,34);
     ctx.strokeStyle='#5a3d1a'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(n.x,n.y,34,0,Math.PI*2); ctx.stroke();
@@ -144,9 +148,15 @@ function drawMap(){
     else { ctx.fillStyle='#6b6152'; ctx.fillRect(n.x-10,n.y-2,20,16); ctx.strokeStyle='#6b6152'; ctx.lineWidth=4; ctx.beginPath(); ctx.arc(n.x,n.y-4,7,Math.PI,0); ctx.stroke(); }
     txt(STAGES[id].name,n.x,n.y+52,14,'#5a3d1a','center',false);
     if (done) txt('✓',n.x+26,n.y-26,18,'#2e7d32','center',false);
-    if (sel) drawHeroAt(selHero,n.x,n.y-38,0.7,{anim:clock});
+    if (sel || (shopSel && i===mapLastStage)) drawHeroAt(selHero,n.x,n.y-38,0.7,{anim:clock,tier:heroProg(selHero).weapon});
   });
-  const id=STAGE_IDS[mapSel], S=STAGES[id], open=stageUnlocked(id);
+  // shop button and purse
+  const shopSel=mapSel===STAGE_IDS.length;
+  panel(W-168,H-176,130,40,20,shopSel?'#ffd23f':'rgba(90,61,26,0.85)');
+  coinIcon(W-140,H-156,9); txt('LOJA',W-92,H-156,18,shopSel?'#1b1b2e':'#fff6dc','center',false);
+  txt('↓ loja',W-103,H-126,12,'#7a5a2a','center',false);
+  coinIcon(W-150,52,10); txt(String(Progress.gold),W-130,52,20,'#5a3d1a','left',false);
+  const id=STAGE_IDS[shopSel?mapLastStage:mapSel], S=STAGES[id], open=stageUnlocked(id);
   const bossType=S.zones[S.zones.length-1].waves[0][0][0];
   const foes=[...new Set(S.zones.filter(z=>!z.boss).flatMap(z=>z.waves.flat().map(w=>w[0])))].map(t=>ENEMY_NAMES[t]||t);
   panel(W/2-300,H-126,600,92,14,'rgba(90,61,26,0.88)');
@@ -158,6 +168,70 @@ function drawMap(){
   txt(confirmHint('jogar'),W/2,H-14,13,'#5a3d1a','center',false);
 }
 
+// ----- blacksmith shop -----
+let shopSel=0, shopMsg=null;
+function openShop(){ mode='shop'; shopSel=0; shopMsg=null; }
+function tickShop(){
+  const P=Input.pressed;
+  shopSel=menuNav(3,shopSel);
+  if (P.left || P.right){ const i=HERO_IDS.indexOf(selHero); selHero=HERO_IDS[(i+(P.left?-1:1)+HERO_IDS.length)%HERO_IDS.length]; SFX.move(); }
+  if (P.confirm || P.attack){
+    if (shopSel===2){ SFX.move(); mode='map'; }
+    else {
+      const r=buyGear(selHero,shopSel===0?'weapon':'armor');
+      if (r==='ok'){ SFX.levelUp(); shopMsg={s:'Comprado!',c:'#9fe3a8',t:90}; }
+      else if (r==='poor'){ SFX.noMp(); shopMsg={s:'Ouro insuficiente',c:'#ff8a8a',t:90}; }
+      else { SFX.noMp(); shopMsg={s:'Já é o melhor equipamento',c:'#cfe3ff',t:90}; }
+    }
+  } else if (P.back){ SFX.move(); mode='map'; }
+  if (shopMsg && --shopMsg.t<=0) shopMsg=null;
+  consumeInput();
+}
+function drawShop(){
+  const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#3a2616'); g.addColorStop(1,'#1e130b');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='rgba(255,160,60,0.10)'; circle(140,420,220);
+  txt('FERREIRO DE VALLEN',W/2,44,32,'#ffd23f');
+  coinIcon(W-150,44,11); txt(String(Progress.gold),W-130,44,22,'#ffd23f','left');
+  const Hh=HEROES[selHero], gp=heroProg(selHero), st=heroStats(selHero);
+  // hero card
+  panel(30,80,300,390,16,'rgba(0,0,0,0.35)');
+  ctx.fillStyle='rgba(0,0,0,0.3)'; ctx.beginPath(); ctx.ellipse(180,300,40,8,0,0,Math.PI*2); ctx.fill();
+  drawHeroAt(selHero,180,298,2,{anim:clock,tier:gp.weapon});
+  txt('◀  '+Hh.name+'  ▶',180,330,22,'#ffd23f');
+  txt(Hh.title+' · Nível '+gp.lvl,180,354,14,'#ffffff','center',false);
+  const f=gp.lvl>=MAX_LEVEL?1:gp.xp/xpNeed(gp.lvl);
+  ctx.fillStyle='rgba(255,255,255,0.15)'; ctx.fillRect(70,368,220,6); ctx.fillStyle='#ffd23f'; ctx.fillRect(70,368,220*f,6);
+  txt(gp.lvl>=MAX_LEVEL?'nível máximo':`${gp.xp} / ${xpNeed(gp.lvl)} XP`,180,384,11,'#e9d8a6','center',false);
+  [['Vida',String(st.maxHp)],['Ataque',Math.round(st.atkMul*100)+'%'],['Defesa',Math.round(st.def*100)+'%']].forEach(([k,v],i)=>{
+    txt(k,70,412+i*20,14,'#cfe3ff','left',false); txt(v,290,412+i*20,14,'#ffffff','right',false);
+  });
+  // gear rows
+  const rows=[
+    {label:'ARMA', cur:WEAPON_NAMES[selHero][gp.weapon], tiers:WEAPON_TIERS, lvl:gp.weapon, names:WEAPON_NAMES[selHero], bonus:t=>`+${Math.round(t.atk*100)}% ataque`},
+    {label:'ARMADURA', cur:ARMOR_NAMES[gp.armor], tiers:ARMOR_TIERS, lvl:gp.armor, names:ARMOR_NAMES, bonus:t=>`+${Math.round(t.hp*100)}% vida · ${Math.round(t.def*100)}% defesa`},
+  ];
+  rows.forEach((r,i)=>{
+    const y=96+i*130, sel=shopSel===i, next=r.tiers[r.lvl+1];
+    panel(360,y,570,112,14,sel?'rgba(255,210,63,0.16)':'rgba(0,0,0,0.35)');
+    if (sel){ ctx.strokeStyle='#ffd23f'; ctx.lineWidth=2; ctx.beginPath(); ctx.roundRect(360,y,570,112,14); ctx.stroke(); }
+    txt(r.label,384,y+22,14,'#e9d8a6','left',false);
+    txt(r.cur,384,y+50,22,'#ffffff','left',false);
+    txt(r.lvl>0?r.bonus(r.tiers[r.lvl]):'equipamento inicial',384,y+78,13,'#cfe3ff','left',false);
+    for (let k=1;k<r.tiers.length;k++){ ctx.fillStyle=k<=r.lvl?'#ffd23f':'rgba(255,255,255,0.18)'; ctx.fillRect(384+(k-1)*22,y+92,16,6); }
+    if (next){
+      txt('PRÓXIMO: '+r.names[r.lvl+1],906,y+38,15,'#ffd23f','right',false);
+      txt(r.bonus(next),906,y+60,13,'#cfe3ff','right',false);
+      coinIcon(840,y+86,8); txt(String(next.cost),906,y+86,16,Progress.gold>=next.cost?'#ffd23f':'#ff8a8a','right',false);
+    } else txt('MÁXIMO',906,y+56,18,'#9fe3a8','right',false);
+  });
+  const backSel=shopSel===2;
+  panel(560,372,170,44,22,backSel?'#ffd23f':'rgba(0,0,0,0.4)');
+  txt('VOLTAR',645,394,18,backSel?'#1b1b2e':'#e6ebf5','center',false);
+  if (shopMsg) txt(shopMsg.s,645,440,18,shopMsg.c);
+  txt('Ganhe ouro derrotando inimigos e vencendo fases · ← → trocar herói',W/2,H-24,13,'#e9d8a6','center',false);
+}
+
 // ----- options -----
 const TOUCH_MODES = ['auto','on','off'], TOUCH_NAMES = {auto:'Automático',on:'Sempre',off:'Nunca'};
 function optionItems(){
@@ -167,10 +241,14 @@ function optionItems(){
     {label:'Tremor de tela', val:()=>Settings.shake?'Ligado':'Desligado', adj:()=>{ Settings.shake=!Settings.shake; }},
     {label:'Controles na tela', val:()=>TOUCH_NAMES[Settings.touch], adj:d=>{ const i=TOUCH_MODES.indexOf(Settings.touch); Settings.touch=TOUCH_MODES[(i+d+3)%3]; updateTouchVisibility(); }},
     {label:'Configurar teclas', go:()=>{ mode='keys'; keySel=0; keyWaiting=false; }},
+    {label:'Apagar progresso', val:()=>resetArm?'Confirme: aperte de novo':'Níveis, ouro e fases', go:()=>{
+      if (!resetArm){ resetArm=true; return; }
+      resetArm=false; resetProgress(); bigTextMenu='Progresso apagado'; }},
     {label:'Voltar', go:closeOptions},
   ];
 }
-function openOptions(from){ optionsFrom=from; mode='options'; optSel=0; }
+let resetArm=false, bigTextMenu=null;
+function openOptions(from){ optionsFrom=from; mode='options'; optSel=0; resetArm=false; bigTextMenu=null; }
 function closeOptions(){ saveSettings(); mode = optionsFrom==='pause' ? 'play' : 'title'; }
 function tickOptions(){
   const items=optionItems(), P=Input.pressed;
@@ -179,6 +257,7 @@ function tickOptions(){
   if (it.vol && d){ Settings[it.vol]=clamp(Settings[it.vol]+d,0,10); applyVolumes(); if (it.vol==='sfx') SFX.hit(false); }
   else if (it.adj && (d || P.confirm || P.attack)){ it.adj(d||1); SFX.move(); }
   else if (it.go && (P.confirm || P.attack)){ SFX.select(); it.go(); }
+  if (P.up || P.down) resetArm=false;
   if (P.back){ SFX.move(); closeOptions(); }
   consumeInput();
 }
@@ -186,7 +265,7 @@ function drawOptions(){
   ctx.fillStyle='rgba(8,10,30,0.78)'; ctx.fillRect(0,0,W,H);
   txt('OPÇÕES',W/2,60,38,'#ffd23f');
   optionItems().forEach((it,i)=>{
-    const y=130+i*58, sel=i===optSel;
+    const y=118+i*54, sel=i===optSel;
     panel(W/2-260,y-22,520,44,12,sel?'rgba(255,210,63,0.18)':'rgba(0,0,0,0.45)');
     if (sel){ ctx.strokeStyle='#ffd23f'; ctx.lineWidth=2; ctx.stroke(); }
     txt(it.label,W/2-236,y,18,sel?'#ffd23f':'#e6ebf5','left',false);
@@ -196,6 +275,7 @@ function drawOptions(){
     } else if (it.val){ txt((sel?'◀ ':'')+it.val()+(sel?' ▶':''),W/2+236,y,17,'#ffffff','right',false); }
     else if (it.go && sel) txt('▶',W/2+236,y,17,'#ffd23f','right',false);
   });
+  if (bigTextMenu) txt(bigTextMenu,W/2,H-58,18,'#9fe3a8');
   txt(confirmHint('alterar'),W/2,H-26,15,'#ffffff');
 }
 

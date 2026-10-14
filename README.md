@@ -10,6 +10,10 @@ Jogo de ação 2D feito com HTML, CSS e JavaScript puro, sem etapa de build. Bas
 
 Nos modos online, um jogador cria a sala e o outro entra com o código de 4 letras. Precisa de internet.
 
+## Progressão
+
+Derrotar inimigos dá XP (até o nível 20, cada nível aumenta vida e ataque) e ouro. No mapa, desça até **LOJA** para comprar armas e armaduras melhores no ferreiro; as armas mudam de cor a cada nível. Tudo fica salvo no navegador e pode ser apagado em **Opções → Apagar progresso**. No PvP todos lutam com os atributos base.
+
 ## Personagens
 
 | Herói | Estilo | Especiais (1, 2 e 3 barras de MP) |
@@ -55,7 +59,7 @@ No celular aparecem botões na tela (jogue com o aparelho na horizontal).
 | `js/player.js` | lógica dos jogadores e dos acertos |
 | `js/enemies.js` | inimigos, chefes e suas IAs |
 | `js/stages.js` | fases e cenários |
-| `js/progress.js` | progresso da história salvo no navegador |
+| `js/progress.js` | fases liberadas, níveis, ouro e equipamentos (salvos no navegador) |
 | `js/render.js` | desenho do mundo e do HUD |
 | `js/net.js` | conexão online (PeerJS) |
 | `js/pvp.js` | regras do PvP |

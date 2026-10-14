@@ -77,10 +77,17 @@ function killEnemy(e,dir){
   e.hp=0; e.state='dying'; e.t=0; e.vy=-6; e.vx=dir*4;
   score+=T.score;
   burst(e.x,e.y-e.h/2,'#ffffff',16,7);
-  if (T.boss) onBossDefeated(e);
-  else {
+  // rewards: everyone in the party gets the XP; gold drops as coins anyone can grab
+  const xp=Math.round(T.score/5);
+  if (Net.mode==='coop') netSend({type:'xp',xp});
+  gainXp(me,xp);
+  if (T.boss){
+    for (let k=0;k<8;k++) dropItem(e.x+rand(-30,30),e.y-40,'gold',-rand(5,10),Math.round(T.score/40),rand(-5,5));
+    onBossDefeated(e);
+  } else {
     SFX.die();
     if (Math.random()<0.22) dropItem(e.x,e.y-20,Math.random()<0.6?'hp':'mp');
+    else if (Math.random()<0.55) dropItem(e.x,e.y-20,'gold',-6,Math.max(5,Math.round(T.score/10)),rand(-2,2));
   }
 }
 function stunEnemy(e){
@@ -89,7 +96,7 @@ function stunEnemy(e){
   else { e.state='hurt'; e.t=45; e.vx=0; }
   e.flash=8; addText(e.x,e.y-e.h-24,'ATORDOADO!','#ffd23f',false);
 }
-function dropItem(x,y,type,vy=-6){ items.push({x,y,vx:0,vy,type,t:0,onGround:false,id:'i'+nextId++}); }
+function dropItem(x,y,type,vy=-6,val=0,vx=0){ items.push({x,y,vx,vy,type,val,t:0,onGround:false,id:'i'+nextId++}); }
 
 // ----- AI -----
 function enemyHitPlayers(e,x1,x2,y1,y2,dmg,dir){

@@ -4,14 +4,17 @@
 // Remote players are puppets moved by network snapshots (see net.js).
 function makePlayer(hero,opts={}){
   const Hh=HEROES[hero];
-  return {
+  const p={
     isPlayer:true, id:opts.id||'p0', local:opts.local!==false, inp:opts.inp||Input, name:opts.name||Hh.name,
     hero, x:opts.x??150, y:GROUND, vx:0, vy:0, w:30, h:72, face:opts.face||1,
     hp:Hh.hp, maxHp:Hh.hp, mp:100, atkMul:1, defMul:1,
     state:'free', t:0, sk:0, atk:null, queued:false, hitIds:new Set(),
     jumps:0, airAtk:0, inv:0, anim:0, dropThrough:0, onGround:true,
     lastTap:{dir:0,t:-99}, localInv:0, tx:0, ty:GROUND, guardHp:100, rollCd:0, rollDir:1,
+    base:!!opts.base || opts.local===false, def:0, lvl:1, tier:0,
   };
+  applyStats(p); p.hp=p.maxHp;
+  return p;
 }
 
 // ----- emotes (keys 1-4) -----
@@ -145,6 +148,7 @@ const PERFECT_GUARD = 9; // frames after raising the guard that count as a perfe
 function guardsAgainst(p,fromX){ return p.state==='guard' && fromX!=null && (fromX-p.x)*p.face>=-4; }
 function applyHurt(p,h){
   if (p.inv>0 || !isAlive(p) || !canFight()) return;
+  if (!h.pvp && p.def) h={...h, dmg:Math.max(1,Math.round(h.dmg*(1-p.def)))};
   if (guardsAgainst(p,h.fromX)){ blockHit(p,h); return; }
   p.hp-=h.dmg; p.mp=Math.min(MAXMP,p.mp+h.dmg*0.2);
   addText(p.x,p.y-p.h-10,h.crit?h.dmg+'!':h.dmg,h.crit?'#ffd23f':'#ff5a5a',h.crit);

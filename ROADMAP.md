@@ -34,6 +34,7 @@ Cada fase termina com um commit próprio.
 - [x] Escolha de arena no PvP
 
 ## Fase 6: Progressão
-- [ ] XP e níveis
-- [ ] Ouro e equipamentos
-- [ ] Progresso salvo
+- [x] XP e níveis (até o nível 20; cada nível dá mais vida e ataque; no co-op os dois ganham XP)
+- [x] Ouro (moedas dos inimigos e bônus por rank) e loja do ferreiro com 3 níveis de arma e armadura por herói
+- [x] Progresso salvo no navegador, com opção de apagar em Opções
+- [x] PvP continua justo: usa os atributos base, sem nível nem equipamento
