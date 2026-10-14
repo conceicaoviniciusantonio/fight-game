@@ -3,7 +3,7 @@
 let selMode='story', selHero='knight', menuSel=0, optSel=0, keySel=0, keyWaiting=false, optionsFrom='title', pauseSel=0;
 
 const TITLE_ITEMS = [
-  {id:'story', label:'HISTÓRIA',   hint:'Atravesse o Bosque de Vallen e derrote o chefe'},
+  {id:'story', label:'HISTÓRIA',   hint:'Atravesse as terras de Vallen e derrote seus chefes'},
   {id:'coop',  label:'CO-OP ONLINE', hint:'Jogue a história com um amigo em outro navegador'},
   {id:'pvp',   label:'PVP ONLINE', hint:'Lute contra um amigo em outro navegador'},
   {id:'options', label:'OPÇÕES',   hint:'Som, tela e controles'},
@@ -57,7 +57,7 @@ function tickHeroSelect(){
   selHero=HERO_IDS[menuNav(HERO_IDS.length,i,true)];
   if (P.back){ SFX.move(); mode='title'; }
   else if (P.confirm || P.attack){
-    if (selMode==='story') startStory();
+    if (selMode==='story') openMap();
     else openLobby(selMode);
   }
   consumeInput();
@@ -87,6 +87,75 @@ function drawHeroSelect(){
     txt(Hh.desc,cx,y+ch-12,11,'#cfe3ff','center',false);
   });
   txt(confirmHint('confirmar'),W/2,H-26,15,'#ffffff');
+}
+
+// ----- stage map -----
+let mapSel=0;
+const MAP_NODES = { forest:{x:150,y:322,icon:'tree'}, cave:{x:375,y:215,icon:'crystal'}, desert:{x:600,y:318,icon:'pyramid'}, castle:{x:820,y:190,icon:'castle'} };
+const ENEMY_NAMES = { goblin:'Goblin', archer:'Goblin arqueiro', orc:'Orc', bat:'Morcego', kobold:'Kobold', shaman:'Xamã',
+  scorpion:'Escorpião', mummy:'Múmia', nomad:'Nômade', skeleton:'Esqueleto', darkmage:'Mago sombrio', blackknight:'Cavaleiro negro' };
+function openMap(){
+  mode='map';
+  const open=STAGE_IDS.filter(stageUnlocked), next=open.find(id=>!Progress.cleared.includes(id));
+  mapSel=STAGE_IDS.indexOf(next||open[open.length-1]);
+}
+function tickMap(){
+  const P=Input.pressed;
+  mapSel=menuNav(STAGE_IDS.length,mapSel,true);
+  const id=STAGE_IDS[mapSel];
+  if (P.confirm || P.attack){
+    if (!stageUnlocked(id)) SFX.noMp();
+    else if (Net.mode==='coop') coopStart(id);
+    else startStory(id);
+  } else if (P.back){ SFX.move(); if (Net.mode==='coop') leaveOnline(); else mode='heroSelect'; }
+  consumeInput();
+}
+function drawMapIcon(kind,x,y){
+  if (kind==='tree'){ ctx.fillStyle='#6b4a2a'; ctx.fillRect(x-3,y,6,14); ctx.fillStyle='#3f8f45'; circle(x,y-2,12); circle(x-9,y+4,8); circle(x+9,y+4,8); }
+  else if (kind==='crystal'){ ctx.fillStyle='#4fc3d9'; tri(x-12,y+12,x-6,y-14,x,y+12); ctx.fillStyle='#9ff8ff'; tri(x-4,y+12,x+3,y-20,x+10,y+12); ctx.fillStyle='#ff7bd8'; tri(x+6,y+12,x+12,y-4,x+16,y+12); }
+  else if (kind==='pyramid'){ ctx.fillStyle='#e0b060'; tri(x-18,y+12,x,y-16,x+18,y+12); ctx.fillStyle='#b8873e'; tri(x,y-16,x+18,y+12,x+2,y+12); }
+  else if (kind==='castle'){ ctx.fillStyle='#4a4458'; ctx.fillRect(x-14,y-6,28,18); ctx.fillRect(x-16,y-14,8,26); ctx.fillRect(x+8,y-14,8,26);
+    tri(x-17,y-14,x-12,y-24,x-7,y-14); tri(x+7,y-14,x+12,y-24,x+17,y-14); ctx.fillStyle='#ffcf6b'; ctx.fillRect(x-3,y+2,6,10); }
+}
+function drawMap(){
+  const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#efe0b4'); g.addColorStop(1,'#d9c18a');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='#9a7a46'; ctx.lineWidth=6; ctx.strokeRect(14,14,W-28,H-28);
+  ctx.strokeStyle='rgba(154,122,70,0.4)'; ctx.lineWidth=2; ctx.strokeRect(24,24,W-48,H-48);
+  ctx.globalAlpha=0.18; ctx.fillStyle='#7a5a2a';
+  for (let i=0;i<9;i++){ circle(80+i*110,110+(i%3)*150,30+(i%4)*8); }
+  ctx.globalAlpha=1;
+  txt('MAPA DE VALLEN',W/2,52,32,'#5a3d1a','center',false);
+  txt(Net.mode==='coop'?'Co-op: você escolhe a fase da dupla':'Escolha a próxima aventura',W/2,82,15,'#7a5a2a','center',false);
+  // path between stages
+  ctx.setLineDash([10,9]); ctx.lineWidth=4;
+  for (let i=1;i<STAGE_IDS.length;i++){
+    const a=MAP_NODES[STAGE_IDS[i-1]], b=MAP_NODES[STAGE_IDS[i]];
+    ctx.strokeStyle=stageUnlocked(STAGE_IDS[i])?'#8a5a2a':'rgba(138,90,42,0.35)';
+    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.quadraticCurveTo((a.x+b.x)/2,Math.min(a.y,b.y)-50,b.x,b.y); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  STAGE_IDS.forEach((id,i)=>{
+    const n=MAP_NODES[id], open=stageUnlocked(id), done=Progress.cleared.includes(id), sel=i===mapSel;
+    if (sel){ ctx.strokeStyle=`rgba(255,180,40,${0.5+0.4*Math.sin(clock*0.12)})`; ctx.lineWidth=5; ctx.beginPath(); ctx.arc(n.x,n.y,44,0,Math.PI*2); ctx.stroke(); }
+    ctx.fillStyle=done?'#ffd23f':open?'#fff6dc':'#b9ad98'; circle(n.x,n.y,34);
+    ctx.strokeStyle='#5a3d1a'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(n.x,n.y,34,0,Math.PI*2); ctx.stroke();
+    if (open) drawMapIcon(n.icon,n.x,n.y);
+    else { ctx.fillStyle='#6b6152'; ctx.fillRect(n.x-10,n.y-2,20,16); ctx.strokeStyle='#6b6152'; ctx.lineWidth=4; ctx.beginPath(); ctx.arc(n.x,n.y-4,7,Math.PI,0); ctx.stroke(); }
+    txt(STAGES[id].name,n.x,n.y+52,14,'#5a3d1a','center',false);
+    if (done) txt('✓',n.x+26,n.y-26,18,'#2e7d32','center',false);
+    if (sel) drawHeroAt(selHero,n.x,n.y-38,0.7,{anim:clock});
+  });
+  const id=STAGE_IDS[mapSel], S=STAGES[id], open=stageUnlocked(id);
+  const bossType=S.zones[S.zones.length-1].waves[0][0][0];
+  const foes=[...new Set(S.zones.filter(z=>!z.boss).flatMap(z=>z.waves.flat().map(w=>w[0])))].map(t=>ENEMY_NAMES[t]||t);
+  panel(W/2-300,H-126,600,92,14,'rgba(90,61,26,0.88)');
+  txt(`${S.sub} · ${S.name}`,W/2,H-106,20,'#ffd23f','center',false);
+  if (open){
+    txt('Chefe: '+ENEMY_TYPES[bossType].name,W/2,H-80,15,'#fff6dc','center',false);
+    txt('Inimigos: '+foes.join(', '),W/2,H-58,13,'#e9d8a6','center',false);
+  } else txt('Vença a fase anterior para liberar',W/2,H-72,16,'#e9d8a6','center',false);
+  txt(confirmHint('jogar'),W/2,H-14,13,'#5a3d1a','center',false);
 }
 
 // ----- options -----

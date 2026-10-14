@@ -26,9 +26,12 @@ Cada fase termina com um commit próprio.
 - [x] Dario, o lanceiro: estocadas longas, giro, mergulho do alto; Investida, Redemoinho e Lança Celestial
 
 ## Fase 5: Novas fases
-- [ ] Mapa de fases
-- [ ] Caverna, castelo e deserto, com inimigos e chefes próprios
-- [ ] Novas arenas de PvP
+- [x] Mapa de fases, liberadas em sequência e salvas no navegador
+- [x] Caverna de Cristal (Golem de Cristal), Deserto Escaldante (Rei Escorpião) e Castelo Sombrio (Lorde Sombrio)
+- [x] Inimigos novos: morcego, kobold, xamã, escorpião, múmia, nômade, esqueleto, mago sombrio e cavaleiro negro
+- [x] Golpes de chefe novos: pedras, espinhos de cristal, veneno, onda sombria e teleporte
+- [x] Música própria para cada cenário
+- [x] Escolha de arena no PvP
 
 ## Fase 6: Progressão
 - [ ] XP e níveis

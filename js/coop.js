@@ -10,8 +10,8 @@ const REVIVE_TIME = 600; // frames a fallen hero waits before getting back up (i
 
 function coopHello(m){
   coop.partnerHero=m.hero;
-  if (Net.host) coopStart();
-  else lobbyStatus('Conectado! Aguardando o anfitrião começar…');
+  if (Net.host){ closeLobby(); openMap(); }
+  else lobbyStatus('Conectado! O anfitrião está escolhendo a fase…');
 }
 function coopStart(stageId){
   const m={type:'coopStart',stage:stageId||currentStageId(),hostHero:selHero,guestHero:coop.partnerHero};

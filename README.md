@@ -4,9 +4,9 @@ Jogo de ação 2D feito com HTML, CSS e JavaScript puro, sem etapa de build. Bas
 
 ## Modos
 
-- **História**: atravesse o Bosque de Vallen e derrote Gorgo, o Rei Orc.
+- **História**: quatro fases em sequência no mapa de Vallen: Bosque de Vallen (Gorgo, o Rei Orc), Caverna de Cristal (Golem de Cristal), Deserto Escaldante (Rei Escorpião) e Castelo Sombrio (Lorde Sombrio). Vencer uma fase libera a próxima.
 - **Co-op Online**: a história em dupla, cada jogador no seu navegador. Os inimigos ficam mais fortes, e quem cai volta depois de 10 segundos se o parceiro continuar de pé.
-- **PvP Online**: luta na arena, com melhor de 1, 3 ou 5 rounds e tempo configurável.
+- **PvP Online**: luta numa das quatro arenas, com melhor de 1, 3 ou 5 rounds e tempo configurável.
 
 Nos modos online, um jogador cria a sala e o outro entra com o código de 4 letras. Precisa de internet.
 
@@ -55,6 +55,7 @@ No celular aparecem botões na tela (jogue com o aparelho na horizontal).
 | `js/player.js` | lógica dos jogadores e dos acertos |
 | `js/enemies.js` | inimigos, chefes e suas IAs |
 | `js/stages.js` | fases e cenários |
+| `js/progress.js` | progresso da história salvo no navegador |
 | `js/render.js` | desenho do mundo e do HUD |
 | `js/net.js` | conexão online (PeerJS) |
 | `js/pvp.js` | regras do PvP |

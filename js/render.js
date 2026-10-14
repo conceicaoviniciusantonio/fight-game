@@ -52,6 +52,28 @@ const PROJ_DRAW = {
     ctx.fillStyle=g; ctx.beginPath(); ctx.moveTo(-110,-20); ctx.lineTo(0,-34); ctx.lineTo(0,34); ctx.lineTo(-110,20); ctx.closePath(); ctx.fill();
     ctx.fillStyle='#6d4c41'; circle(0,0,32); ctx.fillStyle='#8d6e63'; circle(-8,-8,14); ctx.fillStyle='#ffcc80'; circle(10,6,8);
   },
+  eorb: pr => { glowOrb(15,pr.col||'#7ff0ff','rgba(80,40,160,0)'); },
+  boulder: pr => {
+    ctx.rotate(pr.x*0.05); ctx.fillStyle='#6b6f7c'; circle(0,0,pr.r); ctx.fillStyle='#8a8f9c'; circle(-6,-6,pr.r*0.5);
+    ctx.fillStyle='#7ff0ff'; tri(4,2,10,-8,12,4);
+  },
+  glob: pr => { ctx.fillStyle='#6fbf3a'; circle(0,0,pr.r*0.8); ctx.fillStyle='#a6f06a'; circle(-4,-4,pr.r*0.35); },
+  spike: pr => {
+    if (pr.life>22){
+      const a=0.35+0.3*Math.sin(clock*0.6);
+      ctx.fillStyle=`rgba(127,240,255,${a})`; ctx.beginPath(); ctx.ellipse(0,0,34,7,0,0,Math.PI*2); ctx.fill();
+    } else {
+      const k=Math.min(1,(22-pr.life)/5), h=90*k;
+      ctx.fillStyle='#7ff0ff'; tri(-26,0,-16,-h*0.7,-6,0); tri(-10,0,0,-h,10,0); tri(6,0,16,-h*0.75,26,0);
+      ctx.fillStyle='rgba(255,255,255,0.7)'; tri(-3,0,0,-h*0.9,3,0);
+    }
+  },
+  swave: pr => {
+    const f=(frame>>1)%2;
+    ctx.fillStyle='rgba(138,60,255,0.35)'; ctx.beginPath(); ctx.ellipse(0,-30,30,40,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#4a1f7a'; tri(-16,0,-4,-56-f*8,8,0);
+    ctx.fillStyle='#ff5cf0'; tri(-6,0,4,-36-(1-f)*10,14,0);
+  },
   pshock: pr => {
     const f=(frame>>1)%2;
     ctx.fillStyle='#ffd36b'; tri(-14,0,-4,-34-f*6,6,0);
@@ -65,6 +87,8 @@ const PROJ_TRAIL = {
   fireball: pr => parts.push({x:pr.x,y:pr.y+rand(-8,8),vx:-pr.vx*0.1,vy:-0.5,life:16,max:16,color:pick(['#ff9d4d','#ffd36b','#ff6b3d']),size:5,grav:0}),
   meteor: pr => parts.push({x:pr.x-pr.vx*2,y:pr.y-pr.vy*2,vx:rand(-1,1),vy:rand(-1,1),life:20,max:20,color:pick(['#ff9d4d','#ffd36b','#6d4c41']),size:7,grav:0}),
   pshock: pr => dust(pr.x,pr.y,1),
+  eorb: pr => parts.push({x:pr.x,y:pr.y,vx:0,vy:0,life:12,max:12,color:pr.col||'#7ff0ff',size:3,grav:0}),
+  glob: pr => parts.push({x:pr.x,y:pr.y,vx:0,vy:0.5,life:10,max:10,color:'#8bdc4a',size:3,grav:0}),
 };
 
 function drawParts(){

@@ -67,10 +67,17 @@ function projNear(pr,e){
     : Math.abs(e.x-pr.x)<e.w/2+(pr.r||30) && pr.y>e.y-e.h-20 && pr.y<e.y+10;
 }
 // Extra enemy-projectile collision tests registered by other modules
+const nearBody = (pr,p,r) => Math.hypot(p.x-pr.x,(p.y-36)-pr.y) < r+18;
 const ENEMY_PROJ_HIT = {
   arrow:(pr,p)=>Math.abs(p.x-pr.x)<p.w/2+6 && pr.y>p.y-p.h && pr.y<p.y,
+  eorb:(pr,p)=>Math.abs(p.x-pr.x)<p.w/2+10 && pr.y>p.y-p.h && pr.y<p.y,
   shock:(pr,p)=>Math.abs(p.x-pr.x)<26 && p.y>pr.y-40,
+  swave:(pr,p)=>Math.abs(p.x-pr.x)<30 && p.y>pr.y-70 && p.y<pr.y+10,
+  boulder:(pr,p)=>nearBody(pr,p,pr.r),
+  glob:(pr,p)=>nearBody(pr,p,pr.r),
+  spike:(pr,p)=>pr.life<=22 && Math.abs(p.x-pr.x)<34 && p.y>pr.y-100 && p.y<=pr.y+6,
 };
+const ONCE_PROJ = ['arrow','eorb','boulder','glob'];
 function updateProjs(){
   for (const pr of projs){
     pr.x+=pr.vx; pr.y+=pr.vy; pr.life--;
@@ -94,13 +101,21 @@ function updateProjs(){
       }
       if (pr.explode && (struck && !pr.pierce || pr.life<=1 || pr.y>=GROUND-6)){ explodeProj(owner,pr); pr.life=0; }
     } else {
-      if (pr.type==='shock' && frame%3===0) dust(pr.x,pr.y,1);
+      if ((pr.type==='shock'||pr.type==='swave') && frame%3===0) dust(pr.x,pr.y,1);
+      if (PROJ_TRAIL[pr.type] && frame%2===0) PROJ_TRAIL[pr.type](pr);
+      if (pr.grav && pr.y>=GROUND-4){ pr.life=0; dust(pr.x,GROUND,6); if (pr.type==='glob') burst(pr.x,GROUND-6,'#8bdc4a',8,3); continue; }
+      if (pr.home){
+        const tp=nearestPlayer(pr.x,pr.y);
+        if (tp) pr.vy=clamp(pr.vy+clamp(((tp.y-40)-pr.y)*0.01,-0.12,0.12),-3,3);
+      }
       if (!pr.local) continue;
       const test=ENEMY_PROJ_HIT[pr.type];
+      pr.hitP=pr.hitP||new Set();
       for (const p of alivePlayers()){
-        if (p.inv>0 || !test || !test(pr,p)) continue;
-        hurtPlayer(p,{dmg:pr.dmg,dir:Math.sign(pr.vx)||1,fromX:pr.x-pr.vx*5});
-        if (pr.type==='arrow' || pr.once){ pr.life=0; break; }
+        if (p.inv>0 || pr.hitP.has(p.id) || !test || !test(pr,p)) continue;
+        pr.hitP.add(p.id);
+        hurtPlayer(p,{dmg:pr.dmg,dir:Math.sign(pr.vx)||(p.x>=pr.x?1:-1),fromX:pr.x-pr.vx*5});
+        if (ONCE_PROJ.includes(pr.type)){ pr.life=0; break; }
       }
     }
     if (pr.x<-200 || pr.x>worldW+200 || pr.y>H+100) pr.life=0;
@@ -171,6 +186,8 @@ function tickPlay(){
     const secs=frame/60, hpB=Math.round(me.hp*4), timeB=Math.max(0,Math.round((300-secs)*15));
     const total=score+hpB+timeB;
     result={secs,hpB,timeB,total,rank: total>=15000?'S':total>=11000?'A':total>=7500?'B':'C'};
+    const id=currentStageId(), next=STAGE_IDS[STAGE_IDS.indexOf(id)+1];
+    if (markCleared(id) && next) result.unlocked=STAGES[next].name;
     mode='win'; endTimer=0;
   }
   consumeInput();
@@ -180,9 +197,10 @@ function tickEnd(){
   const P=Input.pressed;
   if (Net.mode==='coop'){ if (Net.sendT++%30===0) netSend({type:'ping'}); checkTimeout(); }
   if (endTimer>40 && P.confirm){
-    if (Net.mode!=='coop') startStory(currentStageId());
-    else if (Net.host) coopStart(currentStageId());
-    else coop.waiting=true;
+    if (Net.mode==='coop' && !Net.host) coop.waiting=true;
+    else if (mode==='win') openMap();
+    else if (Net.mode==='coop') coopStart(currentStageId());
+    else startStory(currentStageId());
   }
   else if (endTimer>40 && P.back){ if (Net.mode) leaveOnline(); else goTitle(); }
   consumeInput();
@@ -195,6 +213,7 @@ function tick(){
   switch (mode){
     case 'title': tickTitle(); break;
     case 'heroSelect': tickHeroSelect(); break;
+    case 'map': tickMap(); break;
     case 'options': tickOptions(); break;
     case 'keys': tickKeys(); break;
     case 'lobby': if (Input.pressed.back) leaveOnline(); consumeInput(); break;
@@ -248,7 +267,8 @@ function drawEndOverlay(){
       const pop=Math.max(1,3-(endTimer-110)*0.15);
       txt('RANK',W/2+250,190,22,'#ffffff'); txt(result.rank,W/2+250,260,110*pop,rc);
     }
-    if (endTimer>140) txt(endAction('jogar de novo')+'   ·   ESC menu',W/2,H-50,22,'#ffffff');
+    if (result.unlocked && endTimer>80) txt('Nova fase liberada: '+result.unlocked+'!',W/2,H-86,20,'#9fe3a8');
+    if (endTimer>140) txt(endAction('ir para o mapa')+'   ·   ESC menu',W/2,H-50,22,'#ffffff');
   }
 }
 function endAction(verb){
@@ -273,6 +293,7 @@ function draw(){
   switch (mode){
     case 'title': drawTitle(); break;
     case 'heroSelect': drawHeroSelect(); break;
+    case 'map': drawMap(); break;
     case 'options': drawOptions(); break;
     case 'keys': drawKeys(); break;
     case 'lobby': ctx.fillStyle='rgba(8,10,30,0.6)'; ctx.fillRect(0,0,W,H); txt('CRÔNICAS DE VALLEN',W/2,50,38,'#ffd23f'); break;

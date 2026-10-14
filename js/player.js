@@ -293,7 +293,7 @@ function updatePlayer(p){
         for (const t of targetsOf(p)){
           if (!p.hitIds.has(t.id) && boxHits(b,t) && strike(p,t,a.dmg,p.face,a.kb,a.up)) p.hitIds.add(t.id);
         }
-        for (const pr of projs) if (pr.owner==='e' && pr.type==='arrow' && pr.x>b.x1 && pr.x<b.x2 && pr.y>b.y1 && pr.y<b.y2){
+        for (const pr of projs) if (pr.owner==='e' && (pr.type==='arrow'||pr.type==='eorb') && pr.x>b.x1 && pr.x<b.x2 && pr.y>b.y1 && pr.y<b.y2){
           pr.life=0; burst(pr.x,pr.y,'#ffe08a',6,4); psfx('deflect'); }
       }
       if (P.dodge && p.onGround && p.t>a.act[1] && p.rollCd<=0) startRoll(p);

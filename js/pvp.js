@@ -22,15 +22,17 @@ function pvpDisconnect(){
 }
 
 function startMatch(){
-  const m={type:'round',n:1,wins:[0,0],bestOf:+$('optRounds').value,time:+$('optTime').value};
+  const a=$('optArena').value, arena=a==='random'?pick(STAGE_IDS):a;
+  const m={type:'round',n:1,wins:[0,0],bestOf:+$('optRounds').value,time:+$('optTime').value,arena};
   netSend(m); onRound(m);
 }
 function onRound(m){
   closeLobby();
   pvp.round=m.n; pvp.wins=m.wins.slice(); pvp.disc=false;
   if (m.bestOf) pvp.bestOf=m.bestOf;
-  if (m.time!=null) pvp.time=m.time; pvp.wantRematch=false; pvp.rivalRematch=false;
-  loadStage('forest'); resetWorld();
+  if (m.time!=null) pvp.time=m.time;
+  if (m.arena) pvp.arena=m.arena; pvp.wantRematch=false; pvp.rivalRematch=false;
+  loadStage(pvp.arena||'forest'); resetWorld();
   const ar=stage.arena; platforms=[...stage.platforms, ...ar.extra];
   locked=true; lockL=ar.left; lockR=ar.left+W; cam.x=ar.left;
   mode='pvp'; playMusic('boss');
@@ -79,7 +81,7 @@ function tickPvp(){
     } else if (pvp.phase==='ko' && pvp.phaseT>=180){
       pvp.phase='wait';
       const need=winsNeeded();
-      const m = pvp.wins[0]>=need||pvp.wins[1]>=need ? {type:'match',w:pvp.wins[0]>=need?0:1} : {type:'round',n:pvp.round+1,wins:pvp.wins.slice()};
+      const m = pvp.wins[0]>=need||pvp.wins[1]>=need ? {type:'match',w:pvp.wins[0]>=need?0:1} : {type:'round',n:pvp.round+1,wins:pvp.wins.slice(),arena:pvp.arena};
       netSend(m); if (m.type==='match') onMatchEnd(m); else onRound(m);
     }
   }
