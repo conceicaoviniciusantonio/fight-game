@@ -1,0 +1,103 @@
+'use strict';
+// ===================== Continent 1: Reino de Vallen =====================
+// Stage fields: platforms (low steps ~90px up, high steps ~82px above a low step), zones (each locks the
+// camera until its waves are cleared; the last one holds the boss), theme (see themes.js), music and
+// the arena used in PvP. `map` places the stage on the continent map.
+registerContinent({
+  id:'vallen', name:'Reino de Vallen', sub:'Continente 1',
+  map:{x:250,y:250}, colors:{land:'#7fb069', shore:'#e9d8a6', dark:'#4f7a3a'},
+  stages:[
+    { id:'forest', map:{x:150,y:322,icon:'tree'}, arenaName:'Ruínas do Bosque',
+      name:'Bosque de Vallen', theme:'forest', worldW:4000, music:'stage', bossMusic:'boss',
+      platforms:[
+        // low steps ~90px up (one jump); high steps ~82px above a low step beside them
+        {x:420,y:372,w:200},{x:560,y:290,w:160},{x:800,y:372,w:200},
+        {x:1380,y:372,w:200},{x:1540,y:290,w:180},{x:1820,y:372,w:200},{x:1990,y:296,w:130},
+        {x:2400,y:372,w:220},{x:2580,y:292,w:170},{x:2850,y:372,w:180},
+        {x:3180,y:372,w:170},{x:3750,y:372,w:170},
+      ],
+      zones:[
+        {at:330, left:100, waves:[
+          [['goblin',560],['goblin',760],['goblin',920]],
+          [['goblin',250],['archer',950],['goblin',640],['archer',690]]]},
+        {at:1260, left:1150, waves:[
+          [['goblin',1500],['archer',1800],['archer',1250],['goblin',1650]],
+          [['orc',1700],['goblin',1350],['goblin',1950],['archer',2080]]]},
+        {at:2260, left:2150, waves:[
+          [['orc',2550],['archer',2900],['goblin',2400],['goblin',2700]],
+          [['orc',2300],['orc',2950],['archer',2560],['archer',2880],['goblin',2650]]]},
+        {at:3150, left:3040, boss:true, waves:[[['gorgo',3760]]]},
+      ],
+      arena:{left:3040, extra:[{x:3470,y:296,w:110}]},
+    },
+    { id:'cave', map:{x:375,y:215,icon:'crystal'}, arenaName:'Caverna de Cristal',
+      name:'Caverna de Cristal', theme:'cave', worldW:4000, music:'cave', bossMusic:'boss',
+      platforms:[
+        // low steps ~90px up (one jump); high steps ~82px above a low step beside them
+        {x:460,y:372,w:190},{x:620,y:296,w:150},{x:840,y:372,w:180},
+        {x:1340,y:372,w:180},{x:1500,y:296,w:200},{x:1780,y:372,w:220},{x:1960,y:300,w:130},
+        {x:2380,y:372,w:200},{x:2560,y:296,w:180},{x:2820,y:372,w:200},
+        {x:3200,y:372,w:170},{x:3720,y:372,w:170},
+      ],
+      zones:[
+        {at:330, left:100, waves:[
+          [['bat',600],['kobold',800],['kobold',950]],
+          [['shaman',900],['bat',300],['kobold',500],['bat',700]]]},
+        {at:1260, left:1150, waves:[
+          [['kobold',1500],['shaman',1900],['bat',1300],['bat',1700]],
+          [['kobold',1400],['kobold',1950],['shaman',1600],['bat',1800],['orc',1700]]]},
+        {at:2260, left:2150, waves:[
+          [['orc',2600],['shaman',2950],['bat',2400],['bat',2800]],
+          [['kobold',2300],['kobold',2900],['shaman',2500],['bat',2700],['bat',2400]]]},
+        {at:3150, left:3040, boss:true, waves:[[['golem',3760]]]},
+      ],
+      arena:{left:3040, extra:[{x:3470,y:296,w:110}]},
+    },
+    { id:'desert', map:{x:600,y:318,icon:'pyramid'}, arenaName:'Deserto',
+      name:'Deserto Escaldante', theme:'desert', worldW:4000, music:'desert', bossMusic:'boss',
+      platforms:[
+        // low steps ~90px up (one jump); high steps ~82px above a low step beside them
+        {x:500,y:376,w:240},{x:700,y:300,w:150},{x:900,y:376,w:160},
+        {x:1400,y:376,w:220},{x:1600,y:298,w:170},{x:1860,y:376,w:200},{x:2040,y:300,w:120},
+        {x:2420,y:376,w:240},{x:2620,y:298,w:160},{x:2880,y:376,w:170},
+        {x:3230,y:376,w:160},{x:3700,y:376,w:160},
+      ],
+      zones:[
+        {at:330, left:100, waves:[
+          [['scorpion',600],['scorpion',850],['nomad',950]],
+          [['mummy',800],['scorpion',300],['nomad',650]]]},
+        {at:1260, left:1150, waves:[
+          [['scorpion',1500],['nomad',1900],['mummy',1700],['scorpion',1300]],
+          [['mummy',1450],['mummy',1950],['nomad',1650],['scorpion',1800]]]},
+        {at:2260, left:2150, waves:[
+          [['mummy',2500],['nomad',2950],['scorpion',2350],['scorpion',2750]],
+          [['mummy',2300],['mummy',2900],['nomad',2550],['nomad',2850],['scorpion',2650]]]},
+        {at:3150, left:3040, boss:true, waves:[[['scorpking',3760]]]},
+      ],
+      arena:{left:3040, extra:[{x:3470,y:298,w:110}]},
+    },
+    { id:'castle', map:{x:820,y:190,icon:'castle'}, arenaName:'Castelo Sombrio',
+      name:'Castelo Sombrio', theme:'castle', worldW:4000, music:'castle', bossMusic:'boss',
+      platforms:[
+        // low steps ~90px up (one jump); high steps ~82px above a low step beside them
+        {x:440,y:370,w:200},{x:600,y:288,w:170},{x:860,y:370,w:180},
+        {x:1360,y:370,w:200},{x:1520,y:288,w:190},{x:1800,y:370,w:200},{x:1990,y:296,w:130},
+        {x:2380,y:370,w:200},{x:2560,y:288,w:200},{x:2860,y:370,w:180},
+        {x:3200,y:370,w:180},{x:3720,y:370,w:180},
+      ],
+      zones:[
+        {at:330, left:100, waves:[
+          [['skeleton',600],['skeleton',800],['darkmage',950]],
+          [['bat',500],['skeleton',300],['skeleton',700],['darkmage',650]]]},
+        {at:1260, left:1150, waves:[
+          [['skeleton',1500],['darkmage',1900],['blackknight',1700],['bat',1300]],
+          [['blackknight',1450],['skeleton',1950],['darkmage',1650],['skeleton',1800]]]},
+        {at:2260, left:2150, waves:[
+          [['blackknight',2500],['darkmage',2950],['skeleton',2350],['bat',2750]],
+          [['blackknight',2300],['blackknight',2900],['darkmage',2550],['darkmage',2850],['skeleton',2650]]]},
+        {at:3150, left:3040, boss:true, waves:[[['darklord',3760]]]},
+      ],
+      arena:{left:3040, extra:[{x:3470,y:290,w:110}]},
+    },
+  ],
+});

@@ -189,7 +189,10 @@ function tickPlay(){
     const total=score+hpB+timeB;
     result={secs,hpB,timeB,total,rank: total>=15000?'S':total>=11000?'A':total>=7500?'B':'C'};
     const id=currentStageId(), next=STAGE_IDS[STAGE_IDS.indexOf(id)+1];
-    if (markCleared(id) && next) result.unlocked=STAGES[next].name;
+    if (markCleared(id) && next){
+      result.unlocked=STAGES[next].name;
+      if (continentOf(next)!==continentOf(id)) result.unlocked='novo continente, '+continentOf(next).name;
+    }
     result.bonus={S:500,A:350,B:250,C:150}[result.rank];
     addGold(me,result.bonus); saveProgress();
     result.xp=run.xp; result.gold=run.gold;
@@ -203,7 +206,7 @@ function tickEnd(){
   if (Net.mode==='coop'){ if (Net.sendT++%30===0) netSend({type:'ping'}); checkTimeout(); }
   if (endTimer>40 && P.confirm){
     if (Net.mode==='coop' && !Net.host) coop.waiting=true;
-    else if (mode==='win') openMap();
+    else if (mode==='win') openMapAfter(currentStageId());
     else if (Net.mode==='coop') coopStart(currentStageId());
     else startStory(currentStageId());
   }
@@ -218,6 +221,7 @@ function tick(){
   switch (mode){
     case 'title': tickTitle(); break;
     case 'heroSelect': tickHeroSelect(); break;
+    case 'world': tickWorldMap(); break;
     case 'map': tickMap(); break;
     case 'shop': tickShop(); break;
     case 'options': tickOptions(); break;
@@ -303,6 +307,7 @@ function draw(){
   switch (mode){
     case 'title': drawTitle(); break;
     case 'heroSelect': drawHeroSelect(); break;
+    case 'world': drawWorldMap(); break;
     case 'map': drawMap(); break;
     case 'shop': drawShop(); break;
     case 'options': drawOptions(); break;

@@ -4,7 +4,7 @@ Jogo de ação 2D feito com HTML, CSS e JavaScript puro, sem etapa de build. Bas
 
 ## Modos
 
-- **História**: quatro fases em sequência no mapa de Vallen: Bosque de Vallen (Gorgo, o Rei Orc), Caverna de Cristal (Golem de Cristal), Deserto Escaldante (Rei Escorpião) e Castelo Sombrio (Lorde Sombrio). Vencer uma fase libera a próxima.
+- **História**: no mapa-múndi você escolhe um continente e, dentro dele, a fase. O primeiro continente, o **Reino de Vallen**, tem quatro fases: Bosque de Vallen (Gorgo, o Rei Orc), Caverna de Cristal (Golem de Cristal), Deserto Escaldante (Rei Escorpião) e Castelo Sombrio (Lorde Sombrio). Vencer uma fase libera a próxima, e terminar um continente libera o seguinte.
 - **Co-op Online**: a história em dupla, cada jogador no seu navegador. Os inimigos ficam mais fortes, e quem cai volta depois de 10 segundos se o parceiro continuar de pé.
 - **PvP Online**: luta numa das quatro arenas, com melhor de 1, 3 ou 5 rounds e tempo configurável.
 
@@ -12,7 +12,7 @@ Nos modos online, um jogador cria a sala e o outro entra com o código de 4 letr
 
 ## Progressão
 
-Derrotar inimigos dá XP (até o nível 20, cada nível aumenta vida e ataque) e ouro. No mapa, desça até **LOJA** para comprar armas e armaduras melhores no ferreiro; as armas mudam de cor a cada nível. Tudo fica salvo no navegador e pode ser apagado em **Opções → Apagar progresso**. No PvP todos lutam com os atributos base.
+Derrotar inimigos dá XP (até o nível 40, cada nível aumenta vida e ataque) e ouro. No mapa do continente, desça até **LOJA** para comprar armas e armaduras melhores no ferreiro; as armas mudam de cor a cada nível. Tudo fica salvo no navegador e pode ser apagado em **Opções → Apagar progresso**. No PvP todos lutam com os atributos base.
 
 ## Personagens
 
@@ -58,7 +58,9 @@ No celular aparecem botões na tela (jogue com o aparelho na horizontal).
 | `js/heroes.js` | heróis: atributos, golpes, especiais e visual |
 | `js/player.js` | lógica dos jogadores e dos acertos |
 | `js/enemies.js` | inimigos, chefes e suas IAs |
-| `js/stages.js` | fases e cenários |
+| `js/stages.js` | registro de continentes e fases, dificuldade automática |
+| `js/themes.js` | cenários: fundo, plataformas, iluminação e atmosfera |
+| `js/stages/vallen.js` | continente 1, Reino de Vallen, e suas 4 fases |
 | `js/progress.js` | fases liberadas, níveis, ouro e equipamentos (salvos no navegador) |
 | `js/render.js` | desenho do mundo e do HUD |
 | `js/net.js` | conexão online (PeerJS) |
@@ -66,3 +68,14 @@ No celular aparecem botões na tela (jogue com o aparelho na horizontal).
 | `js/coop.js` | modo cooperativo (sincronização do mundo) |
 | `js/menus.js` | menus, opções e pausa |
 | `js/game.js` | fluxo do jogo e loop principal |
+
+## Como criar um continente novo
+
+1. Crie `js/stages/<nome>.js` copiando a estrutura de `js/stages/vallen.js` e chame `registerContinent({...})` com:
+   - `id`, `name`, `sub` (por exemplo "Continente 2"), `map` (posição da ilha no mapa-múndi) e `colors` da ilha;
+   - `stages`: a lista de fases. Cada fase tem `id`, `name`, `map` (posição e ícone no mapa do continente), `theme`, `music`, `platforms`, `zones` (a última com `boss:true`) e, se quiser uma arena de PvP, `arena`.
+2. Adicione o arquivo no `index.html`, depois de `js/stages/vallen.js` (a ordem dos arquivos é a ordem dos continentes).
+3. Se o continente tiver um cenário novo, crie o tema em `js/themes.js`. Inimigos e chefes novos ficam em `js/enemies.js`; chefes têm um ajuste próprio de dificuldade (`tune`).
+4. Aumente o número `?v=` dos arquivos no `index.html` para os navegadores baixarem a versão nova.
+
+A dificuldade dos inimigos comuns é calculada sozinha pela posição da fase na campanha, as fases liberam em sequência entre continentes, e as arenas de PvP entram na lista automaticamente. O progresso salvo dos jogadores continua valendo.

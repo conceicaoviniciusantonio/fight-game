@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#0b0d17">
 <title>Crônicas de Vallen</title>
 <!-- bump ?v= on every release so browsers fetch the new files instead of cached ones -->
-<link rel="stylesheet" href="css/style.css?v=8">
+<link rel="stylesheet" href="css/style.css?v=11">
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </head>
 <body>
@@ -55,7 +55,7 @@
   <div class="opts" id="pvpOpts">
     <label>Partida <select id="optRounds"><option value="1">Melhor de 1</option><option value="3" selected>Melhor de 3</option><option value="5">Melhor de 5</option></select></label>
     <label>Tempo <select id="optTime"><option value="60">60 s</option><option value="99" selected>99 s</option><option value="0">Sem limite</option></select></label>
-    <label>Arena <select id="optArena"><option value="forest">Ruínas do Bosque</option><option value="cave">Caverna de Cristal</option><option value="desert">Deserto</option><option value="castle">Castelo Sombrio</option><option value="random">Aleatória</option></select></label>
+    <label>Arena <select id="optArena"></select></label>
   </div>
   <div class="or" id="orSep">— ou entre na sala de um amigo —</div>
   <div class="row" id="joinRow"><input id="joinCode" maxlength="4" placeholder="CÓDIGO" autocomplete="off" aria-label="Código da sala"><button id="btnJoin">Entrar</button></div>
@@ -65,21 +65,23 @@
 
 <div id="rotate">Gire o celular na horizontal para jogar ↻</div>
 
-<script src="js/util.js?v=8"></script>
-<script src="js/settings.js?v=8"></script>
-<script src="js/input.js?v=8"></script>
-<script src="js/audio.js?v=8"></script>
-<script src="js/world.js?v=8"></script>
-<script src="js/heroes.js?v=8"></script>
-<script src="js/player.js?v=8"></script>
-<script src="js/enemies.js?v=8"></script>
-<script src="js/stages.js?v=8"></script>
-<script src="js/progress.js?v=8"></script>
-<script src="js/render.js?v=8"></script>
-<script src="js/net.js?v=8"></script>
-<script src="js/pvp.js?v=8"></script>
-<script src="js/coop.js?v=8"></script>
-<script src="js/menus.js?v=8"></script>
-<script src="js/game.js?v=8"></script>
+<script src="js/util.js?v=11"></script>
+<script src="js/settings.js?v=11"></script>
+<script src="js/input.js?v=11"></script>
+<script src="js/audio.js?v=11"></script>
+<script src="js/world.js?v=11"></script>
+<script src="js/heroes.js?v=11"></script>
+<script src="js/player.js?v=11"></script>
+<script src="js/enemies.js?v=11"></script>
+<script src="js/stages.js?v=11"></script>
+<script src="js/themes.js?v=11"></script>
+<script src="js/stages/vallen.js?v=11"></script>
+<script src="js/progress.js?v=11"></script>
+<script src="js/render.js?v=11"></script>
+<script src="js/net.js?v=11"></script>
+<script src="js/pvp.js?v=11"></script>
+<script src="js/coop.js?v=11"></script>
+<script src="js/menus.js?v=11"></script>
+<script src="js/game.js?v=11"></script>
 </body>
 </html>

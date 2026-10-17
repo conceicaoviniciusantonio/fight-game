@@ -22,8 +22,13 @@ function pvpDisconnect(){
   if (mode==='pvp'||mode==='pvpEnd'){ pvp.disc=true; mode='pvpEnd'; endTimer=0; playMusic(null); }
 }
 
+// Arena options come from every stage that has an arena, so new continents add arenas automatically
+(function fillArenas(){
+  const sel=$('optArena');
+  sel.innerHTML=STAGE_IDS.filter(id=>STAGES[id].arena).map(id=>`<option value="${id}">${STAGES[id].arenaName||STAGES[id].name}</option>`).join('')+'<option value="random">Aleatória</option>';
+})();
 function startMatch(){
-  const a=$('optArena').value, arena=a==='random'?pick(STAGE_IDS):a;
+  const a=$('optArena').value, arena=a==='random'?pick(STAGE_IDS.filter(id=>STAGES[id].arena)):a;
   const m={type:'round',n:1,wins:[0,0],bestOf:+$('optRounds').value,time:+$('optTime').value,arena};
   netSend(m); onRound(m);
 }

@@ -50,7 +50,16 @@ Cada fase termina com um commit próprio.
 - [x] Plataformas em degraus em todas as fases e arenas: degrau baixo alcançável com um pulo simples e degrau alto logo ao lado, para qualquer herói conseguir subir
 - [x] Pulo duplo com cambalhota (mais fácil de perceber) e versão nos arquivos para o navegador sempre carregar a atualização mais recente
 
+## Fase 8: Estrutura de continentes
+- [x] Mapa-múndi com os continentes (bloqueados com cadeado e ilhas "Em breve"); cada continente tem seu mapa de fases e a loja
+- [x] Reino de Vallen vira o continente 1, com as 4 fases atuais; o progresso salvo continua valendo
+- [x] Um arquivo por continente em `js/stages/`, cenários separados em `js/themes.js`
+- [x] Dificuldade dos inimigos calculada pela posição da fase na campanha; fases liberam em sequência entre continentes
+- [x] Nível máximo sobe para 40; a loja aceita equipamentos que só liberam em continentes futuros
+- [x] Arenas de PvP montadas automaticamente a partir das fases
+
 ## Próximas ideias
+- [ ] Continente 2 (tema a definir: gelo, ilhas, vulcão…)
 - [ ] Arte em sprites (personagens desenhados quadro a quadro)
 - [ ] Mais fases, chefes ou um quinto herói
 - [ ] Ajustes de equilíbrio de dano, vida e dificuldade depois de mais partidas

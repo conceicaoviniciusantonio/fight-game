@@ -1,7 +1,7 @@
 'use strict';
 // ===================== Progress: stages, levels, gold and gear (saved in this browser) =====================
 const PROGRESS_KEY = 'vallen.progress.v1';
-const MAX_LEVEL = 20;
+const MAX_LEVEL = 40;
 const Progress = { cleared:[], gold:0, heroes:{} };
 function loadProgress(){
   try { const s=JSON.parse(localStorage.getItem(PROGRESS_KEY)||'null'); if (s) Object.assign(Progress,s); } catch (e) {}
@@ -17,6 +17,7 @@ function stageUnlocked(id){
   const i=STAGE_IDS.indexOf(id);
   return i<=0 || Progress.cleared.includes(STAGE_IDS[i-1]);
 }
+const continentUnlocked = C => stageUnlocked(C.stageIds[0]);
 function markCleared(id){
   if (!Progress.cleared.includes(id)){ Progress.cleared.push(id); saveProgress(); return true; }
   return false;
@@ -24,6 +25,7 @@ function markCleared(id){
 
 // ----- gear -----
 // Tier 0 is what every hero starts with; each tier adds attack (weapon) or life and defense (armor).
+// `cont` is the continent index that must be unlocked before the tier is sold (new continents add tiers).
 const WEAPON_TIERS = [ {atk:0,cost:0,tint:null}, {atk:0.10,cost:300,tint:'#e3eaf2'}, {atk:0.22,cost:900,tint:'#9ff8ff'}, {atk:0.36,cost:2000,tint:'#ffd34d'} ];
 const ARMOR_TIERS  = [ {hp:0,def:0,cost:0}, {hp:0.15,def:0.05,cost:300}, {hp:0.30,def:0.10,cost:900}, {hp:0.50,def:0.15,cost:2000} ];
 const WEAPON_NAMES = {
@@ -58,6 +60,7 @@ function applyStats(p){
 function buyGear(id,slot){
   const g=heroProg(id), tiers=slot==='weapon'?WEAPON_TIERS:ARMOR_TIERS, next=tiers[g[slot]+1];
   if (!next) return 'max';
+  if (next.cont && !continentUnlocked(CONTINENTS[next.cont])) return 'locked';
   if (Progress.gold<next.cost) return 'poor';
   Progress.gold-=next.cost; g[slot]++; saveProgress();
   return 'ok';

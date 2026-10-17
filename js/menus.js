@@ -89,29 +89,94 @@ function drawHeroSelect(){
   txt(confirmHint('confirmar'),W/2,H-26,15,'#ffffff');
 }
 
-// ----- stage map -----
-let mapSel=0;
-const MAP_NODES = { forest:{x:150,y:322,icon:'tree'}, cave:{x:375,y:215,icon:'crystal'}, desert:{x:600,y:318,icon:'pyramid'}, castle:{x:820,y:190,icon:'castle'} };
+// ----- world map (continents) and continent map (stages) -----
+// Flow: hero select → world map → continent map → stage. The shop sits on the continent map.
+let worldSel=0, mapCont=0, mapSel=0, mapLastStage=0;
 const ENEMY_NAMES = { goblin:'Goblin', archer:'Goblin arqueiro', orc:'Orc', bat:'Morcego', kobold:'Kobold', shaman:'Xamã',
   scorpion:'Escorpião', mummy:'Múmia', nomad:'Nômade', skeleton:'Esqueleto', darkmage:'Mago sombrio', blackknight:'Cavaleiro negro' };
-function openMap(){
-  mode='map';
-  const open=STAGE_IDS.filter(stageUnlocked), next=open.find(id=>!Progress.cleared.includes(id));
-  mapSel=STAGE_IDS.indexOf(next||open[open.length-1]);
+// Spots for islands still to come: drawn under fog unless a registered continent already sits there
+const COMING_SOON = [{x:570,y:190},{x:790,y:320},{x:420,y:390}];
+const freeSlots = () => COMING_SOON.filter(s=>CONTINENTS.every(C=>Math.hypot(C.map.x-s.x,C.map.y-s.y)>230)).slice(0,2);
+
+const nextStageId = () => STAGE_IDS.find(id=>stageUnlocked(id) && !Progress.cleared.includes(id)) || STAGE_IDS.filter(stageUnlocked).pop();
+function openMap(){ mode='world'; worldSel=continentOf(nextStageId()).index; }
+function openContinent(ci,stageId){
+  mode='map'; mapCont=ci;
+  const C=CONTINENTS[ci], open=C.stageIds.filter(stageUnlocked);
+  const want=stageId && C.stageIds.includes(stageId) ? stageId : (open.find(id=>!Progress.cleared.includes(id)) || open[open.length-1] || C.stageIds[0]);
+  mapSel=mapLastStage=C.stageIds.indexOf(want);
 }
-let mapLastStage=0;
+// After a win: stay on the continent if it has more stages, otherwise show the world map
+function openMapAfter(stageId){
+  const next=STAGE_IDS[STAGE_IDS.indexOf(stageId)+1];
+  if (next && continentOf(next)===continentOf(stageId)) openContinent(continentOf(stageId).index,next);
+  else { mode='world'; worldSel=continentOf(next||stageId).index; }
+}
+
+function tickWorldMap(){
+  const P=Input.pressed;
+  worldSel=menuNav(CONTINENTS.length,worldSel,true);
+  if (P.confirm || P.attack){
+    if (continentUnlocked(CONTINENTS[worldSel])){ SFX.select(); openContinent(worldSel); }
+    else SFX.noMp();
+  } else if (P.back){ SFX.move(); if (Net.mode==='coop') leaveOnline(); else mode='heroSelect'; }
+  consumeInput();
+}
+// A smooth irregular island outline (same seed = same shape every frame)
+function islandShape(cx,cy,seed,scale=1){
+  const R=mulberry(seed), n=16, pts=[];
+  for (let i=0;i<n;i++){ const a=i/n*Math.PI*2, r=(1+0.22*Math.sin(a*3+seed)+R()*0.16)*scale; pts.push([cx+Math.cos(a)*120*r,cy+Math.sin(a)*72*r]); }
+  ctx.beginPath();
+  const mid=(p,q)=>[(p[0]+q[0])/2,(p[1]+q[1])/2];
+  let m=mid(pts[n-1],pts[0]); ctx.moveTo(m[0],m[1]);
+  for (let i=0;i<n;i++){ const q=mid(pts[i],pts[(i+1)%n]); ctx.quadraticCurveTo(pts[i][0],pts[i][1],q[0],q[1]); }
+  ctx.closePath();
+}
+function drawWorldMap(){
+  const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#2a6f97'); g.addColorStop(1,'#1b4965');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='rgba(255,255,255,0.12)'; ctx.lineWidth=2;
+  for (let i=0;i<26;i++){ const x=(i*157+clock*0.3)%(W+80)-40, y=40+(i*89)%(H-80); ctx.beginPath(); ctx.arc(x,y,10,Math.PI*1.1,Math.PI*1.9); ctx.stroke(); }
+  txt('MAPA-MÚNDI',W/2,46,32,'#ffffff');
+  txt(Net.mode==='coop'?'Co-op: você escolhe o continente da dupla':'Escolha um continente',W/2,78,15,'#cfe3ff','center',false);
+  // islands still to come
+  freeSlots().forEach((s,i)=>{
+    ctx.fillStyle='rgba(200,215,230,0.18)'; islandShape(s.x,s.y,40+i,0.7); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.13)'; for (let k=0;k<4;k++) circle(s.x-54+k*36,s.y-14+Math.sin(clock*0.02+k)*6,24);
+    txt('Em breve',s.x,s.y+8,15,'rgba(255,255,255,0.75)','center',false);
+  });
+  CONTINENTS.forEach((C,i)=>{
+    const {x,y}=C.map, open=continentUnlocked(C), sel=i===worldSel, cl=C.colors||{};
+    const done=C.stageIds.filter(id=>Progress.cleared.includes(id)).length;
+    ctx.fillStyle=open?(cl.shore||'#e9d8a6'):'#9aa5b1'; islandShape(x,y,11+i*7,1.08); ctx.fill();
+    ctx.fillStyle=open?(cl.land||'#7fb069'):'#6b7480'; islandShape(x,y,11+i*7,0.95); ctx.fill();
+    if (open){ ctx.fillStyle=cl.dark||'#4f7a3a'; for (let k=0;k<6;k++) circle(x-70+k*28,y-22+(k%2)*30,10); }
+    if (sel){ ctx.strokeStyle=`rgba(255,210,63,${0.5+0.4*Math.sin(clock*0.12)})`; ctx.lineWidth=5; islandShape(x,y,11+i*7,1.16); ctx.stroke(); }
+    if (!open){ ctx.fillStyle='#3e4651'; ctx.fillRect(x-14,y-4,28,22); ctx.strokeStyle='#3e4651'; ctx.lineWidth=5; ctx.beginPath(); ctx.arc(x,y-8,10,Math.PI,0); ctx.stroke(); }
+    if (sel && open) drawHeroAt(selHero,x,y+10,0.9,{anim:clock,tier:heroProg(selHero).weapon});
+    txt(C.name,x,y+98,20,'#ffffff');
+    txt(`${done}/${C.stageIds.length} fases`,x,y+120,14,done===C.stageIds.length?'#9fe3a8':'#cfe3ff','center',false);
+  });
+  const C=CONTINENTS[worldSel], last=STAGES[C.stageIds[C.stageIds.length-1]];
+  const bossType=last.zones[last.zones.length-1].waves[0][0][0];
+  panel(W/2-300,H-96,600,70,14,'rgba(10,30,50,0.85)');
+  txt(`${C.sub} · ${C.name}`,W/2,H-76,19,'#ffd23f','center',false);
+  txt(continentUnlocked(C)?`Chefe final: ${ENEMY_TYPES[bossType].name}`:'Termine o continente anterior para liberar',W/2,H-50,14,'#e6f0ff','center',false);
+  txt(confirmHint('entrar'),W/2,H-12,13,'#cfe3ff','center',false);
+}
+
 function tickMap(){
-  const P=Input.pressed, shopSelected=mapSel===STAGE_IDS.length;
-  if (!shopSelected){ mapSel=menuNav(STAGE_IDS.length,mapSel,true); mapLastStage=mapSel; }
-  if (P.down && !shopSelected){ mapSel=STAGE_IDS.length; SFX.move(); }
+  const P=Input.pressed, C=CONTINENTS[mapCont], ids=C.stageIds, shopSelected=mapSel===ids.length;
+  if (!shopSelected){ mapSel=menuNav(ids.length,mapSel,true); mapLastStage=mapSel; }
+  if (P.down && !shopSelected){ mapSel=ids.length; SFX.move(); }
   else if (P.up && shopSelected){ mapSel=mapLastStage; SFX.move(); }
-  const id=STAGE_IDS[mapSel];
+  const id=ids[mapSel];
   if ((P.confirm || P.attack) && shopSelected){ SFX.select(); openShop(); }
   else if (P.confirm || P.attack){
     if (!stageUnlocked(id)) SFX.noMp();
     else if (Net.mode==='coop') coopStart(id);
     else startStory(id);
-  } else if (P.back){ SFX.move(); if (Net.mode==='coop') leaveOnline(); else mode='heroSelect'; }
+  } else if (P.back){ SFX.move(); mode='world'; worldSel=mapCont; }
   consumeInput();
 }
 function drawMapIcon(kind,x,y){
@@ -122,6 +187,7 @@ function drawMapIcon(kind,x,y){
     tri(x-17,y-14,x-12,y-24,x-7,y-14); tri(x+7,y-14,x+12,y-24,x+17,y-14); ctx.fillStyle='#ffcf6b'; ctx.fillRect(x-3,y+2,6,10); }
 }
 function drawMap(){
+  const C=CONTINENTS[mapCont], ids=C.stageIds;
   const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#efe0b4'); g.addColorStop(1,'#d9c18a');
   ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
   ctx.strokeStyle='#9a7a46'; ctx.lineWidth=6; ctx.strokeRect(14,14,W-28,H-28);
@@ -129,18 +195,19 @@ function drawMap(){
   ctx.globalAlpha=0.18; ctx.fillStyle='#7a5a2a';
   for (let i=0;i<9;i++){ circle(80+i*110,110+(i%3)*150,30+(i%4)*8); }
   ctx.globalAlpha=1;
-  txt('MAPA DE VALLEN',W/2,52,32,'#5a3d1a','center',false);
-  txt(Net.mode==='coop'?'Co-op: você escolhe a fase da dupla':'Escolha a próxima aventura',W/2,82,15,'#7a5a2a','center',false);
-  // path between stages
+  txt(C.name.toUpperCase(),W/2,52,32,'#5a3d1a','center',false);
+  txt(Net.mode==='coop'?'Co-op: você escolhe a fase da dupla':`${C.sub} · escolha a próxima aventura`,W/2,82,15,'#7a5a2a','center',false);
+  txt('ESC mapa-múndi',44,52,13,'#7a5a2a','left',false);
   ctx.setLineDash([10,9]); ctx.lineWidth=4;
-  for (let i=1;i<STAGE_IDS.length;i++){
-    const a=MAP_NODES[STAGE_IDS[i-1]], b=MAP_NODES[STAGE_IDS[i]];
-    ctx.strokeStyle=stageUnlocked(STAGE_IDS[i])?'#8a5a2a':'rgba(138,90,42,0.35)';
+  for (let i=1;i<ids.length;i++){
+    const a=STAGES[ids[i-1]].map, b=STAGES[ids[i]].map;
+    ctx.strokeStyle=stageUnlocked(ids[i])?'#8a5a2a':'rgba(138,90,42,0.35)';
     ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.quadraticCurveTo((a.x+b.x)/2,Math.min(a.y,b.y)-50,b.x,b.y); ctx.stroke();
   }
   ctx.setLineDash([]);
-  STAGE_IDS.forEach((id,i)=>{
-    const n=MAP_NODES[id], open=stageUnlocked(id), done=Progress.cleared.includes(id), sel=i===mapSel, shopSel=mapSel===STAGE_IDS.length;
+  const shopSel=mapSel===ids.length;
+  ids.forEach((id,i)=>{
+    const n=STAGES[id].map, open=stageUnlocked(id), done=Progress.cleared.includes(id), sel=i===mapSel;
     if (sel){ ctx.strokeStyle=`rgba(255,180,40,${0.5+0.4*Math.sin(clock*0.12)})`; ctx.lineWidth=5; ctx.beginPath(); ctx.arc(n.x,n.y,44,0,Math.PI*2); ctx.stroke(); }
     ctx.fillStyle=done?'#ffd23f':open?'#fff6dc':'#b9ad98'; circle(n.x,n.y,34);
     ctx.strokeStyle='#5a3d1a'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(n.x,n.y,34,0,Math.PI*2); ctx.stroke();
@@ -151,16 +218,15 @@ function drawMap(){
     if (sel || (shopSel && i===mapLastStage)) drawHeroAt(selHero,n.x,n.y-38,0.7,{anim:clock,tier:heroProg(selHero).weapon});
   });
   // shop button and purse
-  const shopSel=mapSel===STAGE_IDS.length;
   panel(W-168,H-176,130,40,20,shopSel?'#ffd23f':'rgba(90,61,26,0.85)');
   coinIcon(W-140,H-156,9); txt('LOJA',W-92,H-156,18,shopSel?'#1b1b2e':'#fff6dc','center',false);
   txt('↓ loja',W-103,H-126,12,'#7a5a2a','center',false);
   coinIcon(W-150,52,10); txt(String(Progress.gold),W-130,52,20,'#5a3d1a','left',false);
-  const id=STAGE_IDS[shopSel?mapLastStage:mapSel], S=STAGES[id], open=stageUnlocked(id);
+  const id=ids[shopSel?mapLastStage:mapSel], S=STAGES[id], open=stageUnlocked(id);
   const bossType=S.zones[S.zones.length-1].waves[0][0][0];
   const foes=[...new Set(S.zones.filter(z=>!z.boss).flatMap(z=>z.waves.flat().map(w=>w[0])))].map(t=>ENEMY_NAMES[t]||t);
   panel(W/2-300,H-126,600,92,14,'rgba(90,61,26,0.88)');
-  txt(`${S.sub} · ${S.name}`,W/2,H-106,20,'#ffd23f','center',false);
+  txt(`Fase ${ids.indexOf(id)+1} · ${S.name}`,W/2,H-106,20,'#ffd23f','center',false);
   if (open){
     txt('Chefe: '+ENEMY_TYPES[bossType].name,W/2,H-80,15,'#fff6dc','center',false);
     txt('Inimigos: '+foes.join(', '),W/2,H-58,13,'#e9d8a6','center',false);
@@ -181,6 +247,7 @@ function tickShop(){
       const r=buyGear(selHero,shopSel===0?'weapon':'armor');
       if (r==='ok'){ SFX.levelUp(); shopMsg={s:'Comprado!',c:'#9fe3a8',t:90}; }
       else if (r==='poor'){ SFX.noMp(); shopMsg={s:'Ouro insuficiente',c:'#ff8a8a',t:90}; }
+      else if (r==='locked'){ SFX.noMp(); shopMsg={s:'Chegue ao próximo continente para liberar',c:'#ffd23f',t:90}; }
       else { SFX.noMp(); shopMsg={s:'Já é o melhor equipamento',c:'#cfe3ff',t:90}; }
     }
   } else if (P.back){ SFX.move(); mode='map'; }
