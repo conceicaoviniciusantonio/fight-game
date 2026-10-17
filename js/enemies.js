@@ -75,6 +75,15 @@ const ENEMY_TYPES = {
     moves:['wave','burrow','bombs','charge'], summon:['buscape','buscape','fogueteiro'], bombStyle:'fire', waveStyle:'fire', burrowWave:'fire',
     tune:{wind:0.9, rec:0.9, cd:[36,72], enrage:0.5, rage:1.35, charge:11.5, summons:2},
     look:{kind:'serpent', s:1, body:'#ff5a1f', glow:'#ffd36b', eye:'#ffffff', noOutline:true}},
+  // ----- Noite do Saci -----
+  saci:{hp:120, w:28, h:52, speed:2.6, dmg:34, ai:'trickster', score:240, look:{kind:'saci', s:1.05, skin:'#6b4423', cap:'#d62828', shorts:'#d62828'}},
+  fogofatuo:{hp:70, w:30, h:30, speed:2.4, dmg:30, ai:'flyer', fly:true, score:180, look:{kind:'wisp', light:'120,190,255'}},
+  lobisomem:{hp:300, w:44, h:80, speed:1.6, dmg:54, ai:'melee', reach:58, windup:24, score:360,
+    look:{s:1.4, skin:'#5a5560', body:'#3d3a44', cloth:'#5a3a2a', eye:'#ffd23f', weapon:'claw', wolf:true}},
+  mula:{hp:9600, w:130, h:100, speed:2.2, dmg:140, ai:'boss', boss:true, score:7500, name:'Mula-sem-cabeça',
+    moves:['charge','leap','wave','slam'], summon:['saci','fogofatuo','lobisomem'], bombStyle:'fire', waveStyle:'fire',
+    tune:{wind:0.88, rec:0.88, cd:[34,70], enrage:0.5, rage:1.38, charge:12.5, summons:2},
+    look:{kind:'mule', s:1, body:'#9a7556', mane:'#3a2a1e', light:'255,120,40', noOutline:true}},
   bonecaoRei:{hp:6300, w:100, h:175, speed:1.7, dmg:120, ai:'boss', boss:true, score:6000, name:'Bonecão Desgovernado',
     moves:['spin','rain','slam','leap'], summon:['foliao','foliao','pierrot'], bombStyle:'confetti',
     tune:{wind:0.95, rec:0.95, cd:[40,80], enrage:0.5, rage:1.3, charge:10, summons:2},
@@ -381,6 +390,7 @@ function updateEnemy(e){
     else if (T.ai==='hopper') hopperAI(e,tg,dx,adx);
     else if (T.ai==='roller') rollerAI(e,tg,dx,adx);
     else if (T.ai==='kamikaze') kamikazeAI(e,tg,dx,adx);
+    else if (T.ai==='trickster') tricksterAI(e,tg,dx,adx);
     else meleeAI(e,tg,dx,adx);
   }
   if (T.fly){ if (e.state==='hurt') e.vy*=0.9; e.x+=e.vx; e.y=clamp(e.y+e.vy,60,GROUND-6); e.onGround=false; }
@@ -398,6 +408,30 @@ function hopperAI(e,tg,dx,adx){
     for (const p of alivePlayers())
       if (!e.hitIds.has(p.id) && Math.abs(p.x-e.x)<e.w/2+p.w/2 && e.y>p.y-p.h && e.y-e.h<p.y){ e.hitIds.add(p.id); hurtPlayer(p,{dmg:e.dmg,dir:e.face,fromX:e.x,srcId:e.id}); }
   }
+}
+// The Saci hops around on one leg, vanishes in a little whirlwind and reappears behind the target to kick
+function tricksterAI(e,tg,dx,adx){
+  if (e.state==='walk'){
+    e.face=dx>0?1:-1;
+    if (e.onGround){ e.vx=e.face*e.speed; if (e.anim%20<1) e.vy=-5; }
+    if (e.cd<=0 && adx<380){ e.state='teleportWind'; e.t=0; }
+  } else if (e.state==='teleportWind'){
+    e.vx*=0.6; e.t++;
+    if (e.t%2===0) parts.push({x:e.x+Math.cos(e.t*0.6)*18,y:e.y-20-e.t,vx:0,vy:-0.5,life:16,max:16,color:pick(['#8fbf6a','#c9a227','#6b8f3a']),size:3,grav:0});
+    if (e.t>=20){
+      const [l,r]=bounds();
+      burst(e.x,e.y-26,'#8fbf6a',12,4,0);
+      e.x=clamp(tg.x-tg.face*48,l+15,r-15); e.y=tg.y; e.vy=0; e.face=tg.x>e.x?1:-1;
+      burst(e.x,e.y-26,'#c9a227',12,4,0); SFX.blink();
+      e.state='windup'; e.t=6;
+    }
+  } else if (e.state==='windup'){
+    e.vx*=0.6; e.t++;
+    if (e.t>=18){ e.state='strike'; e.t=0; SFX.strike();
+      const x1=e.face>0?e.x:e.x-62, x2=e.face>0?e.x+62:e.x; enemyHitPlayers(e,x1,x2,e.y-e.h-10,e.y,e.dmg,e.face); }
+  } else if (e.state==='strike'){
+    e.vx*=0.8; e.t++; if (e.t>16){ e.state='walk'; e.cd=rand(90,150); }
+  } else e.state='walk';
 }
 // "Busca-pé" fireworks: dash at the target, fizz for a moment, then blow up (destroying themselves)
 function kamikazeAI(e,tg,dx,adx){
@@ -577,6 +611,59 @@ function drawChicken(e,T,c,F,sx){
   ctx.fillStyle=F('#e6e6e6'); ctx.save(); ctx.translate(-2,-24); ctx.rotate(-0.3-flap*0.6); ctx.beginPath(); ctx.ellipse(0,0,9,5,0,0,Math.PI*2); ctx.fill(); ctx.restore();
   ctx.restore(); foeBars(e,T,sx);
 }
+function drawSaci(e,T,c,F,sx){
+  ctx.save(); ctx.translate(sx,e.y); ctx.scale(e.face*c.s,c.s); foeDying(e);
+  if (e.state==='teleportWind') ctx.globalAlpha=Math.max(0.1,1-e.t/20);
+  const hop=e.onGround?0:-0.1, kick=e.state==='strike';
+  ctx.rotate(hop);
+  ctx.fillStyle=F(c.skin); ctx.fillRect(-2,-16,6,16); ctx.fillRect(-3,-3,9,3);         // one leg
+  if (kick){ ctx.save(); ctx.translate(2,-18); ctx.rotate(-1.2); ctx.fillRect(0,-3,18,6); ctx.restore(); }
+  ctx.fillStyle=F(c.shorts); ctx.beginPath(); ctx.roundRect(-8,-24,16,10,3); ctx.fill();
+  ctx.fillStyle=F(c.skin); ctx.beginPath(); ctx.roundRect(-8,-38,16,16,5); ctx.fill();
+  circle(2,-46,10);
+  ctx.fillStyle=F(c.cap); ctx.beginPath(); ctx.moveTo(-9,-50); ctx.quadraticCurveTo(2,-64,-10,-74); ctx.quadraticCurveTo(6,-62,12,-50); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#ffffff'; circle(6,-47,2.6); ctx.fillStyle='#1b1b2e'; circle(7,-47,1.4);
+  ctx.strokeStyle='#ffffff'; ctx.lineWidth=1.4; ctx.beginPath(); ctx.arc(5,-41,3,0.2,Math.PI-0.4); ctx.stroke();
+  ctx.fillStyle=F('#8a5a2a'); ctx.fillRect(9,-41,8,2.5); ctx.fillRect(15,-45,3,5);      // pipe
+  ctx.fillStyle='rgba(220,220,220,0.6)'; circle(17+Math.sin(clock*0.1)*2,-51-(clock%40)/4,3);
+  ctx.restore(); foeBars(e,T,sx);
+}
+function drawWisp(e,T,c,F,sx){
+  const y=e.y-15, fl=Math.sin(e.anim*0.4);
+  ctx.save(); ctx.translate(sx,y);
+  if (e.state==='dying') ctx.globalAlpha=Math.max(0,1-e.t/45);
+  const g=ctx.createRadialGradient(0,0,2,0,0,30); g.addColorStop(0,'rgba(220,240,255,0.95)'); g.addColorStop(0.4,'rgba(120,190,255,0.7)'); g.addColorStop(1,'rgba(60,120,255,0)');
+  ctx.fillStyle=g; circle(0,0,30);
+  ctx.fillStyle=F('#9ad0ff'); ctx.beginPath(); ctx.moveTo(-10,4); ctx.quadraticCurveTo(-8,-14-fl*4,0,-26); ctx.quadraticCurveTo(8,-14+fl*4,10,4); ctx.quadraticCurveTo(0,12,-10,4); ctx.fill();
+  ctx.fillStyle=e.state==='windup'?'#ff2020':'#1b2a5a'; circle(-3,-4,2); circle(4,-4,2);
+  ctx.restore();
+  if (e.hp>0 && e.state==='windup' && (e.anim>>2)%2) txt('!',sx,y-34,20,'#ff4040');
+  if (e.hp>0 && e.hp<e.maxHp){ ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(sx-18,y-30,36,4); ctx.fillStyle='#ff4d5e'; ctx.fillRect(sx-18,y-30,36*e.hp/e.maxHp,4); }
+}
+// Mula-sem-cabeça: a galloping mule with a column of fire where the head should be
+function drawMule(e,T,c,F,sx){
+  ctx.save(); ctx.translate(sx,e.y); ctx.scale(e.face,1);
+  if (e.state==='dying'){ ctx.globalAlpha=Math.max(0,1-e.t/45); ctx.rotate(-Math.min(1,e.t/14)*0.5); }
+  const run=Math.abs(e.vx)>0.5, ph=run?e.anim*0.35:0, rage=WIND.includes(e.state)||e.state==='charge';
+  const rear=e.state==='slamWind'?-0.25:e.state==='leap'?-0.15:0;
+  ctx.rotate(rear);
+  // legs
+  ctx.strokeStyle=F(c.body); ctx.lineWidth=9; ctx.lineCap='round';
+  for (const [lx,o] of [[-38,0],[-24,Math.PI],[26,Math.PI*0.5],[40,Math.PI*1.5]]){ const sw=run?Math.sin(ph+o)*0.45:0;
+    ctx.beginPath(); ctx.moveTo(lx,-50); ctx.lineTo(lx+Math.sin(sw)*24,-6); ctx.stroke(); ctx.fillStyle=F('#1b1b1b'); circle(lx+Math.sin(sw)*24,-4,5); }
+  // body, tail, saddle
+  ctx.fillStyle=F(c.body); ctx.beginPath(); ctx.ellipse(0,-62,58,24,0,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle=F(c.mane); ctx.lineWidth=7; ctx.beginPath(); ctx.moveTo(-54,-68); ctx.quadraticCurveTo(-80,-60+Math.sin(clock*0.2)*6,-74,-30); ctx.stroke();
+  ctx.fillStyle=F('#7a1f1f'); ctx.beginPath(); ctx.roundRect(-14,-88,30,12,4); ctx.fill();
+  // neck ending in fire
+  ctx.fillStyle=F(c.body); ctx.beginPath(); ctx.moveTo(34,-80); ctx.lineTo(62,-112); ctx.lineTo(78,-102); ctx.lineTo(54,-58); ctx.closePath(); ctx.fill();
+  ctx.fillStyle=F(c.mane); ctx.beginPath(); ctx.moveTo(36,-84); ctx.lineTo(60,-114); ctx.lineTo(56,-96); ctx.closePath(); ctx.fill();
+  for (let k=0;k<3;k++){ const fl=Math.sin(clock*0.4+k)*6, s=1-k*0.25;
+    ctx.fillStyle=['#ff5a1f','#ffb347','#fff3c4'][k]; ctx.beginPath(); ctx.ellipse(72,-118-k*4,16*s,(30+fl)*s,0.5,0,Math.PI*2); ctx.fill(); }
+  if (rage) for (let k=0;k<3;k++) parts.push({x:e.x+e.face*72+rand(-8,8),y:e.y-130,vx:rand(-1,1),vy:-rand(1,3),life:20,max:20,color:pick(['#ff5a1f','#ffd36b']),size:3,grav:0});
+  ctx.restore();
+  if (e.hp>0 && WIND.includes(e.state) && (e.anim>>2)%2) txt('!',sx,e.y-e.h-60,22,'#ff4040');
+}
 function drawRocketFoe(e,T,c,F,sx){
   ctx.save(); ctx.translate(sx,e.y); ctx.scale(e.face,1); foeDying(e,0.6);
   const wind=e.state==='windup', run=Math.abs(e.vx)>0.5;
@@ -639,6 +726,9 @@ function drawMonster(e,noShadow){
   if (c.kind==='egg') return drawEggFoe(e,T,c,F,sx);
   if (c.kind==='chicken') return drawChicken(e,T,c,F,sx);
   if (c.kind==='rocket') return drawRocketFoe(e,T,c,F,sx);
+  if (c.kind==='saci') return drawSaci(e,T,c,F,sx);
+  if (c.kind==='wisp') return drawWisp(e,T,c,F,sx);
+  if (c.kind==='mule') return drawMule(e,T,c,F,sx);
   if (c.kind==='serpent') return drawSerpent(e,T,c,F,sx);
   if (!noShadow && e.state!=='dying'){ const s=T.boss?GROUND:surfaceBelow(e.x,e.y), d=clamp((s-e.y)/250,0,0.7); shadow(sx,s,e.w*0.6*(1-d)); }
   ctx.save(); ctx.translate(sx,e.y);
@@ -681,6 +771,8 @@ function drawMonster(e,noShadow){
   const eyeC=(WIND.includes(st)||st==='charge')?'#ff2020':c.eye;
   if (c.skull){ ctx.fillStyle='#1d1d1d'; circle(9,-44,3.4); circle(1,-44,3); ctx.fillStyle=eyeC; circle(9,-44,1.6); ctx.fillStyle='#1d1d1d'; ctx.fillRect(2,-37,10,2); }
   else { ctx.fillStyle=eyeC; circle(9,-44,2.4); }
+  if (c.wolf){ ctx.fillStyle=F(c.skin); tri(-6,-50,-2,-64,4,-52); tri(4,-52,10,-66,13,-51); ctx.beginPath(); ctx.ellipse(14,-40,9,5.5,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#1b1b2e'; circle(22,-41,2); ctx.fillStyle='#ffffff'; tri(14,-36,16,-32,18,-36); }
   if (c.burlap){ ctx.strokeStyle='#5a3a1a'; ctx.lineWidth=1.3; ctx.beginPath(); ctx.moveTo(3,-37); ctx.lineTo(13,-37); for (let k=4;k<13;k+=3){ ctx.moveTo(k,-39); ctx.lineTo(k,-35); } ctx.stroke(); }
   if (c.straw){ ctx.fillStyle=F('#e9c46a'); ctx.beginPath(); ctx.ellipse(3,-52,20,4.5,0,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(3,-57,10,7,0,Math.PI,0); ctx.fill();
     ctx.fillStyle=F('#b5452f'); ctx.fillRect(-7,-55,20,3); }
@@ -714,6 +806,7 @@ function drawMonster(e,noShadow){
       ctx.fillStyle=F('#2b2236'); ctx.beginPath(); ctx.moveTo(16,-4); ctx.lineTo(50,-3); ctx.lineTo(56,0); ctx.lineTo(50,3); ctx.lineTo(16,4); ctx.closePath(); ctx.fill();
       ctx.strokeStyle=fl?'#fff':'rgba(255,92,240,0.8)'; ctx.lineWidth=1.2; ctx.beginPath(); ctx.moveTo(18,0); ctx.lineTo(50,0); ctx.stroke(); }
     else if (c.weapon==='fist'){ ctx.fillStyle=F(c.skin); circle(13,0,4.5); }
+    else if (c.weapon==='claw'){ ctx.fillStyle=F(c.skin); circle(13,0,5); ctx.fillStyle=F('#e9e4d8'); for (const o of [-4,0,4]) tri(15,o-1,23,o,15,o+1.5); }
     else if (c.weapon==='fork'){ ctx.fillStyle=F('#7a5230'); ctx.fillRect(-4,-1.5,40,3); ctx.fillStyle=F('#b0b8c0');
       ctx.fillRect(34,-7,3,14); for (const o of [-6,0,6]) ctx.fillRect(36,o-1,9,2); }
     else if (c.weapon==='tambourine'){ ctx.strokeStyle=F('#c9a227'); ctx.lineWidth=2.5; ctx.beginPath(); ctx.arc(18,0,8,0,Math.PI*2); ctx.stroke();

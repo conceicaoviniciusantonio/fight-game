@@ -199,6 +199,7 @@ function sceneLights(){
   for (const q of parts) if (q.beam) L.push({x:q.x-cam.x+q.face*q.len/2,y:q.y,r:260,c:'255,240,180'});
   for (const h of hazards) if (h.type==='fire'){ const x=h.x+h.w/2-cam.x; if (x>-200 && x<W+200) L.push({x,y:GROUND-30,r:190+Math.sin(clock*0.3)*8,c:'255,140,50'}); }
   if (boss && boss.hp>0 && boss.hp<boss.maxHp*0.5) L.push({x:boss.x-cam.x,y:boss.y-60,r:150,c:'255,60,40'});
+  for (const e of enemies){ const lt=ENEMY_TYPES[e.type].look.light; if (lt && e.hp>0 && !e.hidden) L.push({x:e.x-cam.x+(ENEMY_TYPES[e.type].boss?e.face*72:0),y:e.y-(ENEMY_TYPES[e.type].boss?110:16),r:ENEMY_TYPES[e.type].boss?190:110,c:lt}); }
   const th=THEMES[stage.theme];
   if (th.lights) L.push(...th.lights(cam.x));
   return L;

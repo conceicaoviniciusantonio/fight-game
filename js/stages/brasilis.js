@@ -77,5 +77,27 @@ registerContinent({
       ],
       arena:{left:3040, extra:[{x:3470,y:296,w:110}]},
     },
+    { id:'saci', map:{x:650,y:200,icon:'saci'}, arenaName:'Clareira do Saci',
+      name:'Noite do Saci', theme:'saci', worldW:4000, music:'saci', bossMusic:'boss',
+      platforms:[
+        {x:420,y:372,w:180},{x:580,y:290,w:160},{x:820,y:372,w:180},
+        {x:1340,y:372,w:200},{x:1520,y:290,w:170},{x:1760,y:372,w:180},{x:1950,y:296,w:130},
+        {x:2400,y:372,w:200},{x:2580,y:290,w:180},{x:2840,y:372,w:180},
+        {x:3200,y:372,w:170},{x:3720,y:372,w:170},
+      ],
+      zones:[
+        {at:330, left:100, waves:[
+          [['saci',600],['fogofatuo',800],['saci',950]],
+          [['lobisomem',880],['fogofatuo',300],['saci',620],['fogofatuo',720]]]},
+        {at:1260, left:1150, waves:[
+          [['saci',1500],['lobisomem',1850],['fogofatuo',1300],['fogofatuo',1700]],
+          [['lobisomem',1450],['saci',1950],['saci',1650],['fogofatuo',1800],['fogofatuo',1350]]]},
+        {at:2260, left:2150, waves:[
+          [['lobisomem',2550],['saci',2950],['fogofatuo',2400],['saci',2700]],
+          [['lobisomem',2300],['lobisomem',2900],['saci',2560],['saci',2880],['fogofatuo',2650],['fogofatuo',2450]]]},
+        {at:3150, left:3040, boss:true, waves:[[['mula',3760]]]},
+      ],
+      arena:{left:3040, extra:[{x:3470,y:296,w:110}]},
+    },
   ],
 });

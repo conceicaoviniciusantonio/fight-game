@@ -94,7 +94,8 @@ function drawHeroSelect(){
 let worldSel=0, mapCont=0, mapSel=0, mapLastStage=0;
 const ENEMY_NAMES = { goblin:'Goblin', archer:'Goblin arqueiro', orc:'Orc', bat:'Morcego', kobold:'Kobold', shaman:'Xamã',
   scorpion:'Escorpião', mummy:'Múmia', nomad:'Nômade', skeleton:'Esqueleto', darkmage:'Mago sombrio', blackknight:'Cavaleiro negro',
-  foliao:'Folião', pierrot:'Pierrô', bonecao:'Bonecão', coelho:'Coelho', ovo:'Ovo rolante', galinha:'Galinha', espantalho:'Espantalho', fogueteiro:'Espantalho fogueteiro', buscape:'Busca-pé' };
+  foliao:'Folião', pierrot:'Pierrô', bonecao:'Bonecão', coelho:'Coelho', ovo:'Ovo rolante', galinha:'Galinha', espantalho:'Espantalho', fogueteiro:'Espantalho fogueteiro', buscape:'Busca-pé',
+  saci:'Saci', fogofatuo:'Fogo-fátuo', lobisomem:'Lobisomem' };
 // Spots for islands still to come: drawn under fog unless a registered continent already sits there
 const COMING_SOON = [{x:570,y:190},{x:790,y:320},{x:420,y:390}];
 const freeSlots = () => COMING_SOON.filter(s=>CONTINENTS.every(C=>Math.hypot(C.map.x-s.x,C.map.y-s.y)>230)).slice(0,2);
@@ -191,6 +192,8 @@ function drawMapIcon(kind,x,y){
     ctx.fillStyle='#bde0fe'; ctx.fillRect(x-11,y+6,22,4); }
   else if (kind==='bonfire'){ ctx.fillStyle='#5d3a1a'; ctx.save(); ctx.translate(x,y+10); ctx.rotate(0.4); ctx.fillRect(-14,-3,28,6); ctx.rotate(-0.8); ctx.fillRect(-14,-3,28,6); ctx.restore();
     ctx.fillStyle='#ff5a1f'; ctx.beginPath(); ctx.ellipse(x,y-2,10,16,0,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#ffd36b'; ctx.beginPath(); ctx.ellipse(x,y+2,5,9,0,0,Math.PI*2); ctx.fill(); }
+  else if (kind==='saci'){ ctx.fillStyle='#d62828'; ctx.beginPath(); ctx.moveTo(x-12,y+8); ctx.quadraticCurveTo(x+2,y-12,x-10,y-22); ctx.quadraticCurveTo(x+12,y-6,x+14,y+8); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#8fbf6a'; for (let k=0;k<6;k++){ const a=k*1.1; ctx.fillRect(x+Math.cos(a)*(6+k*2)-2,y+12-k*2,4,2.5); } }
   else if (kind==='castle'){ ctx.fillStyle='#4a4458'; ctx.fillRect(x-14,y-6,28,18); ctx.fillRect(x-16,y-14,8,26); ctx.fillRect(x+8,y-14,8,26);
     tri(x-17,y-14,x-12,y-24,x-7,y-14); tri(x+7,y-14,x+12,y-24,x+17,y-14); ctx.fillStyle='#ffcf6b'; ctx.fillRect(x-3,y+2,6,10); }
 }

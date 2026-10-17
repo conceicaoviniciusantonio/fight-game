@@ -346,3 +346,50 @@ THEMES.junina = {
     ctx.strokeStyle='#e9c46a'; ctx.lineWidth=1.5; for (const f of SCENERY.tufts){ const x=f.x-cx; if (x<-10||x>W+10) continue; ctx.beginPath(); ctx.moveTo(x,GROUND+2); ctx.lineTo(x+6*f.s,GROUND-6*f.s); ctx.stroke(); }
   },
 };
+
+THEMES.saci = {
+  platform:{post:'#2e2418', body:'#4a3a28', line:'#3a2e20', top:'#3f6b3a', vine:'#2f5a2a'},
+  darkness:() => 0.62,
+  lights(cx){ // hanging oil lanterns
+    const L=[]; for (const p of BR_SCENERY.poles){ const x=p.x-cx*0.6+40; if (x>-160 && x<W+160) L.push({x,y:250,r:140,c:'255,190,100'}); } return L;
+  },
+  ambient(cx){
+    // drifting fog banks
+    for (let i=0;i<6;i++){ const x=((i*311-cx*0.5+clock*0.25)%(W+400)+W+400)%(W+400)-200, y=GROUND-30-(i%3)*40;
+      const g=ctx.createRadialGradient(x,y,10,x,y,160); g.addColorStop(0,'rgba(200,210,230,0.16)'); g.addColorStop(1,'rgba(200,210,230,0)'); ctx.fillStyle=g; ctx.fillRect(x-160,y-80,320,160); }
+    // a little whirlwind of leaves (the Saci's sign)
+    const wx=((700-cx*0.9+clock*0.8)%(W+300)+W+300)%(W+300)-150;
+    for (let k=0;k<14;k++){ const a=clock*0.25+k*0.9, r=6+k*1.6; ctx.fillStyle=k%2?'#8fbf6a':'#c9a227'; ctx.fillRect(wx+Math.cos(a)*r,GROUND-8-k*7,4,2.5); }
+  },
+  draw(cx){
+    const S=SCENERY;
+    const g=ctx.createLinearGradient(0,0,0,GROUND); g.addColorStop(0,'#050914'); g.addColorStop(1,'#1c2b33');
+    ctx.fillStyle=g; ctx.fillRect(-30,-30,W+60,GROUND+40);
+    ctx.fillStyle='rgba(255,255,255,0.75)'; for (let i=0;i<50;i++) circle(((i*211-cx*0.03)%W+W)%W,(i*53)%200+8,1);
+    ctx.fillStyle='rgba(240,240,220,0.25)'; circle(W*0.25-cx*0.02,90,56); ctx.fillStyle='#f2efe0'; circle(W*0.25-cx*0.02,90,36);
+    // layered jungle silhouettes
+    for (const [f,col,base,list] of [[0.15,'#0f1d1f',120,S.mountains],[0.35,'#13282a',60,S.farTrees]]){
+      ctx.fillStyle=col;
+      for (const t of list){ const x=t.x*(f===0.15?1:1.6)-cx*f; if (x<-140||x>W+140) continue; const h=(t.h||80)+base;
+        circle(x,GROUND-h,46); circle(x-34,GROUND-h+26,36); circle(x+36,GROUND-h+22,38); ctx.fillRect(x-8,GROUND-h,16,h); }
+      ctx.fillRect(-30,GROUND-base,W+60,base);
+    }
+    // near trees with hanging vines, and palm leaves
+    for (const n of S.nearTrees){ const x=n.x-cx*0.6; if (x<-100||x>W+100) continue;
+      ctx.fillStyle='#1a1410'; ctx.fillRect(x-9,GROUND-n.h-40,18,n.h+40);
+      ctx.fillStyle='#1d3a26'; circle(x,GROUND-n.h-50,n.r+12); circle(x-n.r,GROUND-n.h-30,n.r*0.9); circle(x+n.r,GROUND-n.h-34,n.r*0.95);
+      ctx.strokeStyle='#244a2c'; ctx.lineWidth=2; for (let k=-1;k<=1;k++){ ctx.beginPath(); ctx.moveTo(x+k*22,GROUND-n.h-30); ctx.quadraticCurveTo(x+k*24+6,GROUND-n.h+30,x+k*20,GROUND-n.h+60+((n.x|0)%30)); ctx.stroke(); } }
+    // lantern posts
+    for (const p of BR_SCENERY.poles){ const x=p.x-cx*0.6+40; if (x<-30||x>W+30) continue;
+      ctx.fillStyle='#2e2418'; ctx.fillRect(x-3,236,6,GROUND-236); ctx.fillRect(x-3,236,20,4);
+      ctx.fillStyle='#3a2a1a'; ctx.fillRect(x+10,240,12,16); ctx.fillStyle='#ffcf6b'; ctx.fillRect(x+12,243,8,10); }
+    // old stone well and wooden cross-fence at the clearing (boss arena)
+    const ax=3040-cx;
+    if (ax<W && ax>-1000){ ctx.fillStyle='#3a3a3a'; ctx.fillRect(ax+420,GROUND-60,110,60); ctx.fillStyle='#2a2a2a'; ctx.fillRect(ax+414,GROUND-66,122,10);
+      ctx.fillStyle='#4a3a28'; for (let k=0;k<12;k++) ctx.fillRect(ax+40+k*80,GROUND-50,6,50); ctx.fillRect(ax+40,GROUND-40,900,5); }
+    ctx.fillStyle='#1c1a14'; ctx.fillRect(-30,GROUND,W+60,H-GROUND+30);
+    ctx.fillStyle='#2a2618'; for (const p of S.pebbles){ const x=p.x-cx; if (x>-10&&x<W+10) circle(x,p.y,p.r); }
+    ctx.fillStyle='#24361f'; ctx.fillRect(-30,GROUND-3,W+60,6);
+    ctx.fillStyle='#2f4a26'; for (const f of S.tufts){ const x=f.x-cx; if (x<-10||x>W+10) continue; tri(x-5*f.s,GROUND-2,x,GROUND-16*f.s,x+5*f.s,GROUND-2); }
+  },
+};
