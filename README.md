@@ -5,6 +5,7 @@ Jogo de ação 2D feito com HTML, CSS e JavaScript puro, sem etapa de build. Bas
 ## Modos
 
 - **História**: no mapa-múndi você escolhe um continente e, dentro dele, a fase. O primeiro continente, o **Reino de Vallen**, tem quatro fases: Bosque de Vallen (Gorgo, o Rei Orc), Caverna de Cristal (Golem de Cristal), Deserto Escaldante (Rei Escorpião) e Castelo Sombrio (Lorde Sombrio). Vencer uma fase libera a próxima, e terminar um continente libera o seguinte.
+  O segundo continente, **Terra Brasilis**, acompanha as festas do ano: Carnaval (Bonecão Desgovernado), Páscoa (Coelho Colossal), Festa Junina (Boitatá), Noite do Saci (Mula-sem-cabeça) e Natal (Ladrão de Presentes).
 - **Co-op Online**: a história em dupla, cada jogador no seu navegador. Os inimigos ficam mais fortes, e quem cai volta depois de 10 segundos se o parceiro continuar de pé.
 - **PvP Online**: luta numa das quatro arenas, com melhor de 1, 3 ou 5 rounds e tempo configurável.
 
@@ -61,6 +62,8 @@ No celular aparecem botões na tela (jogue com o aparelho na horizontal).
 | `js/stages.js` | registro de continentes e fases, dificuldade automática |
 | `js/themes.js` | cenários: fundo, plataformas, iluminação e atmosfera |
 | `js/stages/vallen.js` | continente 1, Reino de Vallen, e suas 4 fases |
+| `js/stages/brasilis.js` | continente 2, Terra Brasilis, e suas 5 fases |
+| `js/admin.js` | modo administrador para testes (`?admin`) |
 | `js/progress.js` | fases liberadas, níveis, ouro e equipamentos (salvos no navegador) |
 | `js/render.js` | desenho do mundo e do HUD |
 | `js/net.js` | conexão online (PeerJS) |
@@ -79,3 +82,18 @@ No celular aparecem botões na tela (jogue com o aparelho na horizontal).
 4. Aumente o número `?v=` dos arquivos no `index.html` para os navegadores baixarem a versão nova.
 
 A dificuldade dos inimigos comuns é calculada sozinha pela posição da fase na campanha, as fases liberam em sequência entre continentes, e as arenas de PvP entram na lista automaticamente. O progresso salvo dos jogadores continua valendo.
+
+## Modo administrador (para testes)
+
+Abra o jogo com `?admin` no fim do endereço, por exemplo `https://conceicaoviniciusantonio.github.io/fight-game/?admin` ou `http://localhost:8765/?admin`. Todas as fases ficam liberadas (sem alterar o progresso salvo) e, dentro de uma fase, estas teclas funcionam:
+
+| Tecla | Ação |
+|---|---|
+| B | pula direto para o chefe |
+| K | derrota todos os inimigos da tela |
+| I | liga/desliga invencibilidade |
+| N | enche o MP |
+| L | sobe um nível |
+| O | ganha 5000 de ouro |
+
+Nível e ouro ganhos com L e O ficam salvos; para voltar ao normal, use **Opções → Apagar progresso**.

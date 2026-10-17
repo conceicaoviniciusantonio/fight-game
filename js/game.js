@@ -216,6 +216,7 @@ function tickPlay(){
   const inp=me.inp; if (paused) me.inp=NO_INPUT;
   for (const p of players) if (p.local) updatePlayer(p); else updatePuppet(p);
   me.inp=inp;
+  adminTick();
   if (isGuest()){
     for (const e of enemies) updateEnemyPuppet(e);
     for (const it of items) it.t++;
@@ -370,6 +371,7 @@ function draw(){
       if (endTimer>30) txt('ENTER voltar ao menu',W/2,H/2+30,20,'#ffffff');
       break;
   }
+  drawAdminBadge();
 }
 
 // ----- loop -----

@@ -58,8 +58,18 @@ Cada fase termina com um commit próprio.
 - [x] Nível máximo sobe para 40; a loja aceita equipamentos que só liberam em continentes futuros
 - [x] Arenas de PvP montadas automaticamente a partir das fases
 
+## Fase 9: Terra Brasilis (continente 2)
+- [x] Carnaval: carros alegóricos que se movem; folião, pierrô e bonecão; chefe Bonecão Desgovernado
+- [x] Páscoa: ovos escondidos com ouro; coelho, ovo rolante e galinha; chefe Coelho Colossal
+- [x] Festa Junina: fogueiras e fogos que caem do céu; espantalhos e busca-pé; chefe Boitatá
+- [x] Noite do Saci: mata escura com lampiões; Saci, fogo-fátuo e lobisomem; chefe Mula-sem-cabeça
+- [x] Natal: praia com presentes-surpresa; duende, soldadinho e rena; chefe Ladrão de Presentes
+- [x] Música própria por fase, arenas de PvP novas e dois níveis novos de equipamento na loja
+- [x] Dificuldade dos chefes continuando a escadinha depois do Lorde Sombrio
+- [x] Modo administrador para testes (`?admin`)
+
 ## Próximas ideias
-- [ ] Continente 2 (tema a definir: gelo, ilhas, vulcão…)
+- [ ] Continente 3
 - [ ] Arte em sprites (personagens desenhados quadro a quadro)
 - [ ] Mais fases, chefes ou um quinto herói
 - [ ] Ajustes de equilíbrio de dano, vida e dificuldade depois de mais partidas
