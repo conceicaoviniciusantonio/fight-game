@@ -25,6 +25,7 @@ function startStory(stageId='forest'){
   run.xp=0; run.gold=0; run.eggs=0;
   // hidden collectibles placed by the stage (e.g. Easter eggs); they don't expire
   for (const x of stage.eggs||[]) items.push({x,y:GROUND-420,vx:0,vy:0,type:'egg',val:40,keep:true,t:0,onGround:false,id:'i'+nextId++});
+  for (const x of stage.lifeItems||[]) items.push({x,y:GROUND-420,vx:0,vy:0,type:'life',keep:true,t:0,onGround:false,id:'i'+nextId++});
   mode='play'; paused=false;
   banner={txt:stage.name,sub:stage.sub,t:150,max:150};
   playMusic(stage.music); SFX.select();
@@ -140,6 +141,7 @@ function updateProjs(){
 function applyPickup(p,type,val){
   if (!p.local){ netSend({type:'pickup',id:p.id,it:type,val}); return; }
   if (type==='gold'){ addGold(p,val); SFX.coin(); return; }
+  if (type==='life'){ p.lives=Math.min(MAX_LIVES,p.lives+1); bigText(p.x,p.y-p.h-30,'+1 VIDA!','#ff8fa3'); SFX.levelUp(); return; }
   if (type==='egg'){ run.eggs=(run.eggs||0)+1; addGold(p,val); bigText(p.x,p.y-p.h-30,'Ovo de Páscoa!','#ffb3c6'); SFX.levelUp(); return; }
   if (type==='hp'){ const h=Math.min(90,p.maxHp-p.hp); p.hp+=h; addText(p.x,p.y-90,'+'+h+' HP','#7dff8a'); }
   else if (type==='mp'){ p.mp=Math.min(MAXMP,p.mp+70); addText(p.x,p.y-90,'+MP','#7fd7ff'); }
@@ -231,7 +233,9 @@ function tickPlay(){
   if (comboTimer>0 && --comboTimer===0) combo=0;
   if (boss) boss.dispHp+=(Math.max(0,boss.hp)-boss.dispHp)*0.05;
   followCamera();
-  if (!isGuest() && players.length && !alivePlayers().length && ++loseTimer>110){
+  // game over only when nobody is standing and nobody has a life left to get back up with
+  const out=p=>!isAlive(p) && !(p.lives>1);
+  if (!isGuest() && players.length && players.every(out) && ++loseTimer>110){
     if (online) netSend({type:'lose'});
     mode='over'; endTimer=0; playMusic('gameover'); saveProgress();
   }
@@ -296,8 +300,10 @@ function drawStoryHUD(){
   heroPanel(me,14,12);
   const partner=players.find(p=>p!==me);
   if (partner) drawPartnerPanel(partner,14,96);
-  if (me.state==='dead' && partner && isAlive(partner) && Net.mode==='coop')
-    txt(`Você caiu! Voltando em ${Math.ceil((REVIVE_TIME-(me.reviveT||0))/60)}s`,W/2,150,22,'#ffd23f');
+  if (me.state==='dead' && canRespawn(me))
+    txt(`Você caiu! Voltando em ${Math.ceil((RESPAWN_TIME-me.t)/60)}s · vidas restantes: ${me.lives-1}`,W/2,150,22,'#ffd23f');
+  else if (me.state==='dead' && partner && isAlive(partner) && Net.mode==='coop')
+    txt(`Sem vidas! Seu parceiro precisa aguentar: voltando em ${Math.ceil((REVIVE_TIME-(me.reviveT||0))/60)}s`,W/2,150,20,'#ffd23f');
   txt(`PONTOS ${score}`,W-20,26,20,'#ffffff','right');
   coinIcon(W-112,74); txt(String(Progress.gold),W-20,74,16,'#ffd23f','right');
   if (stage.eggs) txt(`🥚 ${run.eggs||0}/${stage.eggs.length}`,W-20,96,14,'#ffd6e0','right');

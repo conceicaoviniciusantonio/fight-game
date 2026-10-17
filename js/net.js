@@ -122,11 +122,11 @@ NET_HANDLERS.stun = m => { const e=enemies.find(o=>o.id===m.id); if (e) stunEnem
 
 function sendSnap(p){
   netSend({type:'s',x:Math.round(p.x*10)/10,y:Math.round(p.y*10)/10,vx:p.vx,vy:p.vy,f:p.face,st:p.state,t:p.t,sk:p.sk,
-    ak:p.atk?p.atk.name:null,an:p.anim,og:p.onGround,inv:p.inv,hp:p.hp,mhp:p.maxHp,mp:Math.round(p.mp),h:p.hero,g:Math.round(p.guardHp),lv:p.lvl,tr:p.tier,am:Math.round((p.aim||0)*100)/100,fl:p.flip||0});
+    ak:p.atk?p.atk.name:null,an:p.anim,og:p.onGround,inv:p.inv,hp:p.hp,mhp:p.maxHp,mp:Math.round(p.mp),h:p.hero,g:Math.round(p.guardHp),lv:p.lvl,tr:p.tier,am:Math.round((p.aim||0)*100)/100,fl:p.flip||0,li:p.lives});
 }
 function applySnap(r,m){
   Object.assign(r,{tx:m.x,ty:m.y,vx:m.vx,vy:m.vy,face:m.f,state:m.st,t:m.t,sk:m.sk,anim:m.an,onGround:m.og,inv:m.inv,
-    hp:m.hp,maxHp:m.mhp,mp:m.mp,hero:m.h,guardHp:m.g,lvl:m.lv,tier:m.tr,aim:m.am||0,flip:m.fl||0});
+    hp:m.hp,maxHp:m.mhp,mp:m.mp,hero:m.h,guardHp:m.g,lvl:m.lv,tier:m.tr,aim:m.am||0,flip:m.fl||0,lives:m.li??1});
   r.atk = m.ak ? HEROES[m.h].atk[m.ak] : null;
   if (r.state==='attack' && !r.atk) r.state='free';
 }

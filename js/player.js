@@ -12,6 +12,7 @@ function makePlayer(hero,opts={}){
     jumps:0, airAtk:0, inv:0, anim:0, dropThrough:0, onGround:true,
     lastTap:{dir:0,t:-99}, localInv:0, tx:0, ty:GROUND, guardHp:100, rollCd:0, rollDir:1,
     base:!!opts.base || opts.local===false, def:0, lvl:1, tier:0, aim:0,
+    lives: opts.base ? 1 : START_LIVES,   // story/co-op: like Grand Chase, you get back up while lives remain
   };
   applyStats(p); p.hp=p.maxHp;
   return p;
@@ -32,6 +33,16 @@ function drawEmote(p){
   ctx.globalAlpha=a; ctx.font=`bold 16px ${FONT}`; const w=ctx.measureText(s).width+20;
   ctx.fillStyle='#ffffff'; ctx.beginPath(); ctx.roundRect(x-w/2,y-15,w,30,10); ctx.fill(); tri(x-6,y+14,x+6,y+14,x,y+22);
   txt(s,x,y,16,'#1b1b2e','center',false); ctx.globalAlpha=1;
+}
+
+// ----- lives -----
+const START_LIVES = 3, MAX_LIVES = 5, RESPAWN_TIME = 120;
+const canRespawn = p => mode==='play' && p.lives>1;
+function respawn(p){
+  p.lives--; p.hp=p.maxHp; p.state='free'; p.t=0; p.inv=150; p.vx=0; p.vy=0; p.guardHp=100; p.status={};
+  if (p.safeX!=null) p.x=p.safeX;
+  p.y=GROUND-260; // drops back in from above
+  bigText(p.x,GROUND-150,'DE VOLTA!','#7dff8a'); ring(p.x,GROUND-120,'#7dff8a',6,20,5,10); SFX.pickup();
 }
 
 // Plays a sound and, when online, asks the other browser to play it too
@@ -249,7 +260,13 @@ function updatePlayer(p){
   if (p.flip>0) p.flip--;
   if (p.state!=='guard') p.guardHp=Math.min(100,p.guardHp+0.5);
   if (p.emoteCd>0) p.emoteCd--;
-  if (p.state==='dead'){ p.t++; p.vx*=0.92; physics(p); tryRevive(p); return; }
+  if (p.state==='dead'){
+    p.t++; p.vx*=0.92; physics(p);
+    if (canRespawn(p)){ if (p.t>=RESPAWN_TIME) respawn(p); }
+    else tryRevive(p);
+    return;
+  }
+  if (p.onGround) p.safeX=p.x; // where to come back after falling
   // archer aim: holding ↑/↓ while shooting raises/lowers the bow little by little
   if (Hh.aim){
     if (p.state==='attack' || (p.state==='skill' && p.sk===0)){

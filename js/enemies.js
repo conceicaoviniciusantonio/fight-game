@@ -146,7 +146,8 @@ function killEnemy(e,dir){
     onBossDefeated(e);
   } else {
     SFX.die();
-    if (Math.random()<0.22) dropItem(e.x,e.y-20,Math.random()<0.6?'hp':'mp');
+    if (Math.random()<0.03) dropItem(e.x,e.y-20,'life');
+    else if (Math.random()<0.22) dropItem(e.x,e.y-20,Math.random()<0.6?'hp':'mp');
     else if (Math.random()<0.55) dropItem(e.x,e.y-20,'gold',-6,Math.max(5,Math.round(T.score/10)),rand(-2,2));
   }
 }

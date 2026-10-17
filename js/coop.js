@@ -103,4 +103,5 @@ function drawPartnerPanel(p,x,y){
   bar(x+48,y+20,170,10,Math.max(0,p.hp)/p.maxHp,'#ff6b7a','#b3122a');
   mpBars(x+48,y+36,52,6,p.mp,7);
   if (!isAlive(p)) txt('CAÍDO',x+133,y+25,12,'#ff8a8a');
+  for (let k=0;k<(p.lives||0);k++) heartIcon(x+205-k*12,y+11,4.5,'#ff4d6d');
 }
