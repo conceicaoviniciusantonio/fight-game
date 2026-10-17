@@ -65,6 +65,16 @@ const ENEMY_TYPES = {
     moves:['hop','bombs','charge','rain'], summon:['coelho','coelho','galinha'], bombStyle:'egg',
     tune:{wind:0.92, rec:0.92, cd:[38,76], enrage:0.5, rage:1.32, charge:11, summons:2},
     look:{kind:'bunny', s:2.7, fur:'#7b4a2e', inner:'#ffb3c6', eye:'#ff2a2a', bow:'#ffd23f'}},
+  // ----- Festa Junina -----
+  espantalho:{hp:200, w:34, h:62, speed:1.3, dmg:40, ai:'melee', reach:60, windup:26, score:260,
+    look:{s:1.15,skin:'#d9b77a',body:'#b5452f',cloth:'#5b7bb5',eye:'#1b1b2e',weapon:'fork',straw:true,burlap:true}},
+  fogueteiro:{hp:110, w:30, h:60, speed:1.5, dmg:30, ai:'archer', shot:'lob', bombStyle:'fire', score:200,
+    look:{s:1.05,skin:'#d9b77a',body:'#3a7d44',cloth:'#c9a227',eye:'#1b1b2e',weapon:'none',straw:true,burlap:true}},
+  buscape:{hp:60, w:24, h:34, speed:3.2, dmg:46, ai:'kamikaze', score:150, look:{kind:'rocket', s:1, body:'#e63946', band:'#ffd23f'}},
+  boitata:{hp:6900, w:120, h:110, speed:2.1, dmg:120, ai:'boss', boss:true, score:7000, name:'Boitatá',
+    moves:['wave','burrow','bombs','charge'], summon:['buscape','buscape','fogueteiro'], bombStyle:'fire', waveStyle:'fire', burrowWave:'fire',
+    tune:{wind:0.9, rec:0.9, cd:[36,72], enrage:0.5, rage:1.35, charge:11.5, summons:2},
+    look:{kind:'serpent', s:1, body:'#ff5a1f', glow:'#ffd36b', eye:'#ffffff', noOutline:true}},
   bonecaoRei:{hp:6300, w:100, h:175, speed:1.7, dmg:120, ai:'boss', boss:true, score:6000, name:'Bonecão Desgovernado',
     moves:['spin','rain','slam','leap'], summon:['foliao','foliao','pierrot'], bombStyle:'confetti',
     tune:{wind:0.95, rec:0.95, cd:[40,80], enrage:0.5, rage:1.3, charge:10, summons:2},
@@ -311,8 +321,8 @@ function bossAI(e,tg,dx,adx){
     case 'waveWind':
       e.vx*=0.8; e.t++; e.face=dx>0?1:-1;
       if (e.t>=wnd(enr?22:30)){
-        addEnemyProj({type:'swave',x:e.x+e.face*60,y:e.y,vx:e.face*9.5,vy:0,life:95,dmg:Math.round(e.dmg*0.62)});
-        if (enr) addEnemyProj({type:'swave',x:e.x-e.face*60,y:e.y,vx:-e.face*9.5,vy:0,life:95,dmg:Math.round(e.dmg*0.62)});
+        addEnemyProj({type:'swave',style:T.waveStyle,x:e.x+e.face*60,y:e.y,vx:e.face*9.5,vy:0,life:95,dmg:Math.round(e.dmg*0.62)});
+        if (enr) addEnemyProj({type:'swave',style:T.waveStyle,x:e.x-e.face*60,y:e.y,vx:-e.face*9.5,vy:0,life:95,dmg:Math.round(e.dmg*0.62)});
         SFX.wave(); addShake(6); e.state='recover'; e.t=15;
       }
       break;
@@ -370,6 +380,7 @@ function updateEnemy(e){
     else if (T.ai==='flyer') flyerAI(e,tg,dx,adx);
     else if (T.ai==='hopper') hopperAI(e,tg,dx,adx);
     else if (T.ai==='roller') rollerAI(e,tg,dx,adx);
+    else if (T.ai==='kamikaze') kamikazeAI(e,tg,dx,adx);
     else meleeAI(e,tg,dx,adx);
   }
   if (T.fly){ if (e.state==='hurt') e.vy*=0.9; e.x+=e.vx; e.y=clamp(e.y+e.vy,60,GROUND-6); e.onGround=false; }
@@ -387,6 +398,20 @@ function hopperAI(e,tg,dx,adx){
     for (const p of alivePlayers())
       if (!e.hitIds.has(p.id) && Math.abs(p.x-e.x)<e.w/2+p.w/2 && e.y>p.y-p.h && e.y-e.h<p.y){ e.hitIds.add(p.id); hurtPlayer(p,{dmg:e.dmg,dir:e.face,fromX:e.x,srcId:e.id}); }
   }
+}
+// "Busca-pé" fireworks: dash at the target, fizz for a moment, then blow up (destroying themselves)
+function kamikazeAI(e,tg,dx,adx){
+  if (e.state==='walk'){
+    e.face=dx>0?1:-1; e.vx=e.face*e.speed;
+    if (adx<60 && Math.abs(tg.y-e.y)<50){ e.state='windup'; e.t=0; SFX.charge(); }
+  } else if (e.state==='windup'){
+    e.vx*=0.85; e.t++; if (e.t%3===0) parts.push({x:e.x,y:e.y-34,vx:rand(-1,1),vy:-rand(1,2),life:14,max:14,color:'#ffd36b',size:2,grav:0});
+    if (e.t>=30){
+      ring(e.x,e.y-20,'#ffb347',8,18,8,10); burst(e.x,e.y-20,'#ff9d4d',20,7,0.1); SFX.blast(); addShake(6);
+      for (const p of alivePlayers()) if (Math.hypot(p.x-e.x,(p.y-30)-(e.y-20))<80) hurtPlayer(p,{dmg:e.dmg,dir:p.x>=e.x?1:-1,fromX:e.x,srcId:e.id});
+      e.hp=0; e.state='dying'; e.t=40; e.vy=0;
+    }
+  } else e.state='walk';
 }
 // Rolling eggs wobble closer, then roll hard at the target
 function rollerAI(e,tg,dx,adx){
@@ -552,6 +577,52 @@ function drawChicken(e,T,c,F,sx){
   ctx.fillStyle=F('#e6e6e6'); ctx.save(); ctx.translate(-2,-24); ctx.rotate(-0.3-flap*0.6); ctx.beginPath(); ctx.ellipse(0,0,9,5,0,0,Math.PI*2); ctx.fill(); ctx.restore();
   ctx.restore(); foeBars(e,T,sx);
 }
+function drawRocketFoe(e,T,c,F,sx){
+  ctx.save(); ctx.translate(sx,e.y); ctx.scale(e.face,1); foeDying(e,0.6);
+  const wind=e.state==='windup', run=Math.abs(e.vx)>0.5;
+  ctx.rotate(run?0.25:0);
+  ctx.fillStyle=F(c.body); ctx.beginPath(); ctx.roundRect(-8,-30,16,26,4); ctx.fill();
+  ctx.fillStyle=F(c.band); ctx.fillRect(-8,-22,16,4); ctx.fillRect(-8,-12,16,3);
+  ctx.fillStyle=F('#ffd23f'); tri(-8,-30,0,-40,8,-30);
+  ctx.strokeStyle='#5a3a1a'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(0,-4); ctx.lineTo(-6,4); ctx.stroke();
+  ctx.fillStyle='#1b1b2e'; circle(3,-25,2); circle(-3,-25,2);
+  if (wind||run){ ctx.fillStyle=(clock>>1)%2?'#fff3c4':'#ffb347'; circle(-6,4,4+(wind?Math.random()*3:0)); }
+  ctx.restore();
+  if (wind && (e.anim>>1)%2) txt('!',sx,e.y-e.h-14,20,'#ff4040');
+  foeBars(e,T,sx);
+}
+// Boitatá: a fire serpent rearing up like a cobra, its glowing body winding along the ground behind it
+function drawSerpent(e,T,c,F,sx){
+  if (e.hidden) return;
+  ctx.save();
+  if (e.state==='dying') ctx.globalAlpha=Math.max(0,1-e.t/45);
+  const f=e.face, rage=WIND.includes(e.state)||e.state==='charge', segs=16;
+  const pts=[];
+  for (let i=0;i<segs;i++){
+    const rise=Math.max(0,4-i)/4;                  // the first segments lift into a neck
+    const x=sx-f*(i*22-10*rise), wave=Math.sin(e.anim*0.18-i*0.7)*(6+i*0.4);
+    const y=e.y-18-rise*rise*84+(1-rise)*wave;
+    pts.push([x,y,28-i*1.1]);
+  }
+  for (let i=segs-1;i>=1;i--){
+    const [x,y,r]=pts[i];
+    const g=ctx.createRadialGradient(x,y,1,x,y,r*1.5); g.addColorStop(0,F('#fff3c4')); g.addColorStop(0.45,F(c.glow)); g.addColorStop(1,'rgba(255,90,31,0)');
+    ctx.fillStyle=g; circle(x,y,r*1.5);
+    ctx.fillStyle=F(c.body); circle(x,y,r*0.72);
+    ctx.fillStyle=F('#ffd36b'); tri(x-5,y-r*0.6,x,y-r*0.6-10-Math.sin(clock*0.3+i)*4,x+5,y-r*0.6);
+  }
+  const [hx,hy]=pts[0];
+  ctx.translate(hx,hy); ctx.scale(f,1);
+  const g=ctx.createRadialGradient(0,0,4,0,0,70); g.addColorStop(0,'rgba(255,240,180,0.85)'); g.addColorStop(1,'rgba(255,90,31,0)'); ctx.fillStyle=g; circle(0,0,70);
+  ctx.fillStyle=F(c.body); ctx.beginPath(); ctx.ellipse(8,0,40,26,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=F('#ff8a3d'); ctx.beginPath(); ctx.ellipse(30,10,24,12,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=rage?'#ffffff':'#fff3c4'; ctx.beginPath(); ctx.ellipse(20,-9,11,8,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=rage?'#ff2020':'#ff8a3d'; circle(23,-9,5);
+  if (rage){ ctx.fillStyle='#fff3c4'; tri(40,14,52,10,44,20); }
+  ctx.fillStyle=F('#ffd36b'); for (let k=0;k<6;k++) tri(-26+k*10,-20,-21+k*10,-40-Math.sin(clock*0.3+k)*6,-16+k*10,-20);
+  ctx.restore();
+  if (e.hp>0 && WIND.includes(e.state) && (e.anim>>2)%2) txt('!',sx,e.y-e.h-70,22,'#ff4040');
+}
 function drawMonsterShadow(e){
   const T=ENEMY_TYPES[e.type], sx=e.x-cam.x;
   if (T.look.kind==='bat' || e.state==='dying' || e.hidden) return;
@@ -567,6 +638,8 @@ function drawMonster(e,noShadow){
   if (c.kind==='bunny') return drawBunny(e,T,c,F,sx);
   if (c.kind==='egg') return drawEggFoe(e,T,c,F,sx);
   if (c.kind==='chicken') return drawChicken(e,T,c,F,sx);
+  if (c.kind==='rocket') return drawRocketFoe(e,T,c,F,sx);
+  if (c.kind==='serpent') return drawSerpent(e,T,c,F,sx);
   if (!noShadow && e.state!=='dying'){ const s=T.boss?GROUND:surfaceBelow(e.x,e.y), d=clamp((s-e.y)/250,0,0.7); shadow(sx,s,e.w*0.6*(1-d)); }
   ctx.save(); ctx.translate(sx,e.y);
   if (T.boss && e.hp>0 && e.hp<e.maxHp*((T.tune&&T.tune.enrage)??0.5)){
@@ -592,6 +665,7 @@ function drawMonster(e,noShadow){
   ctx.fillStyle=F(c.cloth); ctx.fillRect(-11,-17,22,6);
   if (c.skull){ ctx.strokeStyle=F('#8a8478'); ctx.lineWidth=1.5; for (let k=0;k<3;k++){ ctx.beginPath(); ctx.moveTo(-8,-30+k*5); ctx.lineTo(8,-30+k*5); ctx.stroke(); } }
   if (c.wrap){ ctx.strokeStyle=F('#a89b78'); ctx.lineWidth=2; for (let k=0;k<4;k++){ ctx.beginPath(); ctx.moveTo(-11,-31+k*5); ctx.lineTo(11,-29+k*5); ctx.stroke(); } }
+  if (c.burlap){ ctx.fillStyle=F('#e9c46a'); tri(-11,-14,-14,-4,-8,-12); tri(11,-14,14,-4,8,-12); ctx.fillStyle=F('#8a5a2a'); ctx.fillRect(-4,-30,7,6); }
   ctx.fillStyle=F(c.skin); circle(3,-43,12);
   if (ears){ tri(10,-48,22,-55,12,-40); }
   if (c.wrap){ ctx.strokeStyle=F('#a89b78'); ctx.lineWidth=2; for (let k=0;k<3;k++){ ctx.beginPath(); ctx.moveTo(-9,-50+k*6); ctx.lineTo(15,-47+k*6); ctx.stroke(); } }
@@ -607,6 +681,9 @@ function drawMonster(e,noShadow){
   const eyeC=(WIND.includes(st)||st==='charge')?'#ff2020':c.eye;
   if (c.skull){ ctx.fillStyle='#1d1d1d'; circle(9,-44,3.4); circle(1,-44,3); ctx.fillStyle=eyeC; circle(9,-44,1.6); ctx.fillStyle='#1d1d1d'; ctx.fillRect(2,-37,10,2); }
   else { ctx.fillStyle=eyeC; circle(9,-44,2.4); }
+  if (c.burlap){ ctx.strokeStyle='#5a3a1a'; ctx.lineWidth=1.3; ctx.beginPath(); ctx.moveTo(3,-37); ctx.lineTo(13,-37); for (let k=4;k<13;k+=3){ ctx.moveTo(k,-39); ctx.lineTo(k,-35); } ctx.stroke(); }
+  if (c.straw){ ctx.fillStyle=F('#e9c46a'); ctx.beginPath(); ctx.ellipse(3,-52,20,4.5,0,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(3,-57,10,7,0,Math.PI,0); ctx.fill();
+    ctx.fillStyle=F('#b5452f'); ctx.fillRect(-7,-55,20,3); }
   if (c.mask){ ctx.fillStyle=F(c.mask); ctx.beginPath(); ctx.roundRect(-3,-48,20,7,3); ctx.fill(); ctx.fillStyle='#1b1b2e'; circle(9,-44.5,2.2); }
   if (c.clown){ ctx.fillStyle='#1b1b2e'; ctx.fillRect(8,-41,1.5,5); ctx.fillStyle='#e84a8a'; circle(12,-38,1.6); }
   if (!c.skull && !c.closed){ ctx.strokeStyle=F('#1d1d1d'); ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(4,-49); ctx.lineTo(12,-46.5); ctx.stroke(); }
@@ -637,6 +714,8 @@ function drawMonster(e,noShadow){
       ctx.fillStyle=F('#2b2236'); ctx.beginPath(); ctx.moveTo(16,-4); ctx.lineTo(50,-3); ctx.lineTo(56,0); ctx.lineTo(50,3); ctx.lineTo(16,4); ctx.closePath(); ctx.fill();
       ctx.strokeStyle=fl?'#fff':'rgba(255,92,240,0.8)'; ctx.lineWidth=1.2; ctx.beginPath(); ctx.moveTo(18,0); ctx.lineTo(50,0); ctx.stroke(); }
     else if (c.weapon==='fist'){ ctx.fillStyle=F(c.skin); circle(13,0,4.5); }
+    else if (c.weapon==='fork'){ ctx.fillStyle=F('#7a5230'); ctx.fillRect(-4,-1.5,40,3); ctx.fillStyle=F('#b0b8c0');
+      ctx.fillRect(34,-7,3,14); for (const o of [-6,0,6]) ctx.fillRect(36,o-1,9,2); }
     else if (c.weapon==='tambourine'){ ctx.strokeStyle=F('#c9a227'); ctx.lineWidth=2.5; ctx.beginPath(); ctx.arc(18,0,8,0,Math.PI*2); ctx.stroke();
       ctx.fillStyle=F('#f5f0e6'); circle(18,0,6); ctx.fillStyle=F('#d9d9d9'); for (let k=0;k<4;k++){ const a=k*Math.PI/2; circle(18+Math.cos(a)*8,Math.sin(a)*8,1.8); } }
     ctx.restore();

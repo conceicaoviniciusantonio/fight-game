@@ -306,3 +306,43 @@ THEMES.pascoa = {
     for (const f of S.tufts){ const x=f.x-cx; if (x<-10||x>W+10) continue; ctx.fillStyle=['#ffafcc','#ffffff','#ffd166','#cdb4db'][(f.x|0)%4]; circle(x,GROUND-5,3*f.s); ctx.fillStyle='#ffd166'; circle(x,GROUND-5,1.2*f.s); }
   },
 };
+
+THEMES.junina = {
+  platform:{post:'#6b4a2a', body:'#a0703a', line:'#7a5230', top:'#c99554', vine:'#e9c46a'},
+  darkness:() => 0.4,
+  lights(cx){ const L=[]; for (const p of BR_SCENERY.poles){ const x=p.x-cx*0.6; if (x>-160 && x<W+160) L.push({x,y:180,r:130,c:'255,210,120'}); } return L; },
+  ambient(cx){ // fireflies
+    for (let i=0;i<18;i++){ const x=((i*197-cx*0.7)%(W+40)+W+40)%(W+40)-20+Math.sin(clock*0.02+i)*20, y=200+((i*61)%220)+Math.sin(clock*0.04+i)*15;
+      ctx.fillStyle=`rgba(255,240,140,${0.4+0.4*Math.sin(clock*0.15+i*2)})`; circle(x,y,2); }
+  },
+  draw(cx){
+    const S=BR_SCENERY;
+    const g=ctx.createLinearGradient(0,0,0,GROUND); g.addColorStop(0,'#0b1d3a'); g.addColorStop(1,'#3b2a5a');
+    ctx.fillStyle=g; ctx.fillRect(-30,-30,W+60,GROUND+40);
+    ctx.fillStyle='rgba(255,255,255,0.8)'; for (let i=0;i<45;i++) circle(((i*211-cx*0.03)%W+W)%W,(i*67)%220+10,1.2);
+    ctx.fillStyle='#fff6d5'; circle(W*0.8-cx*0.02,80,30);
+    // far hills and a little church
+    ctx.fillStyle='#1d2a44'; ctx.beginPath(); ctx.moveTo(-30,GROUND);
+    for (let x=-30;x<=W+30;x+=20) ctx.lineTo(x,GROUND-90-Math.sin((x+cx*0.15)*0.007)*40); ctx.lineTo(W+30,GROUND); ctx.closePath(); ctx.fill();
+    const chx=900-cx*0.15; ctx.fillStyle='#e9e4d8'; ctx.fillRect(chx,GROUND-210,70,110); tri(chx-6,GROUND-210,chx+35,GROUND-250,chx+76,GROUND-210); ctx.fillRect(chx+28,GROUND-290,14,44); ctx.fillStyle='#ffd36b'; ctx.fillRect(chx+26,GROUND-160,18,30);
+    // festival stalls (barracas) with striped roofs
+    for (const hs of S.houses){ const x=hs.x*1.1-cx*0.45; if (x+100<-20||x>W+20) continue; const top=GROUND-110;
+      ctx.fillStyle='#8a5a2a'; ctx.fillRect(x+6,top,6,110); ctx.fillRect(x+84,top,6,110);
+      for (let k=0;k<6;k++){ ctx.fillStyle=k%2?'#ffffff':['#e63946','#2a9d8f','#e9c46a','#f4a261'][hs.c%4]; ctx.beginPath(); ctx.moveTo(x+k*16,top); ctx.lineTo(x+k*16+16,top); ctx.lineTo(x+k*16+16,top+22); ctx.lineTo(x+k*16,top+22); ctx.closePath(); ctx.fill(); }
+      ctx.fillStyle='#c99554'; ctx.fillRect(x,top+70,96,12); ctx.fillStyle='rgba(255,220,140,0.5)'; ctx.fillRect(x+10,top+30,76,38); }
+    // strings of little flags (bandeirinhas)
+    for (const p of S.poles){ const x=p.x-cx*0.6; if (x<-260||x>W+20) continue;
+      ctx.fillStyle='#4a3a2a'; ctx.fillRect(x-3,150,6,GROUND-150);
+      const x2=x+230; ctx.strokeStyle='rgba(40,30,20,0.8)'; ctx.lineWidth=1.2; ctx.beginPath(); ctx.moveTo(x,156); ctx.quadraticCurveTo(x+115,200,x2,156); ctx.stroke();
+      for (let k=1;k<12;k++){ const t=k/12, bx=x+(x2-x)*t, by=156+(1-(2*t-1)**2)*22, sw=Math.sin(clock*0.08+k)*2;
+        ctx.fillStyle=['#e63946','#ffd23f','#2a9d8f','#4d9de0','#ff4fd8','#7bd389'][k%6]; tri(bx-6,by,bx+6,by,bx+sw,by+14); } }
+    // the big festival arch over the boss arena
+    const ax=3500-cx; if (ax>-300 && ax<W+300){ ctx.strokeStyle='#8a5a2a'; ctx.lineWidth=14; ctx.beginPath(); ctx.arc(ax,GROUND,260,Math.PI,0); ctx.stroke();
+      for (let k=0;k<16;k++){ const a=Math.PI+k/15*Math.PI; ctx.fillStyle=['#e63946','#ffd23f','#2a9d8f','#4d9de0'][k%4]; tri(ax+Math.cos(a)*260-7,GROUND+Math.sin(a)*260,ax+Math.cos(a)*260+7,GROUND+Math.sin(a)*260,ax+Math.cos(a)*244,GROUND+Math.sin(a)*244+14); } }
+    // packed earth with straw
+    ctx.fillStyle='#7a5434'; ctx.fillRect(-30,GROUND,W+60,H-GROUND+30);
+    ctx.fillStyle='#634329'; for (const p of SCENERY.pebbles){ const x=p.x-cx; if (x>-10&&x<W+10) circle(x,p.y,p.r); }
+    ctx.fillStyle='#a07a4a'; ctx.fillRect(-30,GROUND-3,W+60,6);
+    ctx.strokeStyle='#e9c46a'; ctx.lineWidth=1.5; for (const f of SCENERY.tufts){ const x=f.x-cx; if (x<-10||x>W+10) continue; ctx.beginPath(); ctx.moveTo(x,GROUND+2); ctx.lineTo(x+6*f.s,GROUND-6*f.s); ctx.stroke(); }
+  },
+};

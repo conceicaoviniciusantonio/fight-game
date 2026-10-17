@@ -52,4 +52,5 @@ function loadStage(id){
   stage=STAGES[id]; worldW=stage.worldW;
   // copies, so moving platforms never change the stage data
   platforms=stage.platforms.map(p=>({...p,x0:p.x}));
+  hazards=(stage.hazards||[]).map(h=>({...h}));
 }

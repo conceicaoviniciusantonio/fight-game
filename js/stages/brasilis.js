@@ -52,5 +52,30 @@ registerContinent({
       ],
       arena:{left:3040, extra:[{x:3470,y:296,w:110}]},
     },
+    { id:'junina', map:{x:480,y:320,icon:'bonfire'}, arenaName:'Arraial',
+      name:'Festa Junina', theme:'junina', worldW:4000, music:'junina', bossMusic:'boss',
+      // bonfires hurt on touch; fireworks fall every `rockets` frames
+      hazards:[{type:'fire',x:690,w:56},{type:'fire',x:1640,w:56},{type:'fire',x:2700,w:56}],
+      rockets:300,
+      platforms:[
+        {x:400,y:372,w:180},{x:560,y:290,w:160},{x:780,y:372,w:180},
+        {x:1360,y:372,w:180},{x:1520,y:290,w:170},{x:1720,y:372,w:200},{x:1960,y:296,w:130},
+        {x:2400,y:372,w:200},{x:2580,y:290,w:160},{x:2800,y:372,w:180},
+        {x:3200,y:372,w:170},{x:3720,y:372,w:170},
+      ],
+      zones:[
+        {at:330, left:100, waves:[
+          [['espantalho',560],['buscape',800],['fogueteiro',950]],
+          [['buscape',300],['fogueteiro',880],['espantalho',620],['buscape',720]]]},
+        {at:1260, left:1150, waves:[
+          [['espantalho',1500],['fogueteiro',1850],['buscape',1300],['buscape',1700]],
+          [['espantalho',1450],['espantalho',1950],['fogueteiro',1650],['buscape',1800],['buscape',1350]]]},
+        {at:2260, left:2150, waves:[
+          [['espantalho',2550],['fogueteiro',2950],['buscape',2400],['buscape',2850]],
+          [['espantalho',2300],['espantalho',2900],['fogueteiro',2560],['fogueteiro',2880],['buscape',2650],['buscape',2450]]]},
+        {at:3150, left:3040, boss:true, waves:[[['boitata',3760]]]},
+      ],
+      arena:{left:3040, extra:[{x:3470,y:296,w:110}]},
+    },
   ],
 });

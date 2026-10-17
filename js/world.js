@@ -8,6 +8,7 @@ let frame = 0, hitstop = 0, shake = 0, flashScreen = 0, banner = null, cutin = n
 let combo = 0, comboTimer = 0, maxCombo = 0, score = 0;
 let nextId = 1, pidSeq = 0;
 let platClock = 0; // drives moving platforms; the co-op guest follows the host's value
+let hazards = [];  // stage traps (bonfires, booby-trapped presents…), copied from the stage on load
 
 const bounds = () => locked ? [lockL, lockR] : [0, worldW];
 

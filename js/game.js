@@ -158,6 +158,20 @@ function updateItems(){
   }
   items=items.filter(it=>it.keep ? it.t<99999 : it.t<720);
 }
+// Traps run on the browser that owns the world (single player / co-op host); hits reach the guest via hurtPlayer
+function updateHazards(){
+  const dmg=k=>Math.round(k*(stage.diff?stage.diff.dmg:1));
+  for (const h of hazards){
+    if (h.type==='fire'){
+      for (const p of alivePlayers()) if (p.x>h.x-6 && p.x<h.x+h.w+6 && p.y>GROUND-46) hurtPlayer(p,{dmg:dmg(16),dir:p.x<h.x+h.w/2?-1:1,fromX:h.x+h.w/2});
+    }
+  }
+  // fireworks falling from the sky now and then, aimed near a hero
+  const bossFight=locked && stage.zones[zi] && stage.zones[zi].boss;
+  if (stage.rockets && frame%stage.rockets===0 && !winTimer && !bossFight){
+    const p=pick(alivePlayers()); if (p) addEnemyProj({type:'bomb',style:'fire',x:p.x+rand(-140,140),y:-40,vx:rand(-1,1),vy:3,grav:0.3,life:200,dmg:dmg(24),r:14,explode:55});
+  }
+}
 function followCamera(){
   const [l,r]=bounds();
   const target=clamp(me.x-W/2,l,r-W);
@@ -188,7 +202,7 @@ function tickPlay(){
     for (const e of enemies) updateEnemy(e);
     separate();
     enemies=enemies.filter(e=>!e.dead);
-    updateItems(); updateZones();
+    updateItems(); updateZones(); updateHazards();
     if (goTimer>0) goTimer--;
   }
   updateProjs(); updateFx();

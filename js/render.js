@@ -184,6 +184,7 @@ function drawMonsterOutlined(e){
   }
   const bw=T.look.kind==='bat'?90:Math.max(170,130*s), bh=T.look.kind==='bat'?120:Math.max(150,108*s);
   drawMonsterShadow(e);
+  if (T.look.noOutline){ drawMonster(e,true); return; } // big glowing figures look better without the box-limited outline
   withOutline(sx,e.y,bw,bh,()=>drawMonster(e,true));
 }
 
@@ -196,6 +197,7 @@ function sceneLights(){
   for (const p of players) if (p.hp>0) L.push({x:p.x-cam.x,y:p.y-40,r:170});
   for (const pr of projs){ const l=PROJ_LIGHT[pr.type]; if (l) L.push({x:pr.x-cam.x,y:pr.y,r:l[1],c:l[0]}); }
   for (const q of parts) if (q.beam) L.push({x:q.x-cam.x+q.face*q.len/2,y:q.y,r:260,c:'255,240,180'});
+  for (const h of hazards) if (h.type==='fire'){ const x=h.x+h.w/2-cam.x; if (x>-200 && x<W+200) L.push({x,y:GROUND-30,r:190+Math.sin(clock*0.3)*8,c:'255,140,50'}); }
   if (boss && boss.hp>0 && boss.hp<boss.maxHp*0.5) L.push({x:boss.x-cam.x,y:boss.y-60,r:150,c:'255,60,40'});
   const th=THEMES[stage.theme];
   if (th.lights) L.push(...th.lights(cam.x));
@@ -236,8 +238,21 @@ function spark(x,y,color='#fff7d6'){ parts.push({spark:true,x,y,vx:0,vy:0,life:9
 
 function nameTag(p,label,color){ if (p) txt(label,p.x-cam.x,p.y-p.h-30,12,color); }
 
+function drawHazards(){
+  for (const h of hazards){
+    const x=h.x-cam.x; if (x+h.w<-40 || x>W+40) continue;
+    if (h.type==='fire'){ // bonfire: crossed logs and layered flames
+      ctx.fillStyle='#5d3a1a'; for (let k=0;k<h.w;k+=18){ ctx.save(); ctx.translate(x+k+9,GROUND-6); ctx.rotate((k/18%2?0.4:-0.4)); ctx.fillRect(-14,-4,28,8); ctx.restore(); }
+      for (let k=0;k<h.w;k+=14){ const fl=Math.sin(clock*0.3+k)*5, fx=x+k+7;
+        ctx.fillStyle='#ff5a1f'; ctx.beginPath(); ctx.ellipse(fx,GROUND-26,9,24+fl,0,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='#ffb347'; ctx.beginPath(); ctx.ellipse(fx,GROUND-20,6,16+fl*0.6,0,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='#fff3c4'; ctx.beginPath(); ctx.ellipse(fx,GROUND-14,3,8,0,0,Math.PI*2); ctx.fill(); }
+      if (clock%4===0) parts.push({x:h.x+rand(0,h.w),y:GROUND-40,vx:rand(-0.4,0.4),vy:-rand(1,2.5),life:30,max:30,color:pick(['#ffb347','#ff5a1f','#ffd36b']),size:2,grav:0});
+    }
+  }
+}
 function drawWorld(){
-  drawBG(); drawPlatforms(); drawItems();
+  drawBG(); drawPlatforms(); drawHazards(); drawItems();
   for (const e of enemies) drawMonsterOutlined(e);
   drawParts();
   for (const p of players) if (p!==me) drawHeroOutlined(p);

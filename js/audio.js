@@ -138,6 +138,15 @@ const SONGS = {
     bass:sq(`F2 . C3 . F2 . C3 .   Bb1 . F2 . Bb1 . F2 .   C2 . G2 . C2 . G2 .   C2 . G2 . C2 . E2 .
              F2 . C3 . F2 . C3 .   Bb1 . F2 . Bb1 . F2 .   C2 . G2 . C2 . G2 .   F2 . C3 . F2 . . .`),
     drum:sq(`k . h . s . h h `.repeat(7)+`k . s . s s s s`) }},
+  // Festa Junina: baião/forró feel in G mixolydian
+  junina:{ bpm:142, tracks:{
+    lead:sq(`G5 - F5 - E5 - D5 -   E5 F5 G5 - A5 - G5 -   F5 - E5 - D5 - C5 -   D5 - - - G4 - - -
+             B4 - D5 - G5 - F5 -   E5 - D5 - C5 - E5 -   D5 - F5 - E5 - C5 -   G5 - - - . . . .`),
+    harm:sq(`B4 . D5 . B4 . D5 .   C5 . E5 . C5 . E5 .   A4 . C5 . A4 . C5 .   B4 . D5 . B4 . D5 .
+             G4 . B4 . G4 . B4 .   C5 . E5 . C5 . E5 .   F4 . A4 . F4 . A4 .   B4 . D5 . G4 . . .`),
+    bass:sq(`G2 . . G2 D2 . G2 .   C3 . . C3 G2 . C3 .   F2 . . F2 C3 . F2 .   G2 . . G2 D2 . G2 .
+             G2 . . G2 D2 . G2 .   C3 . . C3 G2 . C3 .   F2 . . F2 D2 . F2 .   G2 . . G2 D2 . . .`),
+    drum:sq(`k h h k s h h h `.repeat(7)+`k h k h s s s s`) }},
   victory:{ bpm:150, once:true, tracks:{
     lead:sq(`C5 E5 G5 C6 - - G5 - C6 - - - . . . .`),
     harm:sq(`E4 G4 C5 E5 - - D5 - E5 - - - . . . .`),
