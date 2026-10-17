@@ -1,10 +1,13 @@
 'use strict';
 // ===================== Admin / test mode =====================
-// Open the game with ?admin in the address (e.g. index.html?admin) to test freely:
+// Open the game with ?admin in the address (e.g. http://localhost:8765/?admin) to test freely.
+// Only works when the game is served locally (localhost, 127.0.0.1, a local network address or a file),
+// so the published site ignores it.
 // every stage is unlocked (without touching the saved progress) and these keys work during a stage:
 //   B  jump to the boss        K  defeat every enemy on screen   I  invincible on/off
 //   N  fill MP                  L  +1 level                       O  +5000 gold
-const ADMIN = new URLSearchParams(location.search).has('admin');
+const LOCAL_HOST = location.protocol==='file:' || /^(localhost|127\.0\.0\.1|\[::1\]|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|.+\.local)$/.test(location.hostname);
+const ADMIN = LOCAL_HOST && new URLSearchParams(location.search).has('admin');
 let adminGod = false;
 
 if (ADMIN){

@@ -85,7 +85,7 @@ A dificuldade dos inimigos comuns é calculada sozinha pela posição da fase na
 
 ## Modo administrador (para testes)
 
-Abra o jogo com `?admin` no fim do endereço, por exemplo `https://conceicaoviniciusantonio.github.io/fight-game/?admin` ou `http://localhost:8765/?admin`. Todas as fases ficam liberadas (sem alterar o progresso salvo) e, dentro de uma fase, estas teclas funcionam:
+Funciona só quando o jogo roda no seu computador ou na sua rede local (por exemplo `http://localhost:8765/?admin`); no site publicado o `?admin` é ignorado. Abra o jogo com `?admin` no fim do endereço. Todas as fases ficam liberadas (sem alterar o progresso salvo) e, dentro de uma fase, estas teclas funcionam:
 
 | Tecla | Ação |
 |---|---|
