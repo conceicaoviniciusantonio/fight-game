@@ -393,3 +393,48 @@ THEMES.saci = {
     ctx.fillStyle='#2f4a26'; for (const f of S.tufts){ const x=f.x-cx; if (x<-10||x>W+10) continue; tri(x-5*f.s,GROUND-2,x,GROUND-16*f.s,x+5*f.s,GROUND-2); }
   },
 };
+
+THEMES.natal = {
+  platform:{post:'#6b4a2a', body:'#2a9d8f', line:'#1f7a70', top:'#e63946', vine:'#ffd23f'},
+  darkness:cx => 0.15+clamp((cx-2200)/1000,0,1)*0.25,   // sunset turning into a Christmas night
+  lights(cx){
+    const L=[]; for (const n of SCENERY.nearTrees){ const x=n.x-cx*0.6; if (x>-120 && x<W+120 && (n.x|0)%2) L.push({x,y:GROUND-n.h-20,r:110,c:'255,220,140'}); }
+    const tx=3520-cx; if (tx>-300 && tx<W+300) L.push({x:tx,y:GROUND-200,r:260,c:'255,230,150'});
+    return L;
+  },
+  ambient(cx){ // sparkles in the warm evening air
+    for (let i=0;i<20;i++){ const x=((i*173-cx*0.8)%(W+40)+W+40)%(W+40)-20, y=120+((i*83+clock*0.4)%280);
+      ctx.fillStyle=`rgba(255,240,180,${0.3+0.3*Math.sin(clock*0.12+i)})`; circle(x,y,1.6); }
+  },
+  draw(cx){
+    const S=SCENERY, t=clamp(cx/(worldW-W),0,1);
+    const g=ctx.createLinearGradient(0,0,0,GROUND); g.addColorStop(0,mix('#ff9e7a','#2b2d6e',t)); g.addColorStop(0.7,mix('#ffd6a5','#b56576',t)); g.addColorStop(1,mix('#ffe8c2','#e56b6f',t));
+    ctx.fillStyle=g; ctx.fillRect(-30,-30,W+60,GROUND+40);
+    ctx.fillStyle=mix('#fff1c1','#ffd6a5',t); circle(W*0.7-cx*0.02,GROUND-150+t*120,50);
+    // the sea
+    const sy=GROUND-120;
+    ctx.fillStyle=mix('#4fb3bf','#355c7d',t); ctx.fillRect(-30,sy,W+60,80);
+    ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=2;
+    for (let i=0;i<10;i++){ const x=((i*137-cx*0.2+clock*0.4)%(W+60)+W+60)%(W+60)-30, y=sy+10+(i%4)*16; ctx.beginPath(); ctx.arc(x,y,12,Math.PI*1.1,Math.PI*1.9); ctx.stroke(); }
+    ctx.fillStyle='#f2d16b'; ctx.fillRect(-30,sy+70,W+60,60);
+    // coconut palms wrapped in Christmas lights
+    for (const n of S.nearTrees){ const x=n.x-cx*0.6; if (x<-100||x>W+100) continue; const top=GROUND-n.h-30;
+      ctx.strokeStyle='#7a5434'; ctx.lineWidth=12; ctx.beginPath(); ctx.moveTo(x,GROUND); ctx.quadraticCurveTo(x+18,(GROUND+top)/2,x+8,top); ctx.stroke();
+      ctx.fillStyle='#2d6a4f'; for (let k=0;k<6;k++){ const a=-Math.PI/2+(k-2.5)*0.55; ctx.save(); ctx.translate(x+8,top); ctx.rotate(a); ctx.beginPath(); ctx.ellipse(32,0,34,8,0.25,0,Math.PI*2); ctx.fill(); ctx.restore(); }
+      ctx.fillStyle='#6b4a2a'; circle(x+4,top+8,6); circle(x+14,top+10,6);
+      for (let k=0;k<7;k++){ const yy=GROUND-12-k*(n.h/7), xx=x+((yy-GROUND)/(top-GROUND))*14; ctx.fillStyle=['#e63946','#ffd23f','#2a9d8f','#ffffff'][(k+Math.floor(clock/18))%4]; circle(xx,yy,3); } }
+    // the giant Christmas tree in the boss arena
+    const tx=3520-cx;
+    if (tx>-300 && tx<W+300){
+      ctx.fillStyle='#5a3a1a'; ctx.fillRect(tx-14,GROUND-40,28,40);
+      for (let k=0;k<4;k++){ const w=200-k*44, y=GROUND-40-k*70; ctx.fillStyle=k%2?'#2d6a4f':'#1b4332'; tri(tx-w/2,y,tx,y-110,tx+w/2,y); }
+      ctx.fillStyle='#ffd23f'; for (let k=0;k<5;k++){ const a=-Math.PI/2+k*Math.PI*2/5; circle(tx+Math.cos(a)*14,GROUND-370+Math.sin(a)*14,6); } circle(tx,GROUND-370,8);
+      for (let k=0;k<24;k++){ const yy=GROUND-60-(k*13)%300, ww=(200-((GROUND-60-yy)/70)*44)*0.4; ctx.fillStyle=['#e63946','#ffd23f','#4d9de0','#ff4fd8'][(k+Math.floor(clock/15))%4]; circle(tx+Math.sin(k*2.3)*ww,yy,4); }
+    }
+    // sand
+    ctx.fillStyle='#ecc979'; ctx.fillRect(-30,GROUND,W+60,H-GROUND+30);
+    ctx.fillStyle='#d9b464'; for (const p of S.pebbles){ const x=p.x-cx; if (x>-10&&x<W+10) circle(x,p.y,p.r*0.8); }
+    ctx.fillStyle='#f6dc94'; ctx.fillRect(-30,GROUND-3,W+60,6);
+    for (const f of S.tufts){ const x=f.x-cx; if (x<-10||x>W+10 || (f.x|0)%5) continue; ctx.fillStyle='#ffffff'; circle(x,GROUND+10,3); ctx.fillStyle='#ffb3c6'; circle(x+2,GROUND+9,1.5); }
+  },
+};

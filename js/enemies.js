@@ -84,6 +84,16 @@ const ENEMY_TYPES = {
     moves:['charge','leap','wave','slam'], summon:['saci','fogofatuo','lobisomem'], bombStyle:'fire', waveStyle:'fire',
     tune:{wind:0.88, rec:0.88, cd:[34,70], enrage:0.5, rage:1.38, charge:12.5, summons:2},
     look:{kind:'mule', s:1, body:'#9a7556', mane:'#3a2a1e', light:'255,120,40', noOutline:true}},
+  // ----- Natal -----
+  duende:{hp:110, w:26, h:46, speed:2.8, dmg:34, ai:'melee', reach:42, windup:16, score:200,
+    look:{s:0.85,skin:'#f2c49b',body:'#2a9d8f',cloth:'#e63946',eye:'#1b1b2e',weapon:'cane',elf:true}},
+  soldadinho:{hp:130, w:28, h:64, speed:1.4, dmg:32, ai:'archer', shot:'cork', score:230,
+    look:{s:1.1,skin:'#f2c49b',body:'#c1121f',cloth:'#1d3557',eye:'#1b1b2e',weapon:'musket',shako:true}},
+  rena:{hp:220, w:50, h:62, speed:1.6, dmg:52, ai:'roller', score:300, look:{kind:'reindeer', s:1, fur:'#8a5a3a', belly:'#d9b48a', nose:'#e63946'}},
+  ladrao:{hp:12500, w:80, h:140, speed:2.3, dmg:205, ai:'boss', boss:true, score:9000, name:'Ladrão de Presentes',
+    moves:['bombs','teleport','rain','charge'], summon:['duende','duende','soldadinho'], bombStyle:'gift',
+    tune:{wind:0.82, rec:0.82, cd:[30,62], enrage:0.55, rage:1.42, charge:13, summons:2},
+    look:{s:2.3, skin:'#e0b48a', body:'#2b2d42', cloth:'#c1121f', eye:'#ffd23f', weapon:'cane', mask:'#111111', beanie:'#c1121f', sack:'#8a6a4a'}},
   bonecaoRei:{hp:6300, w:100, h:175, speed:1.7, dmg:120, ai:'boss', boss:true, score:6000, name:'Bonecão Desgovernado',
     moves:['spin','rain','slam','leap'], summon:['foliao','foliao','pierrot'], bombStyle:'confetti',
     tune:{wind:0.95, rec:0.95, cd:[40,80], enrage:0.5, rage:1.3, charge:10, summons:2},
@@ -183,6 +193,7 @@ function archerAI(e,tg,dx,adx){
       const vy=clamp((ty-sy)/Math.max(40,adx/8),-2.5,2.5);
       const ET=ENEMY_TYPES[e.type];
       if (ET.shot==='lob'){ throwBomb(e,tg,ET.bombStyle,0); SFX.shoot(); }
+      else if (ET.shot==='cork'){ addEnemyProj({type:'cork',x:e.x+e.face*26,y:sy-4,vx:e.face*9,vy:vy*0.6,life:110,dmg:e.dmg}); SFX.shoot(); }
       else if (ET.shot==='eorb'){ addEnemyProj({type:'eorb',x:e.x+e.face*22,y:sy-6,vx:e.face*4.5,vy:vy*0.5,life:170,dmg:e.dmg,home:true,col:ENEMY_TYPES[e.type].look.orb}); SFX.zap(); }
       else { addEnemyProj({type:'arrow',x:e.x+e.face*18,y:sy,vx:e.face*8,vy,life:120,dmg:e.dmg}); SFX.shoot(); }
       e.state='strike'; e.t=0;
@@ -664,6 +675,22 @@ function drawMule(e,T,c,F,sx){
   ctx.restore();
   if (e.hp>0 && WIND.includes(e.state) && (e.anim>>2)%2) txt('!',sx,e.y-e.h-60,22,'#ff4040');
 }
+function drawReindeer(e,T,c,F,sx){
+  ctx.save(); ctx.translate(sx,e.y); ctx.scale(e.face*c.s,c.s); foeDying(e,0.6);
+  const run=Math.abs(e.vx)>0.5, ph=run?e.anim*0.4:0, chg=e.state==='charge', wind=e.state==='windup';
+  ctx.rotate(chg?0.12:wind?-0.08:0);
+  ctx.strokeStyle=F(c.fur); ctx.lineWidth=5; ctx.lineCap='round';
+  for (const [lx,o] of [[-16,0],[-8,Math.PI],[10,Math.PI*0.5],[18,Math.PI*1.5]]){ const sw=run?Math.sin(ph+o)*0.5:0; ctx.beginPath(); ctx.moveTo(lx,-28); ctx.lineTo(lx+Math.sin(sw)*12,-2); ctx.stroke(); }
+  ctx.fillStyle=F(c.fur); ctx.beginPath(); ctx.ellipse(0,-34,24,12,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=F(c.belly); ctx.beginPath(); ctx.ellipse(2,-28,14,5,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=F(c.fur); ctx.beginPath(); ctx.moveTo(14,-40); ctx.lineTo(24,-56); ctx.lineTo(32,-50); ctx.lineTo(24,-34); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(30,-54,10,7,0.3,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle=F('#d9b48a'); ctx.lineWidth=2.5;
+  for (const s of [-1,1]){ ctx.beginPath(); ctx.moveTo(26+s*2,-60); ctx.lineTo(22+s*6,-74); ctx.moveTo(23+s*4,-68); ctx.lineTo(16+s*6,-72); ctx.stroke(); }
+  ctx.fillStyle=F(c.nose); circle(39,-52,4); ctx.fillStyle='#1b1b2e'; circle(31,-57,1.8);
+  ctx.fillStyle=F('#ffd23f'); circle(18,-44,3);
+  ctx.restore(); foeBars(e,T,sx);
+}
 function drawRocketFoe(e,T,c,F,sx){
   ctx.save(); ctx.translate(sx,e.y); ctx.scale(e.face,1); foeDying(e,0.6);
   const wind=e.state==='windup', run=Math.abs(e.vx)>0.5;
@@ -729,6 +756,7 @@ function drawMonster(e,noShadow){
   if (c.kind==='saci') return drawSaci(e,T,c,F,sx);
   if (c.kind==='wisp') return drawWisp(e,T,c,F,sx);
   if (c.kind==='mule') return drawMule(e,T,c,F,sx);
+  if (c.kind==='reindeer') return drawReindeer(e,T,c,F,sx);
   if (c.kind==='serpent') return drawSerpent(e,T,c,F,sx);
   if (!noShadow && e.state!=='dying'){ const s=T.boss?GROUND:surfaceBelow(e.x,e.y), d=clamp((s-e.y)/250,0,0.7); shadow(sx,s,e.w*0.6*(1-d)); }
   ctx.save(); ctx.translate(sx,e.y);
@@ -776,6 +804,12 @@ function drawMonster(e,noShadow){
   if (c.burlap){ ctx.strokeStyle='#5a3a1a'; ctx.lineWidth=1.3; ctx.beginPath(); ctx.moveTo(3,-37); ctx.lineTo(13,-37); for (let k=4;k<13;k+=3){ ctx.moveTo(k,-39); ctx.lineTo(k,-35); } ctx.stroke(); }
   if (c.straw){ ctx.fillStyle=F('#e9c46a'); ctx.beginPath(); ctx.ellipse(3,-52,20,4.5,0,0,Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(3,-57,10,7,0,Math.PI,0); ctx.fill();
     ctx.fillStyle=F('#b5452f'); ctx.fillRect(-7,-55,20,3); }
+  if (c.sack){ ctx.fillStyle=F(c.sack); ctx.beginPath(); ctx.ellipse(-16,-30,13,17,-0.2,0,Math.PI*2); ctx.fill(); ctx.fillStyle=F('#5a4430'); ctx.fillRect(-20,-48,8,5);
+    ctx.fillStyle=F('#ffd23f'); ctx.fillRect(-24,-36,6,6); ctx.fillStyle=F('#2a9d8f'); ctx.fillRect(-14,-26,5,5); }
+  if (c.beanie){ ctx.fillStyle=F(c.beanie); ctx.beginPath(); ctx.arc(3,-48,12.5,Math.PI,0); ctx.fill(); ctx.fillStyle=F('#ffffff'); ctx.fillRect(-10,-49,26,4); circle(3,-61,3.5); }
+  if (c.elf){ ctx.fillStyle=F(c.skin); tri(-6,-46,-14,-54,-4,-40); ctx.fillStyle=F(c.body); ctx.beginPath(); ctx.moveTo(-9,-50); ctx.quadraticCurveTo(0,-74,-14,-80); ctx.lineTo(15,-50); ctx.closePath(); ctx.fill();
+    ctx.fillStyle=F('#ffd23f'); circle(-14,-80,3); }
+  if (c.shako){ ctx.fillStyle=F('#1b1b2e'); ctx.fillRect(-7,-72,20,20); ctx.fillStyle=F('#ffd23f'); ctx.fillRect(-7,-56,20,3); circle(3,-66,2.5); }
   if (c.mask){ ctx.fillStyle=F(c.mask); ctx.beginPath(); ctx.roundRect(-3,-48,20,7,3); ctx.fill(); ctx.fillStyle='#1b1b2e'; circle(9,-44.5,2.2); }
   if (c.clown){ ctx.fillStyle='#1b1b2e'; ctx.fillRect(8,-41,1.5,5); ctx.fillStyle='#e84a8a'; circle(12,-38,1.6); }
   if (!c.skull && !c.closed){ ctx.strokeStyle=F('#1d1d1d'); ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(4,-49); ctx.lineTo(12,-46.5); ctx.stroke(); }
@@ -806,6 +840,9 @@ function drawMonster(e,noShadow){
       ctx.fillStyle=F('#2b2236'); ctx.beginPath(); ctx.moveTo(16,-4); ctx.lineTo(50,-3); ctx.lineTo(56,0); ctx.lineTo(50,3); ctx.lineTo(16,4); ctx.closePath(); ctx.fill();
       ctx.strokeStyle=fl?'#fff':'rgba(255,92,240,0.8)'; ctx.lineWidth=1.2; ctx.beginPath(); ctx.moveTo(18,0); ctx.lineTo(50,0); ctx.stroke(); }
     else if (c.weapon==='fist'){ ctx.fillStyle=F(c.skin); circle(13,0,4.5); }
+    else if (c.weapon==='cane'){ ctx.strokeStyle=F('#ffffff'); ctx.lineWidth=4; ctx.lineCap='round'; ctx.beginPath(); ctx.moveTo(4,0); ctx.lineTo(30,0); ctx.arc(30,-6,6,Math.PI/2,-Math.PI/2,true); ctx.stroke();
+      ctx.strokeStyle=F('#e63946'); ctx.lineWidth=4; ctx.setLineDash([3,4]); ctx.beginPath(); ctx.moveTo(4,0); ctx.lineTo(30,0); ctx.stroke(); ctx.setLineDash([]); }
+    else if (c.weapon==='musket'){ ctx.fillStyle=F('#6d4c41'); ctx.fillRect(-6,-2,26,4); ctx.fillStyle=F('#9aa0ad'); ctx.fillRect(18,-1.5,18,3); }
     else if (c.weapon==='claw'){ ctx.fillStyle=F(c.skin); circle(13,0,5); ctx.fillStyle=F('#e9e4d8'); for (const o of [-4,0,4]) tri(15,o-1,23,o,15,o+1.5); }
     else if (c.weapon==='fork'){ ctx.fillStyle=F('#7a5230'); ctx.fillRect(-4,-1.5,40,3); ctx.fillStyle=F('#b0b8c0');
       ctx.fillRect(34,-7,3,14); for (const o of [-6,0,6]) ctx.fillRect(36,o-1,9,2); }

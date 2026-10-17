@@ -114,6 +114,7 @@ const FX_HANDLERS = {
   },
   cutin: m => { cutin={hero:m.hero,name:m.name,t:CUTIN_T}; },
   beam: m => { parts.push({beam:true,x:m.x,y:m.y,face:m.face,len:m.len,life:36,max:36}); },
+  gift: m => { const h=hazards.find(o=>o.i===m.i); if (h) setGift(h,m.s,false); },
   slashline: m => { parts.push({slash:true,x1:m.x1,x2:m.x2,y:m.y,life:18,max:18}); },
 };
 NET_HANDLERS.stagger = () => { if (me) stagger(me); };

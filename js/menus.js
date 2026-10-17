@@ -95,9 +95,9 @@ let worldSel=0, mapCont=0, mapSel=0, mapLastStage=0;
 const ENEMY_NAMES = { goblin:'Goblin', archer:'Goblin arqueiro', orc:'Orc', bat:'Morcego', kobold:'Kobold', shaman:'Xamã',
   scorpion:'Escorpião', mummy:'Múmia', nomad:'Nômade', skeleton:'Esqueleto', darkmage:'Mago sombrio', blackknight:'Cavaleiro negro',
   foliao:'Folião', pierrot:'Pierrô', bonecao:'Bonecão', coelho:'Coelho', ovo:'Ovo rolante', galinha:'Galinha', espantalho:'Espantalho', fogueteiro:'Espantalho fogueteiro', buscape:'Busca-pé',
-  saci:'Saci', fogofatuo:'Fogo-fátuo', lobisomem:'Lobisomem' };
+  saci:'Saci', fogofatuo:'Fogo-fátuo', lobisomem:'Lobisomem', duende:'Duende', soldadinho:'Soldadinho', rena:'Rena' };
 // Spots for islands still to come: drawn under fog unless a registered continent already sits there
-const COMING_SOON = [{x:570,y:190},{x:790,y:320},{x:420,y:390}];
+const COMING_SOON = [{x:570,y:190},{x:790,y:320},{x:420,y:390},{x:860,y:120}];
 const freeSlots = () => COMING_SOON.filter(s=>CONTINENTS.every(C=>Math.hypot(C.map.x-s.x,C.map.y-s.y)>230)).slice(0,2);
 
 const nextStageId = () => STAGE_IDS.find(id=>stageUnlocked(id) && !Progress.cleared.includes(id)) || STAGE_IDS.filter(stageUnlocked).pop();
@@ -194,6 +194,8 @@ function drawMapIcon(kind,x,y){
     ctx.fillStyle='#ff5a1f'; ctx.beginPath(); ctx.ellipse(x,y-2,10,16,0,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#ffd36b'; ctx.beginPath(); ctx.ellipse(x,y+2,5,9,0,0,Math.PI*2); ctx.fill(); }
   else if (kind==='saci'){ ctx.fillStyle='#d62828'; ctx.beginPath(); ctx.moveTo(x-12,y+8); ctx.quadraticCurveTo(x+2,y-12,x-10,y-22); ctx.quadraticCurveTo(x+12,y-6,x+14,y+8); ctx.closePath(); ctx.fill();
     ctx.fillStyle='#8fbf6a'; for (let k=0;k<6;k++){ const a=k*1.1; ctx.fillRect(x+Math.cos(a)*(6+k*2)-2,y+12-k*2,4,2.5); } }
+  else if (kind==='gift'){ ctx.fillStyle='#e63946'; ctx.fillRect(x-14,y-10,28,24); ctx.fillStyle='#ffd23f'; ctx.fillRect(x-3,y-10,6,24); ctx.fillRect(x-14,y-1,28,6);
+    ctx.beginPath(); ctx.ellipse(x-6,y-14,7,4,0.5,0,Math.PI*2); ctx.ellipse(x+6,y-14,7,4,-0.5,0,Math.PI*2); ctx.fill(); }
   else if (kind==='castle'){ ctx.fillStyle='#4a4458'; ctx.fillRect(x-14,y-6,28,18); ctx.fillRect(x-16,y-14,8,26); ctx.fillRect(x+8,y-14,8,26);
     tri(x-17,y-14,x-12,y-24,x-7,y-14); tri(x+7,y-14,x+12,y-24,x+17,y-14); ctx.fillStyle='#ffcf6b'; ctx.fillRect(x-3,y+2,6,10); }
 }

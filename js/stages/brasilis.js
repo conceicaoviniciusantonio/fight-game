@@ -99,5 +99,30 @@ registerContinent({
       ],
       arena:{left:3040, extra:[{x:3470,y:296,w:110}]},
     },
+    { id:'natal', map:{x:830,y:300,icon:'gift'}, arenaName:'Praia de Natal',
+      name:'Natal', theme:'natal', worldW:4000, music:'natal', bossMusic:'boss',
+      // surprise presents: `good` ones burst into coins, the others light a fuse and explode
+      hazards:[{type:'gift',x:300,good:true,col:'#2a9d8f'},{type:'gift',x:980,good:false},{type:'gift',x:1300,good:true,col:'#4d9de0'},
+               {type:'gift',x:2050,good:false},{type:'gift',x:2350,good:true,col:'#ff4fd8'},{type:'gift',x:2980,good:false}],
+      platforms:[
+        {x:420,y:372,w:180},{x:580,y:290,w:160},{x:820,y:372,w:200},
+        {x:1360,y:372,w:200},{x:1540,y:290,w:170},{x:1760,y:372,w:180},{x:1950,y:296,w:130},
+        {x:2420,y:372,w:200},{x:2600,y:290,w:170},{x:2840,y:372,w:180},
+        {x:3180,y:372,w:170},{x:3750,y:372,w:170},
+      ],
+      zones:[
+        {at:330, left:100, waves:[
+          [['duende',600],['duende',780],['soldadinho',950]],
+          [['rena',880],['duende',300],['duende',620],['soldadinho',720]]]},
+        {at:1260, left:1150, waves:[
+          [['duende',1500],['soldadinho',1850],['rena',1300],['duende',1700]],
+          [['rena',1450],['rena',1950],['soldadinho',1650],['duende',1800],['duende',1350]]]},
+        {at:2260, left:2150, waves:[
+          [['rena',2550],['soldadinho',2950],['duende',2400],['duende',2700]],
+          [['rena',2300],['rena',2900],['soldadinho',2560],['soldadinho',2880],['duende',2650],['duende',2450]]]},
+        {at:3150, left:3040, boss:true, waves:[[['ladrao',3760]]]},
+      ],
+      arena:{left:3040, extra:[{x:3470,y:296,w:110}]},
+    },
   ],
 });

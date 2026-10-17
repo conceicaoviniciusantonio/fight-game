@@ -154,6 +154,15 @@ const SONGS = {
     harm:sq(`G4 B4 E4 B4 G4 B4 E4 B4   G4 B4 D4 B4 G4 B4 D4 B4   E4 A4 C4 A4 E4 A4 C4 A4   F#4 B4 D#4 B4 F#4 B4 D#4 B4 `.repeat(2)),
     bass:sq(`E2 - - - B1 - - -   G2 - - - D2 - - -   A1 - - - C2 - - -   B1 - - - B1 - D#2 - `.repeat(2)),
     drum:sq(`k . . h . . s . `.repeat(8)) }},
+  // Natal: festive, bright tune with sleigh-bell hats
+  natal:{ bpm:150, tracks:{
+    lead:sq(`E5 E5 E5 - E5 E5 E5 -   E5 G5 C5 D5 E5 - - -   F5 F5 F5 F5 F5 E5 E5 E5   E5 D5 D5 E5 D5 - G5 -
+             E5 E5 E5 - E5 E5 E5 -   E5 G5 C5 D5 E5 - - -   F5 F5 F5 F5 F5 E5 E5 E5   G5 G5 F5 D5 C5 - - -`),
+    harm:sq(`C5 . G4 . C5 . G4 .   C5 . G4 . C5 . G4 .   A4 . F4 . C5 . G4 .   B4 . G4 . B4 . G4 .
+             C5 . G4 . C5 . G4 .   C5 . G4 . C5 . G4 .   A4 . F4 . C5 . G4 .   B4 . F4 . E4 . . .`),
+    bass:sq(`C3 . G2 . C3 . G2 .   C3 . G2 . C3 . G2 .   F2 . C3 . C3 . G2 .   G2 . D3 . G2 . D3 .
+             C3 . G2 . C3 . G2 .   C3 . G2 . C3 . G2 .   F2 . C3 . C3 . G2 .   G2 . G2 . C3 . . .`),
+    drum:sq(`k h h h s h h h `.repeat(7)+`k h s h s s s s`) }},
   victory:{ bpm:150, once:true, tracks:{
     lead:sq(`C5 E5 G5 C6 - - G5 - C6 - - - . . . .`),
     harm:sq(`E4 G4 C5 E5 - - D5 - E5 - - - . . . .`),

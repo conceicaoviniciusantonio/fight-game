@@ -80,8 +80,9 @@ const ENEMY_PROJ_HIT = {
   glob:(pr,p)=>nearBody(pr,p,pr.r),
   spike:(pr,p)=>pr.life<=22 && Math.abs(p.x-pr.x)<34 && p.y>pr.y-100 && p.y<=pr.y+6,
   bomb:(pr,p)=>nearBody(pr,p,pr.r),
+  cork:(pr,p)=>Math.abs(p.x-pr.x)<p.w/2+6 && pr.y>p.y-p.h && pr.y<p.y,
 };
-const ONCE_PROJ = ['arrow','eorb','boulder','glob','bomb'];
+const ONCE_PROJ = ['arrow','eorb','boulder','glob','bomb','cork'];
 const BOMB_COLORS = { confetti:['#ff4fd8','#ffd23f','#3ec1d3','#7bd389'], egg:['#ffe5ec','#cdeac0','#ffd6a5','#bde0fe'],
   fire:['#ff9d4d','#ffd36b','#ff5a3d'], gift:['#e63946','#2a9d8f','#ffd23f','#f1faee'] };
 // Bombs burst on the ground; the ones with `explode` also hurt everyone close by (host/single only)
@@ -162,6 +163,17 @@ function updateItems(){
 function updateHazards(){
   const dmg=k=>Math.round(k*(stage.diff?stage.diff.dmg:1));
   for (const h of hazards){
+    if (h.type==='gift'){
+      // a surprise present: some burst into coins, the rest light a fuse and explode
+      if (h.state==='idle' && alivePlayers().some(p=>Math.abs(p.x-h.x)<36 && p.y>GROUND-60)){
+        if (h.good){ for (let k=0;k<4;k++) dropItem(h.x,GROUND-30,'gold',-rand(5,8),25,rand(-3,3)); setGift(h,'done',true); }
+        else setGift(h,'fuse');
+      } else if (h.state==='fuse' && ++h.t>=40){
+        for (const p of alivePlayers()) if (Math.hypot(p.x-h.x,(p.y-30)-(GROUND-20))<95) hurtPlayer(p,{dmg:dmg(40),dir:p.x>=h.x?1:-1,fromX:h.x});
+        setGift(h,'done',true);
+      }
+      continue;
+    }
     if (h.type==='fire'){
       for (const p of alivePlayers()) if (p.x>h.x-6 && p.x<h.x+h.w+6 && p.y>GROUND-46) hurtPlayer(p,{dmg:dmg(16),dir:p.x<h.x+h.w/2?-1:1,fromX:h.x+h.w/2});
     }
@@ -171,6 +183,15 @@ function updateHazards(){
   if (stage.rockets && frame%stage.rockets===0 && !winTimer && !bossFight){
     const p=pick(alivePlayers()); if (p) addEnemyProj({type:'bomb',style:'fire',x:p.x+rand(-140,140),y:-40,vx:rand(-1,1),vy:3,grav:0.3,life:200,dmg:dmg(24),r:14,explode:55});
   }
+}
+function setGift(h,state,send){
+  h.state=state; h.t=0;
+  if (state==='fuse') SFX.charge();
+  if (state==='done'){
+    if (h.good){ burst(h.x,GROUND-24,'#ffd23f',18,6); SFX.pickup(); }
+    else { ring(h.x,GROUND-24,'#ffb347',9,20,9,10); burst(h.x,GROUND-24,'#e63946',26,8,0.12); SFX.blast(); addShake(8); }
+  }
+  if (send!==false) netSend({type:'fx',k:'gift',i:h.i,s:state});
 }
 function followCamera(){
   const [l,r]=bounds();
