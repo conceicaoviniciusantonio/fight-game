@@ -94,7 +94,7 @@ function drawHeroSelect(){
 let worldSel=0, mapCont=0, mapSel=0, mapLastStage=0;
 const ENEMY_NAMES = { goblin:'Goblin', archer:'Goblin arqueiro', orc:'Orc', bat:'Morcego', kobold:'Kobold', shaman:'Xamã',
   scorpion:'Escorpião', mummy:'Múmia', nomad:'Nômade', skeleton:'Esqueleto', darkmage:'Mago sombrio', blackknight:'Cavaleiro negro',
-  foliao:'Folião', pierrot:'Pierrô', bonecao:'Bonecão' };
+  foliao:'Folião', pierrot:'Pierrô', bonecao:'Bonecão', coelho:'Coelho', ovo:'Ovo rolante', galinha:'Galinha' };
 // Spots for islands still to come: drawn under fog unless a registered continent already sits there
 const COMING_SOON = [{x:570,y:190},{x:790,y:320},{x:420,y:390}];
 const freeSlots = () => COMING_SOON.filter(s=>CONTINENTS.every(C=>Math.hypot(C.map.x-s.x,C.map.y-s.y)>230)).slice(0,2);
@@ -186,6 +186,9 @@ function drawMapIcon(kind,x,y){
   else if (kind==='pyramid'){ ctx.fillStyle='#e0b060'; tri(x-18,y+12,x,y-16,x+18,y+12); ctx.fillStyle='#b8873e'; tri(x,y-16,x+18,y+12,x+2,y+12); }
   else if (kind==='mask'){ ctx.fillStyle='#e84a8a'; ctx.beginPath(); ctx.ellipse(x,y,18,10,0,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#1b1b2e'; circle(x-7,y,3.5); circle(x+7,y,3.5);
     ctx.fillStyle='#ffd23f'; ctx.beginPath(); ctx.ellipse(x-8,y-14,3,9,-0.4,0,Math.PI*2); ctx.ellipse(x+8,y-14,3,9,0.4,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#3ec1d3'; ctx.beginPath(); ctx.ellipse(x,y-16,3,10,0,0,Math.PI*2); ctx.fill(); }
+  else if (kind==='egg'){ ctx.fillStyle='#ffd6e0'; ctx.beginPath(); ctx.ellipse(x,y,13,17,0,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#7bd389'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(x-13,y-2); for (let k=-13;k<=13;k+=6.5) ctx.lineTo(x+k,y-2+((k+13)/6.5%2?4:-4)); ctx.stroke();
+    ctx.fillStyle='#bde0fe'; ctx.fillRect(x-11,y+6,22,4); }
   else if (kind==='castle'){ ctx.fillStyle='#4a4458'; ctx.fillRect(x-14,y-6,28,18); ctx.fillRect(x-16,y-14,8,26); ctx.fillRect(x+8,y-14,8,26);
     tri(x-17,y-14,x-12,y-24,x-7,y-14); tri(x+7,y-14,x+12,y-24,x+17,y-14); ctx.fillStyle='#ffcf6b'; ctx.fillRect(x-3,y+2,6,10); }
 }

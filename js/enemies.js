@@ -57,6 +57,14 @@ const ENEMY_TYPES = {
     look:{s:1, skin:'#f5f0f0',body:'#f5f5f5',cloth:'#1b1b2e',eye:'#1b1b2e',weapon:'none',clown:true}},
   bonecao:{hp:260, w:44, h:84, speed:1.1, dmg:42, ai:'melee', reach:62, windup:30, score:320,
     look:{kind:'puppet', s:1.1, skin:'#f2c49b', body:'#ff9f1c', cloth:'#2ec4b6', hair:'#3a2a1a'}},
+  // ----- Páscoa -----
+  coelho:{hp:90, w:30, h:44, speed:2.6, dmg:26, ai:'hopper', score:150, look:{kind:'bunny', s:1, fur:'#f1f1f1', inner:'#ffb3c6', eye:'#1b1b2e'}},
+  ovo:{hp:120, w:34, h:42, speed:1.2, dmg:32, ai:'roller', score:170, look:{kind:'egg', s:1, shell:'#ffe5ec', band:'#7bd389', band2:'#bde0fe'}},
+  galinha:{hp:85, w:30, h:44, speed:1.6, dmg:26, ai:'archer', shot:'lob', bombStyle:'egg', score:160, look:{kind:'chicken', s:1, body:'#ffffff', comb:'#e63946'}},
+  coelhoRei:{hp:7200, w:96, h:120, speed:2.0, dmg:128, ai:'boss', boss:true, score:6500, name:'Coelho Colossal',
+    moves:['hop','bombs','charge','rain'], summon:['coelho','coelho','galinha'], bombStyle:'egg',
+    tune:{wind:0.92, rec:0.92, cd:[38,76], enrage:0.5, rage:1.32, charge:11, summons:2},
+    look:{kind:'bunny', s:2.7, fur:'#7b4a2e', inner:'#ffb3c6', eye:'#ff2a2a', bow:'#ffd23f'}},
   bonecaoRei:{hp:6300, w:100, h:175, speed:1.7, dmg:120, ai:'boss', boss:true, score:6000, name:'Bonecão Desgovernado',
     moves:['spin','rain','slam','leap'], summon:['foliao','foliao','pierrot'], bombStyle:'confetti',
     tune:{wind:0.95, rec:0.95, cd:[40,80], enrage:0.5, rage:1.3, charge:10, summons:2},
@@ -360,11 +368,40 @@ function updateEnemy(e){
     if (T.ai==='archer') archerAI(e,tg,dx,adx);
     else if (T.ai==='boss') bossAI(e,tg,dx,adx);
     else if (T.ai==='flyer') flyerAI(e,tg,dx,adx);
+    else if (T.ai==='hopper') hopperAI(e,tg,dx,adx);
+    else if (T.ai==='roller') rollerAI(e,tg,dx,adx);
     else meleeAI(e,tg,dx,adx);
   }
   if (T.fly){ if (e.state==='hurt') e.vy*=0.9; e.x+=e.vx; e.y=clamp(e.y+e.vy,60,GROUND-6); e.onGround=false; }
   else physics(e,!!T.boss);
   const [l,r]=bounds(); e.x=clamp(e.x,l+e.w/2,r-e.w/2);
+}
+// Bunnies close in with hops and hurt whoever they land on or bump mid-air
+function hopperAI(e,tg,dx,adx){
+  e.face=dx>0?1:-1;
+  if (e.onGround){
+    e.vx*=0.6;
+    if (e.cd<=0){ e.vy=-8.5-Math.random()*2; e.vx=e.face*Math.min(e.speed*1.6,adx/18+1); e.cd=rand(18,40); e.hitIds=new Set(); e.state='jump'; }
+    else e.state='walk';
+  } else if (e.hitIds){
+    for (const p of alivePlayers())
+      if (!e.hitIds.has(p.id) && Math.abs(p.x-e.x)<e.w/2+p.w/2 && e.y>p.y-p.h && e.y-e.h<p.y){ e.hitIds.add(p.id); hurtPlayer(p,{dmg:e.dmg,dir:e.face,fromX:e.x,srcId:e.id}); }
+  }
+}
+// Rolling eggs wobble closer, then roll hard at the target
+function rollerAI(e,tg,dx,adx){
+  if (e.state==='walk'){
+    e.face=dx>0?1:-1; e.vx=e.face*e.speed*0.6;
+    if (e.cd<=0 && adx<420 && Math.abs(tg.y-e.y)<60){ e.state='windup'; e.t=0; }
+  } else if (e.state==='windup'){
+    e.vx*=0.7; e.t++; if (e.t>=22){ e.state='charge'; e.t=0; e.hitIds=new Set(); SFX.dash(); }
+  } else if (e.state==='charge'){
+    e.t++; e.vx=e.face*7.5;
+    for (const p of alivePlayers())
+      if (!e.hitIds.has(p.id) && Math.abs(p.x-e.x)<e.w/2+p.w/2 && p.y>e.y-e.h && p.y-p.h<e.y){ e.hitIds.add(p.id); hurtPlayer(p,{dmg:e.dmg,dir:e.face,fromX:e.x,srcId:e.id}); }
+    if (e.t%4===0) dust(e.x,e.y,1);
+    if (e.t>55){ e.state='walk'; e.cd=rand(60,100); }
+  } else e.state='walk';
 }
 // Bats hover above their target and swoop down at it
 function flyerAI(e,tg,dx,adx){
@@ -469,6 +506,52 @@ function drawPuppet(e,T,c,F,sx,noShadow){
   if (e.hp>0 && WIND.includes(st) && (e.anim>>2)%2) txt('!',sx,e.y-e.h-18,22,'#ff4040');
   if (!boss && e.hp>0 && e.hp<e.maxHp){ ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(sx-20,e.y-e.h-10,40,5); ctx.fillStyle='#ff4d5e'; ctx.fillRect(sx-20,e.y-e.h-10,40*e.hp/e.maxHp,5); }
 }
+function foeBars(e,T,sx){
+  if (e.hp>0 && WIND.includes(e.state) && (e.anim>>2)%2) txt('!',sx,e.y-e.h-18,22,'#ff4040');
+  if (!T.boss && e.hp>0 && e.hp<e.maxHp){ ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(sx-20,e.y-e.h-10,40,5); ctx.fillStyle='#ff4d5e'; ctx.fillRect(sx-20,e.y-e.h-10,40*e.hp/e.maxHp,5); }
+}
+function foeDying(e,rot=1.2){ if (e.state==='dying'){ ctx.globalAlpha=Math.max(0,1-e.t/45); ctx.rotate(-Math.min(1,e.t/14)*rot); } }
+function drawBunny(e,T,c,F,sx){
+  ctx.save(); ctx.translate(sx,e.y); ctx.scale(e.face*c.s,c.s); foeDying(e);
+  const air=!e.onGround, wind=WIND.includes(e.state);
+  if (air) ctx.rotate(-0.15);
+  ctx.fillStyle=F(c.fur); ctx.beginPath(); ctx.ellipse(-2,-16,15,14,0,0,Math.PI*2); ctx.fill();
+  circle(-16,-14,6);
+  ctx.beginPath(); ctx.ellipse(-6,-2,7,4,0,0,Math.PI*2); ctx.ellipse(8,-2,7,4,0,0,Math.PI*2); ctx.fill();
+  circle(9,-32,11);
+  // ears (perk up when about to pounce)
+  const ear=wind||air?-0.15:0.25+Math.sin(e.anim*0.1)*0.1;
+  for (const k of [0,1]){ ctx.save(); ctx.translate(4+k*7,-40); ctx.rotate(ear+k*0.2); ctx.fillStyle=F(c.fur); ctx.beginPath(); ctx.ellipse(0,-12,4.5,13,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=F(c.inner); ctx.beginPath(); ctx.ellipse(0,-12,2,9,0,0,Math.PI*2); ctx.fill(); ctx.restore(); }
+  ctx.fillStyle=c.eye; circle(13,-34,2.4); ctx.fillStyle=F(c.inner); circle(19,-30,2);
+  ctx.fillStyle=F('#ffffff'); ctx.fillRect(16,-26,4,4);
+  if (c.bow){ ctx.fillStyle=F(c.bow); tri(2,-21,-6,-26,-6,-16); tri(2,-21,10,-26,10,-16); circle(2,-21,2.5); }
+  ctx.restore(); foeBars(e,T,sx);
+}
+function drawEggFoe(e,T,c,F,sx){
+  ctx.save(); ctx.translate(sx,e.y-21); ctx.scale(e.face*c.s,c.s); foeDying(e);
+  if (e.state==='charge') ctx.rotate(e.anim*0.35); else ctx.rotate(Math.sin(e.anim*0.15)*0.12);
+  ctx.fillStyle=F(c.shell); ctx.beginPath(); ctx.ellipse(0,0,16,21,0,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle=F(c.band); ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(-16,-4); for (let k=-16;k<=16;k+=8) ctx.lineTo(k,-4+((k+16)/8%2?4:-4)); ctx.stroke();
+  ctx.fillStyle=F(c.band2); ctx.fillRect(-14,7,28,4);
+  const wind=WIND.includes(e.state)||e.state==='charge';
+  ctx.fillStyle='#1b1b2e'; circle(5,-8,2.5); circle(11,-8,2.5);
+  ctx.strokeStyle='#1b1b2e'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(1,-14+(wind?2:0)); ctx.lineTo(8,-12); ctx.moveTo(15,-14+(wind?2:0)); ctx.lineTo(8,-12); ctx.stroke();
+  ctx.restore(); foeBars(e,T,sx);
+}
+function drawChicken(e,T,c,F,sx){
+  ctx.save(); ctx.translate(sx,e.y); ctx.scale(e.face*c.s,c.s); foeDying(e);
+  const moving=Math.abs(e.vx)>0.3, ph=moving?Math.sin(e.anim*0.4):0, flap=e.state==='aim'?Math.sin(e.anim*0.8):0;
+  ctx.strokeStyle=F('#e0a020'); ctx.lineWidth=2.5; ctx.beginPath(); ctx.moveTo(-3,-12); ctx.lineTo(-4+ph*3,0); ctx.moveTo(4,-12); ctx.lineTo(5-ph*3,0); ctx.stroke();
+  ctx.fillStyle=F(c.body); ctx.beginPath(); ctx.ellipse(0,-22,14,12,0,0,Math.PI*2); ctx.fill();
+  tri(-12,-26,-22,-34,-14,-18);
+  circle(10,-36,8);
+  ctx.fillStyle=F(c.comb); circle(8,-45,3); circle(12,-46,3); circle(5,-44,2.5); ctx.beginPath(); ctx.ellipse(14,-30,2,3.5,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=F('#ffb703'); tri(17,-38,24,-36,17,-33);
+  ctx.fillStyle='#1b1b2e'; circle(12,-38,1.8);
+  ctx.fillStyle=F('#e6e6e6'); ctx.save(); ctx.translate(-2,-24); ctx.rotate(-0.3-flap*0.6); ctx.beginPath(); ctx.ellipse(0,0,9,5,0,0,Math.PI*2); ctx.fill(); ctx.restore();
+  ctx.restore(); foeBars(e,T,sx);
+}
 function drawMonsterShadow(e){
   const T=ENEMY_TYPES[e.type], sx=e.x-cam.x;
   if (T.look.kind==='bat' || e.state==='dying' || e.hidden) return;
@@ -481,6 +564,9 @@ function drawMonster(e,noShadow){
   if (c.kind==='bat') return drawBat(e,T,c,F,sx);
   if (c.kind==='scorpion') return drawScorpion(e,T,c,F,sx,noShadow);
   if (c.kind==='puppet') return drawPuppet(e,T,c,F,sx,noShadow);
+  if (c.kind==='bunny') return drawBunny(e,T,c,F,sx);
+  if (c.kind==='egg') return drawEggFoe(e,T,c,F,sx);
+  if (c.kind==='chicken') return drawChicken(e,T,c,F,sx);
   if (!noShadow && e.state!=='dying'){ const s=T.boss?GROUND:surfaceBelow(e.x,e.y), d=clamp((s-e.y)/250,0,0.7); shadow(sx,s,e.w*0.6*(1-d)); }
   ctx.save(); ctx.translate(sx,e.y);
   if (T.boss && e.hp>0 && e.hp<e.maxHp*((T.tune&&T.tune.enrage)??0.5)){

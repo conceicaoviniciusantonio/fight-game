@@ -267,3 +267,42 @@ THEMES.carnaval = {
     for (const f of SCENERY.tufts){ const x=f.x-cx; if (x<-10||x>W+10) continue; ctx.fillStyle=cols[(f.x|0)%4]; ctx.fillRect(x,GROUND+4+((f.x*7)|0)%20,4,2.5); }
   },
 };
+
+THEMES.pascoa = {
+  platform:{post:'#6b3e26', body:'#7b4a2e', line:'#5a321e', top:'#a0673c', vine:'#ffd6e0'},
+  ambient(cx){ // butterflies
+    for (let i=0;i<8;i++){
+      const x=((i*263-cx*0.8+clock*0.6)%(W+60)+W+60)%(W+60)-30+Math.sin(clock*0.03+i)*30, y=140+((i*71)%220)+Math.sin(clock*0.05+i*2)*20, f=Math.abs(Math.sin(clock*0.3+i));
+      ctx.fillStyle=['#ffafcc','#bde0fe','#ffd166','#cdb4db'][i%4]; ctx.beginPath(); ctx.ellipse(x-4*f,y,5*f+1,4,0,0,Math.PI*2); ctx.ellipse(x+4*f,y,5*f+1,4,0,0,Math.PI*2); ctx.fill();
+    }
+  },
+  draw(cx){
+    const S=SCENERY, t=clamp(cx/(worldW-W),0,1);
+    const g=ctx.createLinearGradient(0,0,0,GROUND); g.addColorStop(0,mix('#a2d2ff','#cdb4db',t)); g.addColorStop(1,mix('#fde2e4','#ffc8dd',t));
+    ctx.fillStyle=g; ctx.fillRect(-30,-30,W+60,GROUND+40);
+    ctx.fillStyle='rgba(255,255,255,0.85)';
+    for (const c of S.clouds){ const x=((c.x-cx*0.08+clock*0.12)%2700+2700)%2700-200; if (x>W+100) continue; circle(x,c.y,22*c.s); circle(x+24*c.s,c.y-10*c.s,26*c.s); circle(x+52*c.s,c.y,20*c.s); }
+    // pastel hills
+    for (const [f,col,h,o] of [[0.15,'#b5e48c',110,0],[0.35,'#99d98c',70,900]]){
+      ctx.fillStyle=col; ctx.beginPath(); ctx.moveTo(-30,GROUND);
+      for (let x=-30;x<=W+30;x+=20) ctx.lineTo(x,GROUND-40-h*0.5-Math.sin((x+cx*f+o)*0.006)*h*0.5);
+      ctx.lineTo(W+30,GROUND); ctx.closePath(); ctx.fill();
+    }
+    // giant decorated chocolate eggs
+    const pal=['#7b4a2e','#ffafcc','#bde0fe','#ffd166'];
+    for (const n of S.nearTrees){ if (n.r<36) continue; const x=n.x-cx*0.6; if (x<-60||x>W+60) continue; const h=n.h*0.55, k=(n.x|0)%4;
+      ctx.fillStyle=pal[k]; ctx.beginPath(); ctx.ellipse(x,GROUND-h/2,h*0.36,h/2,0,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle=pal[(k+1)%4]; ctx.fillRect(x-h*0.34,GROUND-h*0.55,h*0.68,8); ctx.fillStyle=pal[(k+2)%4]; for (let d=-2;d<=2;d++) circle(x+d*h*0.12,GROUND-h*0.35,4); }
+    // chocolate factory behind the boss arena
+    const fx=3040-cx;
+    if (fx<W){ ctx.fillStyle='#6b3e26'; ctx.fillRect(fx+60,GROUND-260,820,260);
+      ctx.fillStyle='#8b5a3c'; for (let k=0;k<5;k++) ctx.fillRect(fx+100+k*160,GROUND-330,50,80);
+      ctx.fillStyle='rgba(255,255,255,0.6)'; for (let k=0;k<5;k++) circle(fx+125+k*160+Math.sin(clock*0.03+k)*6,GROUND-350-((clock*0.5+k*30)%60),12);
+      ctx.fillStyle='#ffd6e0'; for (let k=0;k<7;k++){ ctx.beginPath(); ctx.roundRect(fx+110+k*110,GROUND-200,60,50,10); ctx.fill(); }
+      ctx.fillStyle='#ffafcc'; ctx.fillRect(fx+60,GROUND-270,820,14); }
+    ctx.fillStyle='#8ac926'; ctx.fillRect(-30,GROUND,W+60,H-GROUND+30);
+    ctx.fillStyle='#76b51f'; for (const p of S.pebbles){ const x=p.x-cx; if (x>-10&&x<W+10) circle(x,p.y,p.r); }
+    ctx.fillStyle='#b9e769'; ctx.fillRect(-30,GROUND-4,W+60,8);
+    for (const f of S.tufts){ const x=f.x-cx; if (x<-10||x>W+10) continue; ctx.fillStyle=['#ffafcc','#ffffff','#ffd166','#cdb4db'][(f.x|0)%4]; circle(x,GROUND-5,3*f.s); ctx.fillStyle='#ffd166'; circle(x,GROUND-5,1.2*f.s); }
+  },
+};

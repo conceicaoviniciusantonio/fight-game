@@ -2,10 +2,15 @@
 // ===================== World rendering and in-game HUD =====================
 function drawItems(){
   for (const it of items){
-    if (it.t>600 && (it.t>>2)%2) continue;
+    if (!it.keep && it.t>600 && (it.t>>2)%2) continue;
     const x=it.x-cam.x, y=it.y-12+Math.sin(it.t*0.1)*3;
     shadow(x,surfaceBelow(it.x,it.y),9);
     if (it.type==='hp'){ ctx.fillStyle='#ff4d6d'; circle(x-5,y-3,6); circle(x+5,y-3,6); tri(x-11,y-1,x,y+11,x+11,y-1); ctx.fillStyle='rgba(255,255,255,0.7)'; circle(x-6,y-5,2); }
+    else if (it.type==='egg'){ // pastel Easter egg with a soft glow so it can be spotted
+      ctx.fillStyle=`rgba(255,220,240,${0.25+0.15*Math.sin(clock*0.1)})`; circle(x,y,18);
+      ctx.fillStyle='#ffd6e0'; ctx.beginPath(); ctx.ellipse(x,y,9,12,0,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle='#7bd389'; ctx.lineWidth=2.5; ctx.beginPath(); ctx.moveTo(x-9,y-1); for (let k=-9;k<=9;k+=4.5) ctx.lineTo(x+k,y-1+((k+9)/4.5%2?3:-3)); ctx.stroke();
+      ctx.fillStyle='#bde0fe'; ctx.fillRect(x-8,y+4,16,3); }
     else if (it.type==='gold'){ ctx.save(); ctx.translate(x,y); ctx.scale(Math.cos(it.t*0.12),1); coinIcon(0,0,9); ctx.restore(); }
     else if (it.type==='mp'){ ctx.fillStyle='#4fb8ff'; ctx.beginPath(); ctx.moveTo(x,y-12); ctx.lineTo(x+8,y); ctx.lineTo(x,y+12); ctx.lineTo(x-8,y); ctx.closePath(); ctx.fill(); ctx.fillStyle='#c9ecff'; tri(x,y-12,x+3,y,x-3,y); }
   }

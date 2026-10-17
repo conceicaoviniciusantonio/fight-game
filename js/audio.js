@@ -129,6 +129,15 @@ const SONGS = {
     bass:sq(`C3 . C2 C3 . C2 C3 C2   F2 . F2 F3 . F2 F3 F2   C3 . C2 C3 . C2 C3 C2   G2 . G2 G3 . G2 G3 G2
              F2 . F2 F3 . F2 F3 F2   G2 . G2 G3 . G2 G3 G2   C3 . C2 C3 F2 . G2 G2   C3 . C2 C3 C2 . . .`),
     drum:sq(`k h s h k s s h `.repeat(7)+`s s s s k s k s`) }},
+  // Páscoa: bouncy, playful major tune
+  pascoa:{ bpm:148, tracks:{
+    lead:sq(`F5 - A5 - C6 - A5 -   G5 - Bb5 - A5 - F5 -   E5 - G5 - C6 - Bb5 A5   G5 - - - C5 - - -
+             F5 - A5 - C6 - D6 -   C6 - A5 - F5 - A5 -   G5 - E5 - C5 - E5 -   F5 - - - . . . .`),
+    harm:sq(`A4 . C5 . A4 . C5 .   Bb4 . D5 . Bb4 . D5 .   G4 . C5 . G4 . C5 .   E4 . G4 . E4 . G4 .
+             A4 . C5 . A4 . C5 .   F4 . A4 . F4 . A4 .   G4 . Bb4 . G4 . Bb4 .   A4 . C5 . A4 . . .`),
+    bass:sq(`F2 . C3 . F2 . C3 .   Bb1 . F2 . Bb1 . F2 .   C2 . G2 . C2 . G2 .   C2 . G2 . C2 . E2 .
+             F2 . C3 . F2 . C3 .   Bb1 . F2 . Bb1 . F2 .   C2 . G2 . C2 . G2 .   F2 . C3 . F2 . . .`),
+    drum:sq(`k . h . s . h h `.repeat(7)+`k . s . s s s s`) }},
   victory:{ bpm:150, once:true, tracks:{
     lead:sq(`C5 E5 G5 C6 - - G5 - C6 - - - . . . .`),
     harm:sq(`E4 G4 C5 E5 - - D5 - E5 - - - . . . .`),

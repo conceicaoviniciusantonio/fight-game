@@ -22,7 +22,9 @@ function startStory(stageId='forest'){
   loadStage(stageId); resetWorld();
   boss=null; zi=0; wave=0; waveDelay=0; goTimer=0; winTimer=0; loseTimer=0; result=null;
   players=[me=makePlayer(selHero,{id:'p0'})];
-  run.xp=0; run.gold=0;
+  run.xp=0; run.gold=0; run.eggs=0;
+  // hidden collectibles placed by the stage (e.g. Easter eggs); they don't expire
+  for (const x of stage.eggs||[]) items.push({x,y:GROUND-420,vx:0,vy:0,type:'egg',val:40,keep:true,t:0,onGround:false,id:'i'+nextId++});
   mode='play'; paused=false;
   banner={txt:stage.name,sub:stage.sub,t:150,max:150};
   playMusic(stage.music); SFX.select();
@@ -137,6 +139,7 @@ function updateProjs(){
 function applyPickup(p,type,val){
   if (!p.local){ netSend({type:'pickup',id:p.id,it:type,val}); return; }
   if (type==='gold'){ addGold(p,val); SFX.coin(); return; }
+  if (type==='egg'){ run.eggs=(run.eggs||0)+1; addGold(p,val); bigText(p.x,p.y-p.h-30,'Ovo de Páscoa!','#ffb3c6'); SFX.levelUp(); return; }
   if (type==='hp'){ const h=Math.min(90,p.maxHp-p.hp); p.hp+=h; addText(p.x,p.y-90,'+'+h+' HP','#7dff8a'); }
   else if (type==='mp'){ p.mp=Math.min(MAXMP,p.mp+70); addText(p.x,p.y-90,'+MP','#7fd7ff'); }
   SFX.pickup();
@@ -153,7 +156,7 @@ function updateItems(){
       }
     }
   }
-  items=items.filter(it=>it.t<720);
+  items=items.filter(it=>it.keep ? it.t<99999 : it.t<720);
 }
 function followCamera(){
   const [l,r]=bounds();
@@ -261,6 +264,7 @@ function drawStoryHUD(){
     txt(`Você caiu! Voltando em ${Math.ceil((REVIVE_TIME-(me.reviveT||0))/60)}s`,W/2,150,22,'#ffd23f');
   txt(`PONTOS ${score}`,W-20,26,20,'#ffffff','right');
   coinIcon(W-112,74); txt(String(Progress.gold),W-20,74,16,'#ffd23f','right');
+  if (stage.eggs) txt(`🥚 ${run.eggs||0}/${stage.eggs.length}`,W-20,96,14,'#ffd6e0','right');
   const s=Math.floor(frame/60); txt(`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`,W-20,50,16,'#cfe3ff','right');
   drawCombo(W-90,130);
   if (locked && stage.zones[zi] && stage.zones[zi].boss) drawBossBar();

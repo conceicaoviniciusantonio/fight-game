@@ -31,7 +31,7 @@ function onCoopStart(m){
 function sendWorld(){
   netSend({type:'w',
     en:enemies.map(e=>[e.id,e.type,Math.round(e.x),Math.round(e.y),e.face,e.state,e.t,Math.round(e.hp),e.maxHp,e.anim|0,Math.round(e.vx*10)/10,e.flash]),
-    it:items.map(i=>[i.id,i.type,Math.round(i.x),Math.round(i.y),i.t]),
+    it:items.map(i=>[i.id,i.type,Math.round(i.x),Math.round(i.y),i.t,i.keep?1:0]),
     z:[locked?1:0,lockL,lockR,zi,goTimer], sc:score, b:boss?boss.id:null, pc:platClock});
 }
 function applyWorld(m){
@@ -45,7 +45,7 @@ function applyWorld(m){
     if (flash>e.flash) e.flash=flash;
   }
   enemies=enemies.filter(e=>seen.has(e.id));
-  items=m.it.map(([id,type,x,y,t])=>({id,type,x,y,t,onGround:true}));
+  items=m.it.map(([id,type,x,y,t,keep])=>({id,type,x,y,t,keep:!!keep,onGround:true}));
   if (m.z[4]>goTimer+30) SFX.go();
   locked=!!m.z[0]; lockL=m.z[1]; lockR=m.z[2]; zi=m.z[3]; goTimer=m.z[4];
   score=m.sc;

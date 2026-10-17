@@ -29,5 +29,28 @@ registerContinent({
       ],
       arena:{left:3040, extra:[{x:3470,y:296,w:110}]},
     },
+    { id:'pascoa', map:{x:300,y:220,icon:'egg'}, arenaName:'Fábrica de Chocolate',
+      name:'Páscoa', theme:'pascoa', worldW:4000, music:'pascoa', bossMusic:'boss',
+      eggs:[480,620,1050,1560,1990,2470,2640,2950],
+      platforms:[
+        {x:440,y:372,w:180},{x:600,y:290,w:160},{x:850,y:372,w:200},
+        {x:1360,y:372,w:200},{x:1530,y:290,w:180},{x:1790,y:372,w:180},{x:1960,y:296,w:130},
+        {x:2420,y:372,w:200},{x:2600,y:290,w:170},{x:2880,y:372,w:180},
+        {x:3200,y:372,w:170},{x:3720,y:372,w:170},
+      ],
+      zones:[
+        {at:330, left:100, waves:[
+          [['coelho',560],['coelho',760],['ovo',950]],
+          [['galinha',880],['coelho',300],['coelho',620],['ovo',700]]]},
+        {at:1260, left:1150, waves:[
+          [['coelho',1500],['galinha',1850],['ovo',1300],['coelho',1700]],
+          [['ovo',1450],['ovo',1950],['galinha',1650],['coelho',1800],['coelho',1350]]]},
+        {at:2260, left:2150, waves:[
+          [['ovo',2550],['galinha',2950],['coelho',2400],['coelho',2700]],
+          [['ovo',2300],['ovo',2900],['galinha',2560],['galinha',2880],['coelho',2650],['coelho',2450]]]},
+        {at:3150, left:3040, boss:true, waves:[[['coelhoRei',3760]]]},
+      ],
+      arena:{left:3040, extra:[{x:3470,y:296,w:110}]},
+    },
   ],
 });
