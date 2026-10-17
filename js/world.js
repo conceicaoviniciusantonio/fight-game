@@ -7,12 +7,13 @@ let cam = { x:0 }, locked = false, lockL = 0, lockR = 4000;
 let frame = 0, hitstop = 0, shake = 0, flashScreen = 0, banner = null, cutin = null;
 let combo = 0, comboTimer = 0, maxCombo = 0, score = 0;
 let nextId = 1, pidSeq = 0;
+let platClock = 0; // drives moving platforms; the co-op guest follows the host's value
 
 const bounds = () => locked ? [lockL, lockR] : [0, worldW];
 
 function resetWorld(){
   enemies=[]; projs=[]; parts=[]; texts=[]; items=[];
-  frame=0; hitstop=0; shake=0; flashScreen=0; banner=null; cutin=null;
+  frame=0; platClock=0; hitstop=0; shake=0; flashScreen=0; banner=null; cutin=null;
   combo=0; comboTimer=0; maxCombo=0; score=0;
   locked=false; lockL=0; lockR=worldW; cam.x=0;
 }
@@ -21,13 +22,26 @@ function physics(e, ignorePlat){
   const prevY = e.y;
   e.vy = Math.min(e.vy + G, 15);
   e.x += e.vx; e.y += e.vy;
-  e.onGround = false;
+  e.onGround = false; e.plat = null;
   if (e.y >= GROUND){ e.y = GROUND; e.vy = 0; e.onGround = true; return; }
   if (e.vy >= 0 && !ignorePlat && !(e.dropThrough > 0)){
     for (const p of platforms){
-      if (e.x > p.x-4 && e.x < p.x+p.w+4 && prevY <= p.y+0.01 && e.y >= p.y){ e.y=p.y; e.vy=0; e.onGround=true; break; }
+      if (e.x > p.x-4 && e.x < p.x+p.w+4 && prevY <= p.y+0.01 && e.y >= p.y){ e.y=p.y; e.vy=0; e.onGround=true; e.plat=p; break; }
     }
   }
+}
+// Moving platforms (e.g. parade floats) slide back and forth and carry whoever stands on them
+function updatePlatforms(){
+  platClock++;
+  let moved=false;
+  for (const p of platforms){
+    if (!p.move){ p.dx=0; continue; }
+    const nx=p.x0+Math.sin(platClock*p.move.speed)*p.move.range;
+    p.dx=nx-p.x; p.x=nx; moved=true;
+  }
+  if (!moved) return;
+  const riders=[...players.filter(p=>p.local), ...enemies.filter(e=>!e.puppet), ...items];
+  for (const e of riders) if (e.plat && e.plat.dx && e.onGround) e.x+=e.plat.dx;
 }
 function surfaceBelow(x,y){ let s=GROUND; for (const p of platforms) if (x>p.x && x<p.x+p.w && p.y>=y-1 && p.y<s) s=p.y; return s; }
 

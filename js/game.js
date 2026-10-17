@@ -77,8 +77,19 @@ const ENEMY_PROJ_HIT = {
   boulder:(pr,p)=>nearBody(pr,p,pr.r),
   glob:(pr,p)=>nearBody(pr,p,pr.r),
   spike:(pr,p)=>pr.life<=22 && Math.abs(p.x-pr.x)<34 && p.y>pr.y-100 && p.y<=pr.y+6,
+  bomb:(pr,p)=>nearBody(pr,p,pr.r),
 };
-const ONCE_PROJ = ['arrow','eorb','boulder','glob'];
+const ONCE_PROJ = ['arrow','eorb','boulder','glob','bomb'];
+const BOMB_COLORS = { confetti:['#ff4fd8','#ffd23f','#3ec1d3','#7bd389'], egg:['#ffe5ec','#cdeac0','#ffd6a5','#bde0fe'],
+  fire:['#ff9d4d','#ffd36b','#ff5a3d'], gift:['#e63946','#2a9d8f','#ffd23f','#f1faee'] };
+// Bombs burst on the ground; the ones with `explode` also hurt everyone close by (host/single only)
+function bombBurst(pr){
+  const cols=BOMB_COLORS[pr.style]||BOMB_COLORS.confetti;
+  for (let i=0;i<(pr.explode?22:12);i++){ const a=Math.random()*Math.PI*2, s=rand(1,pr.explode?7:4);
+    parts.push({x:pr.x,y:Math.min(pr.y,GROUND-6),vx:Math.cos(a)*s,vy:Math.sin(a)*s-2,life:rand(20,36)|0,max:36,color:pick(cols),size:rand(2,4),grav:0.15}); }
+  if (pr.explode){ ring(pr.x,Math.min(pr.y,GROUND-10),pick(cols),6,16,6,8); SFX.blast(); addShake(4);
+    if (pr.local) for (const p of alivePlayers()) if (Math.hypot(p.x-pr.x,(p.y-30)-Math.min(pr.y,GROUND-10))<pr.explode+16) hurtPlayer(p,{dmg:pr.dmg,dir:p.x>=pr.x?1:-1,fromX:pr.x}); }
+}
 function updateProjs(){
   for (const pr of projs){
     pr.x+=pr.vx; pr.y+=pr.vy; pr.life--;
@@ -104,7 +115,7 @@ function updateProjs(){
     } else {
       if ((pr.type==='shock'||pr.type==='swave') && frame%3===0) dust(pr.x,pr.y,1);
       if (PROJ_TRAIL[pr.type] && frame%2===0) PROJ_TRAIL[pr.type](pr);
-      if (pr.grav && pr.y>=GROUND-4){ pr.life=0; dust(pr.x,GROUND,6); if (pr.type==='glob') burst(pr.x,GROUND-6,'#8bdc4a',8,3); continue; }
+      if (pr.grav && pr.y>=GROUND-4){ pr.life=0; if (pr.type==='bomb') bombBurst(pr); else { dust(pr.x,GROUND,6); if (pr.type==='glob') burst(pr.x,GROUND-6,'#8bdc4a',8,3); } continue; }
       if (pr.home){
         const tp=nearestPlayer(pr.x,pr.y);
         if (tp) pr.vy=clamp(pr.vy+clamp(((tp.y-40)-pr.y)*0.01,-0.12,0.12),-3,3);
@@ -116,7 +127,7 @@ function updateProjs(){
         if (p.inv>0 || pr.hitP.has(p.id) || !test || !test(pr,p)) continue;
         pr.hitP.add(p.id);
         hurtPlayer(p,{dmg:pr.dmg,dir:Math.sign(pr.vx)||(p.x>=pr.x?1:-1),fromX:pr.x-pr.vx*5});
-        if (ONCE_PROJ.includes(pr.type)){ pr.life=0; break; }
+        if (ONCE_PROJ.includes(pr.type)){ pr.life=0; if (pr.type==='bomb') bombBurst(pr); break; }
       }
     }
     if (pr.x<-200 || pr.x>worldW+200 || pr.y>H+100) pr.life=0;
@@ -163,6 +174,7 @@ function tickPlay(){
   if (hitstop>0){ hitstop--; return; } // presses stay buffered
   frame++;
   checkEmotes();
+  updatePlatforms();
   const inp=me.inp; if (paused) me.inp=NO_INPUT;
   for (const p of players) if (p.local) updatePlayer(p); else updatePuppet(p);
   me.inp=inp;

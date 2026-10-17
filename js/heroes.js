@@ -356,7 +356,7 @@ function drawBow(p,ghost,gc2){
   ctx.fillStyle=ghost?gc2:'#ffd9b8'; ctx.fillRect(0,-3,16,6);
   if (!ghost){
     const bx=16, r=22, e=1.2, ey=r*Math.sin(e);
-    ctx.strokeStyle=['#8d5a2b','#a0a8b4','#5fc9d9','#e0b028'][p.tier||0]; ctx.lineWidth=3.5; ctx.beginPath(); ctx.arc(bx-r*0.55,0,r,-e,e); ctx.stroke();
+    ctx.strokeStyle=['#8d5a2b','#a0a8b4','#5fc9d9','#e0b028','#5fbf6a','#e84a8a'][p.tier||0]; ctx.lineWidth=3.5; ctx.beginPath(); ctx.arc(bx-r*0.55,0,r,-e,e); ctx.stroke();
     ctx.fillStyle='#ffd34d'; ctx.fillRect(bx-r*0.55+r-2,-3,4,6);
     const sx0=bx-r*0.55+r*Math.cos(e);
     ctx.strokeStyle='#f0f0f0'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(sx0,-ey); ctx.lineTo(sx0-pull,0); ctx.lineTo(sx0,ey); ctx.stroke();

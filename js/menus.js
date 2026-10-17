@@ -93,7 +93,8 @@ function drawHeroSelect(){
 // Flow: hero select → world map → continent map → stage. The shop sits on the continent map.
 let worldSel=0, mapCont=0, mapSel=0, mapLastStage=0;
 const ENEMY_NAMES = { goblin:'Goblin', archer:'Goblin arqueiro', orc:'Orc', bat:'Morcego', kobold:'Kobold', shaman:'Xamã',
-  scorpion:'Escorpião', mummy:'Múmia', nomad:'Nômade', skeleton:'Esqueleto', darkmage:'Mago sombrio', blackknight:'Cavaleiro negro' };
+  scorpion:'Escorpião', mummy:'Múmia', nomad:'Nômade', skeleton:'Esqueleto', darkmage:'Mago sombrio', blackknight:'Cavaleiro negro',
+  foliao:'Folião', pierrot:'Pierrô', bonecao:'Bonecão' };
 // Spots for islands still to come: drawn under fog unless a registered continent already sits there
 const COMING_SOON = [{x:570,y:190},{x:790,y:320},{x:420,y:390}];
 const freeSlots = () => COMING_SOON.filter(s=>CONTINENTS.every(C=>Math.hypot(C.map.x-s.x,C.map.y-s.y)>230)).slice(0,2);
@@ -183,6 +184,8 @@ function drawMapIcon(kind,x,y){
   if (kind==='tree'){ ctx.fillStyle='#6b4a2a'; ctx.fillRect(x-3,y,6,14); ctx.fillStyle='#3f8f45'; circle(x,y-2,12); circle(x-9,y+4,8); circle(x+9,y+4,8); }
   else if (kind==='crystal'){ ctx.fillStyle='#4fc3d9'; tri(x-12,y+12,x-6,y-14,x,y+12); ctx.fillStyle='#9ff8ff'; tri(x-4,y+12,x+3,y-20,x+10,y+12); ctx.fillStyle='#ff7bd8'; tri(x+6,y+12,x+12,y-4,x+16,y+12); }
   else if (kind==='pyramid'){ ctx.fillStyle='#e0b060'; tri(x-18,y+12,x,y-16,x+18,y+12); ctx.fillStyle='#b8873e'; tri(x,y-16,x+18,y+12,x+2,y+12); }
+  else if (kind==='mask'){ ctx.fillStyle='#e84a8a'; ctx.beginPath(); ctx.ellipse(x,y,18,10,0,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#1b1b2e'; circle(x-7,y,3.5); circle(x+7,y,3.5);
+    ctx.fillStyle='#ffd23f'; ctx.beginPath(); ctx.ellipse(x-8,y-14,3,9,-0.4,0,Math.PI*2); ctx.ellipse(x+8,y-14,3,9,0.4,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#3ec1d3'; ctx.beginPath(); ctx.ellipse(x,y-16,3,10,0,0,Math.PI*2); ctx.fill(); }
   else if (kind==='castle'){ ctx.fillStyle='#4a4458'; ctx.fillRect(x-14,y-6,28,18); ctx.fillRect(x-16,y-14,8,26); ctx.fillRect(x+8,y-14,8,26);
     tri(x-17,y-14,x-12,y-24,x-7,y-14); tri(x+7,y-14,x+12,y-24,x+17,y-14); ctx.fillStyle='#ffcf6b'; ctx.fillRect(x-3,y+2,6,10); }
 }
@@ -289,7 +292,8 @@ function drawShop(){
     if (next){
       txt('PRÓXIMO: '+r.names[r.lvl+1],906,y+38,15,'#ffd23f','right',false);
       txt(r.bonus(next),906,y+60,13,'#cfe3ff','right',false);
-      coinIcon(840,y+86,8); txt(String(next.cost),906,y+86,16,Progress.gold>=next.cost?'#ffd23f':'#ff8a8a','right',false);
+      if (next.cont && !continentUnlocked(CONTINENTS[next.cont])) txt('🔒 libera em '+CONTINENTS[next.cont].name,906,y+86,13,'#ffd23f','right',false);
+      else { coinIcon(840,y+86,8); txt(String(next.cost),906,y+86,16,Progress.gold>=next.cost?'#ffd23f':'#ff8a8a','right',false); }
     } else txt('MÁXIMO',906,y+56,18,'#9fe3a8','right',false);
   });
   const backSel=shopSel===2;

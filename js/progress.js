@@ -26,15 +26,17 @@ function markCleared(id){
 // ----- gear -----
 // Tier 0 is what every hero starts with; each tier adds attack (weapon) or life and defense (armor).
 // `cont` is the continent index that must be unlocked before the tier is sold (new continents add tiers).
-const WEAPON_TIERS = [ {atk:0,cost:0,tint:null}, {atk:0.10,cost:300,tint:'#e3eaf2'}, {atk:0.22,cost:900,tint:'#9ff8ff'}, {atk:0.36,cost:2000,tint:'#ffd34d'} ];
-const ARMOR_TIERS  = [ {hp:0,def:0,cost:0}, {hp:0.15,def:0.05,cost:300}, {hp:0.30,def:0.10,cost:900}, {hp:0.50,def:0.15,cost:2000} ];
+const WEAPON_TIERS = [ {atk:0,cost:0,tint:null}, {atk:0.10,cost:300,tint:'#e3eaf2'}, {atk:0.22,cost:900,tint:'#9ff8ff'}, {atk:0.36,cost:2000,tint:'#ffd34d'},
+  {atk:0.52,cost:4500,tint:'#7bd389',cont:1}, {atk:0.70,cost:8000,tint:'#ff4fd8',cont:1} ];
+const ARMOR_TIERS  = [ {hp:0,def:0,cost:0}, {hp:0.15,def:0.05,cost:300}, {hp:0.30,def:0.10,cost:900}, {hp:0.50,def:0.15,cost:2000},
+  {hp:0.75,def:0.20,cost:4500,cont:1}, {hp:1.00,def:0.25,cost:8000,cont:1} ];
 const WEAPON_NAMES = {
-  knight:['Espada de Ferro','Espada de Aço','Lâmina Rúnica','Lâmina Celeste'],
-  archer:['Arco Curto','Arco Longo','Arco Élfico','Arco Estelar'],
-  mage:  ['Cajado de Carvalho','Cajado Arcano','Cajado de Cristal','Cajado Astral'],
-  lancer:['Lança de Ferro','Lança de Aço','Lança Dracônica','Lança do Sol'],
+  knight:['Espada de Ferro','Espada de Aço','Lâmina Rúnica','Lâmina Celeste','Lâmina do Ipê','Lâmina do Carnaval'],
+  archer:['Arco Curto','Arco Longo','Arco Élfico','Arco Estelar','Arco de Jacarandá','Arco do Beija-flor'],
+  mage:  ['Cajado de Carvalho','Cajado Arcano','Cajado de Cristal','Cajado Astral','Cajado de Pau-brasil','Cajado da Vitória-régia'],
+  lancer:['Lança de Ferro','Lança de Aço','Lança Dracônica','Lança do Sol','Lança da Onça','Lança do Boitatá'],
 };
-const ARMOR_NAMES = ['Roupa de Viagem','Armadura de Couro','Cota de Malha','Armadura Real'];
+const ARMOR_NAMES = ['Roupa de Viagem','Armadura de Couro','Cota de Malha','Armadura Real','Armadura Tropical','Armadura Dourada'];
 
 function heroProg(id){
   if (!Progress.heroes[id]) Progress.heroes[id]={lvl:1,xp:0,weapon:0,armor:0};

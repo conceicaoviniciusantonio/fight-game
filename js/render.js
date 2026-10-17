@@ -70,10 +70,23 @@ const PROJ_DRAW = {
     }
   },
   swave: pr => {
-    const f=(frame>>1)%2;
-    ctx.fillStyle='rgba(138,60,255,0.35)'; ctx.beginPath(); ctx.ellipse(0,-30,30,40,0,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle='#4a1f7a'; tri(-16,0,-4,-56-f*8,8,0);
-    ctx.fillStyle='#ff5cf0'; tri(-6,0,4,-36-(1-f)*10,14,0);
+    const f=(frame>>1)%2, fire=pr.style==='fire';
+    ctx.fillStyle=fire?'rgba(255,120,40,0.35)':'rgba(138,60,255,0.35)'; ctx.beginPath(); ctx.ellipse(0,-30,30,40,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=fire?'#ff5a1f':'#4a1f7a'; tri(-16,0,-4,-56-f*8,8,0);
+    ctx.fillStyle=fire?'#ffd36b':'#ff5cf0'; tri(-6,0,4,-36-(1-f)*10,14,0);
+  },
+  bomb: pr => {
+    // shadow on the ground shows where it will land
+    const gy=GROUND-pr.y; if (gy>10){ ctx.fillStyle=`rgba(0,0,0,${clamp(0.4-gy/900,0.08,0.35)})`; ctx.beginPath(); ctx.ellipse(0,gy,pr.r+6,4,0,0,Math.PI*2); ctx.fill(); }
+    ctx.rotate(pr.x*0.03);
+    const st=pr.style, r=pr.r;
+    if (st==='egg'){ ctx.fillStyle='#fff3e6'; ctx.beginPath(); ctx.ellipse(0,0,r*0.8,r,0,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle='#ff7aa2'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(-r*0.8,0); for (let k=-r*0.8;k<=r*0.8;k+=5) ctx.lineTo(k,(k/5)%2?3:-3); ctx.stroke(); }
+    else if (st==='fire'){ glowOrb(r+8,'#ffb347','rgba(255,80,20,0)'); ctx.fillStyle='#fff3c4'; circle(0,0,r*0.4); }
+    else if (st==='gift'){ ctx.fillStyle='#e63946'; ctx.fillRect(-r,-r,r*2,r*2); ctx.fillStyle='#ffd23f'; ctx.fillRect(-3,-r,6,r*2); ctx.fillRect(-r,-3,r*2,6);
+      ctx.beginPath(); ctx.ellipse(-5,-r-3,5,3,0.5,0,Math.PI*2); ctx.ellipse(5,-r-3,5,3,-0.5,0,Math.PI*2); ctx.fill(); }
+    else { const cols=BOMB_COLORS.confetti; ctx.fillStyle='#2b2b3a'; circle(0,0,r); for (let k=0;k<6;k++){ ctx.fillStyle=cols[k%4]; ctx.fillRect(Math.cos(k)*r*0.6-2,Math.sin(k*1.7)*r*0.6-2,4,4); }
+      ctx.strokeStyle='#ffd23f'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(0,-r); ctx.quadraticCurveTo(6,-r-8,2,-r-12); ctx.stroke(); }
   },
   pshock: pr => {
     const f=(frame>>1)%2;
@@ -90,6 +103,7 @@ const PROJ_TRAIL = {
   pshock: pr => dust(pr.x,pr.y,1),
   eorb: pr => parts.push({x:pr.x,y:pr.y,vx:0,vy:0,life:12,max:12,color:pr.col||'#7ff0ff',size:3,grav:0}),
   glob: pr => parts.push({x:pr.x,y:pr.y,vx:0,vy:0.5,life:10,max:10,color:'#8bdc4a',size:3,grav:0}),
+  bomb: pr => { if (pr.style==='fire' || pr.style==='confetti') parts.push({x:pr.x,y:pr.y,vx:rand(-0.5,0.5),vy:-0.3,life:12,max:12,color:pick(BOMB_COLORS[pr.style]),size:2.5,grav:0}); },
 };
 
 function drawParts(){
@@ -159,6 +173,10 @@ function drawHeroOutlined(p){
 function drawMonsterOutlined(e){
   const T=ENEMY_TYPES[e.type], s=T.look.s||1, sx=e.x-cam.x;
   if (sx<-260 || sx>W+260) return;
+  if (e.hidden){ // burrowed boss: a glowing crack marks where it will come out
+    if (e.state==='burrow' && e.t>=24){ const a=0.4+0.4*Math.sin(clock*0.5); ctx.fillStyle=`rgba(255,120,40,${a})`; ctx.beginPath(); ctx.ellipse(sx,GROUND-2,e.w*0.7,8,0,0,Math.PI*2); ctx.fill(); }
+    return;
+  }
   const bw=T.look.kind==='bat'?90:Math.max(170,130*s), bh=T.look.kind==='bat'?120:Math.max(150,108*s);
   drawMonsterShadow(e);
   withOutline(sx,e.y,bw,bh,()=>drawMonster(e,true));

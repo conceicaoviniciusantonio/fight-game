@@ -202,3 +202,68 @@ const THEMES = {
     },
   },
 };
+
+// ===================== Terra Brasilis themes =====================
+const BR = mulberry(21);
+const BR_SCENERY = {
+  houses: [...Array(40)].map((_,i)=>({x:i*118+BR()*20, w:96+BR()*28, h:130+BR()*90, c:(BR()*6)|0, roof:BR()>0.5})),
+  skyline: [...Array(30)].map((_,i)=>({x:i*95+BR()*40, w:50+BR()*50, h:120+BR()*160})),
+  poles: [...Array(24)].map((_,i)=>({x:i*240+BR()*60})),
+};
+const HOUSE_COLORS = ['#f4a259','#5b8e7d','#f4e285','#bc4b51','#8cb369','#4d9de0'];
+
+THEMES.carnaval = {
+  platform:{post:'#7a4a8c', body:'#c9a227', line:'#a6851d', top:'#e84a8a', vine:'#3ec1d3'},
+  darkness:() => 0.3,
+  lights(cx){ // lamps on the light strings
+    const L=[];
+    for (const p of BR_SCENERY.poles){ const x=p.x-cx*0.6; if (x>-160 && x<W+160) L.push({x,y:200,r:150,c:'255,200,120'}); }
+    return L;
+  },
+  ambient(cx){ // confetti drifting down
+    const cols=['#ff4fd8','#ffd23f','#3ec1d3','#7bd389','#ff9f1c'];
+    for (let i=0;i<34;i++){
+      const x=((i*173-cx*0.95+Math.sin(clock*0.02+i)*30)%(W+60)+W+60)%(W+60)-30, y=((i*97+clock*(0.7+(i%4)*0.25))%(H+30))-15;
+      ctx.save(); ctx.translate(x,y); ctx.rotate(clock*0.05*(i%2?1:-1)+i); ctx.fillStyle=cols[i%5]; ctx.fillRect(-3,-1.5,6,3); ctx.restore();
+    }
+  },
+  draw(cx){
+    const S=BR_SCENERY;
+    const g=ctx.createLinearGradient(0,0,0,GROUND); g.addColorStop(0,'#12062e'); g.addColorStop(0.6,'#4a1462'); g.addColorStop(1,'#a8326e');
+    ctx.fillStyle=g; ctx.fillRect(-30,-30,W+60,GROUND+40);
+    ctx.fillStyle='rgba(255,255,255,0.7)'; for (let i=0;i<30;i++) circle(((i*211-cx*0.03)%W+W)%W,(i*67)%170+10,1.1);
+    // fireworks: a few bursts on a loop
+    for (let k=0;k<3;k++){
+      const T=(clock+k*70)%210, fx=((k*317+Math.floor((clock+k*70)/210)*191)%(W-200))+100, fy=70+k*35;
+      if (T<60){ const r=T*1.6, a=1-T/60, cols=['#ffd23f','#ff4fd8','#3ec1d3'];
+        for (let j=0;j<14;j++){ const an=j/14*Math.PI*2; ctx.globalAlpha=a; ctx.fillStyle=cols[(j+k)%3]; circle(fx+Math.cos(an)*r,fy+Math.sin(an)*r+T*0.3,2.2); } ctx.globalAlpha=1; }
+    }
+    // far skyline with lit windows
+    ctx.fillStyle='#24103e';
+    for (const b of S.skyline){ const x=b.x-cx*0.15; if (x+b.w<-20||x>W+20) continue; ctx.fillRect(x,GROUND-60-b.h,b.w,b.h+60);
+      ctx.fillStyle='rgba(255,210,120,0.55)'; for (let wy=GROUND-50-b.h;wy<GROUND-70;wy+=22) for (let wx=x+8;wx<x+b.w-8;wx+=16) if (((wx*7+wy*3)|0)%5) ctx.fillRect(wx,wy,6,9); ctx.fillStyle='#24103e'; }
+    // colorful colonial houses
+    for (const hs of S.houses){ const x=hs.x-cx*0.45; if (x+hs.w<-20||x>W+20) continue; const top=GROUND-hs.h;
+      ctx.fillStyle=HOUSE_COLORS[hs.c]; ctx.fillRect(x,top,hs.w-4,hs.h);
+      ctx.fillStyle='#8a4b2a'; if (hs.roof){ ctx.beginPath(); ctx.moveTo(x-6,top); ctx.lineTo(x+hs.w/2,top-26); ctx.lineTo(x+hs.w+2,top); ctx.closePath(); ctx.fill(); } else ctx.fillRect(x-4,top-8,hs.w+4,10);
+      ctx.fillStyle='#ffffff'; ctx.fillRect(x,top+4,hs.w-4,4);
+      for (let wy=top+22;wy<GROUND-50;wy+=46) for (let wx=x+12;wx<x+hs.w-24;wx+=32){ ctx.fillStyle='#1d3557'; ctx.fillRect(wx,wy,16,26); ctx.fillStyle='rgba(255,220,140,0.6)'; ctx.fillRect(wx+2,wy+2,12,10); }
+      ctx.fillStyle='#5a2e1a'; ctx.fillRect(x+hs.w/2-12,GROUND-44,22,44); }
+    // light strings between poles
+    for (const p of S.poles){ const x=p.x-cx*0.6; if (x<-260||x>W+20) continue;
+      ctx.fillStyle='#3a2a4a'; ctx.fillRect(x-3,170,6,GROUND-170);
+      const x2=x+240*0.6*1.6; ctx.strokeStyle='rgba(30,20,40,0.9)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(x,176); ctx.quadraticCurveTo((x+x2)/2,230,x2,176); ctx.stroke();
+      for (let k=1;k<10;k++){ const t=k/10, bx=x+(x2-x)*t, by=176+ (1-(2*t-1)**2)*27; ctx.fillStyle=['#ffd23f','#ff4fd8','#3ec1d3','#7bd389'][(k+Math.floor(clock/20))%4]; circle(bx,by+3,3.2); } }
+    // sambódromo stands behind the boss arena
+    const ax=3040-cx;
+    if (ax<W){ for (let k=0;k<6;k++){ ctx.fillStyle=k%2?'#5c5470':'#6d6582'; ctx.fillRect(ax,GROUND-60-k*34,1200,34); }
+      for (let i=0;i<160;i++){ const px=ax+((i*53)%1180)+10, py=GROUND-72-((i*7)%6)*34+Math.sin(clock*0.15+i)*2; ctx.fillStyle=['#ffd23f','#ff4fd8','#3ec1d3','#ffffff','#7bd389'][i%5]; circle(px,py,4); } }
+    // cobbled street
+    ctx.fillStyle='#4a4458'; ctx.fillRect(-30,GROUND,W+60,H-GROUND+30);
+    ctx.fillStyle='#5a5470'; const off=((-cx)%40+40)%40;
+    for (let y=GROUND+8;y<H;y+=16) for (let x=off-40+(y%32?20:0);x<W+40;x+=40){ ctx.beginPath(); ctx.roundRect(x,y,34,11,4); ctx.fill(); }
+    ctx.fillStyle='#e84a8a'; ctx.fillRect(-30,GROUND-4,W+60,6);
+    const cols=['#ff4fd8','#ffd23f','#3ec1d3','#7bd389'];
+    for (const f of SCENERY.tufts){ const x=f.x-cx; if (x<-10||x>W+10) continue; ctx.fillStyle=cols[(f.x|0)%4]; ctx.fillRect(x,GROUND+4+((f.x*7)|0)%20,4,2.5); }
+  },
+};

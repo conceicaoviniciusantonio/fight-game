@@ -120,6 +120,15 @@ const SONGS = {
     bass:sq(`C2 C3 C2 C3 C2 C3 C2 C3   Bb1 Bb2 Bb1 Bb2 Bb1 Bb2 Bb1 Bb2   Ab1 Ab2 Ab1 Ab2 Ab1 Ab2 Ab1 Ab2   G1 G2 G1 G2 G1 G2 B1 D2
              F1 F2 F1 F2 F1 F2 F1 F2   G1 G2 G1 G2 G1 G2 G1 G2   Ab1 Ab2 Ab1 Ab2 G1 G2 G1 G2   C2 C3 C2 C3 C2 . . .`),
     drum:sq(`k h s h k h s h `.repeat(7)+`k k s s k s s s`) }},
+  // samba batucada: bright major melody over a busy surdo/caixa/tamborim groove
+  carnaval:{ bpm:136, tracks:{
+    lead:sq(`G5 - E5 G5 - E5 C5 -   D5 E5 F5 - E5 D5 C5 -   G5 - E5 G5 - E5 C6 -   B5 A5 G5 - . . . .
+             A5 - F5 A5 - F5 D5 -   E5 F5 G5 - F5 E5 D5 -   C5 E5 G5 C6 - B5 A5 G5   C6 - - - G5 - C5 -`),
+    harm:sq(`E4 G4 E4 G4 E4 G4 E4 G4   F4 A4 F4 A4 F4 A4 F4 A4   E4 G4 E4 G4 E4 G4 E4 G4   D4 G4 D4 G4 D4 G4 D4 G4
+             F4 A4 F4 A4 F4 A4 F4 A4   G4 B4 G4 B4 G4 B4 G4 B4   E4 G4 E4 G4 F4 A4 F4 A4   E4 G4 C5 G4 E4 . . .`),
+    bass:sq(`C3 . C2 C3 . C2 C3 C2   F2 . F2 F3 . F2 F3 F2   C3 . C2 C3 . C2 C3 C2   G2 . G2 G3 . G2 G3 G2
+             F2 . F2 F3 . F2 F3 F2   G2 . G2 G3 . G2 G3 G2   C3 . C2 C3 F2 . G2 G2   C3 . C2 C3 C2 . . .`),
+    drum:sq(`k h s h k s s h `.repeat(7)+`s s s s k s k s`) }},
   victory:{ bpm:150, once:true, tracks:{
     lead:sq(`C5 E5 G5 C6 - - G5 - C6 - - - . . . .`),
     harm:sq(`E4 G4 C5 E5 - - D5 - E5 - - - . . . .`),

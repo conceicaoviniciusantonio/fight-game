@@ -32,7 +32,7 @@ function sendWorld(){
   netSend({type:'w',
     en:enemies.map(e=>[e.id,e.type,Math.round(e.x),Math.round(e.y),e.face,e.state,e.t,Math.round(e.hp),e.maxHp,e.anim|0,Math.round(e.vx*10)/10,e.flash]),
     it:items.map(i=>[i.id,i.type,Math.round(i.x),Math.round(i.y),i.t]),
-    z:[locked?1:0,lockL,lockR,zi,goTimer], sc:score, b:boss?boss.id:null});
+    z:[locked?1:0,lockL,lockR,zi,goTimer], sc:score, b:boss?boss.id:null, pc:platClock});
 }
 function applyWorld(m){
   const seen=new Set();
@@ -49,6 +49,7 @@ function applyWorld(m){
   if (m.z[4]>goTimer+30) SFX.go();
   locked=!!m.z[0]; lockL=m.z[1]; lockR=m.z[2]; zi=m.z[3]; goTimer=m.z[4];
   score=m.sc;
+  if (Math.abs(m.pc-platClock)>3) platClock=m.pc; // keep moving platforms in step with the host
   if (m.b){
     const b=enemies.find(e=>e.id===m.b);
     if (b && boss!==b){

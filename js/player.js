@@ -83,7 +83,7 @@ function gatherSparks(p,color,until){
 // ----- hitting things -----
 // Everything p's attacks can damage in the current mode
 function targetsOf(p){
-  const t=enemies.filter(e=>e.hp>0);
+  const t=enemies.filter(e=>e.hp>0 && !e.hidden);
   if (Net.mode==='pvp') for (const o of players) if (o!==p && isAlive(o)) t.push(o);
   return t;
 }

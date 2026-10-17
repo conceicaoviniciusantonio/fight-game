@@ -48,9 +48,23 @@ const ENEMY_TYPES = {
     moves:['charge','wave','teleport','slam'], summon:['skeleton','skeleton','darkmage'],
     tune:{wind:0.85, rec:0.85, cd:[38,75], enrage:0.55, rage:1.4, charge:12, summons:2},
     look:{s:2.3, skin:'#4a3f5c',body:'#1f1a2b',cloth:'#6a0f2a',eye:'#ff2a6a',weapon:'greatsword',helmet:true,closed:true,cape:'#4a0f22'}},
+
+  // ===== Terra Brasilis =====
+  // ----- Carnaval -----
+  foliao:{hp:95, w:30, h:56, speed:2.1, dmg:26, ai:'melee', reach:46, windup:20, score:140,
+    look:{s:1.05,skin:'#d9a066',body:'#e84a8a',cloth:'#3ec1d3',eye:'#1b1b2e',weapon:'tambourine',mask:'#ffd23f',plume:['#ff4fd8','#3ec1d3','#ffd23f']}},
+  pierrot:{hp:80, w:28, h:58, speed:1.5, dmg:24, ai:'archer', shot:'lob', bombStyle:'confetti', score:160,
+    look:{s:1, skin:'#f5f0f0',body:'#f5f5f5',cloth:'#1b1b2e',eye:'#1b1b2e',weapon:'none',clown:true}},
+  bonecao:{hp:260, w:44, h:84, speed:1.1, dmg:42, ai:'melee', reach:62, windup:30, score:320,
+    look:{kind:'puppet', s:1.1, skin:'#f2c49b', body:'#ff9f1c', cloth:'#2ec4b6', hair:'#3a2a1a'}},
+  bonecaoRei:{hp:6300, w:100, h:175, speed:1.7, dmg:120, ai:'boss', boss:true, score:6000, name:'Bonecão Desgovernado',
+    moves:['spin','rain','slam','leap'], summon:['foliao','foliao','pierrot'], bombStyle:'confetti',
+    tune:{wind:0.95, rec:0.95, cd:[40,80], enrage:0.5, rage:1.3, charge:10, summons:2},
+    look:{kind:'puppet', s:2.3, skin:'#f7c59f', body:'#7b2cbf', cloth:'#ffd23f', hair:'#1b1b2e', crown:true}},
 };
-const WIND = ['windup','slamWind','leapWind','chargeWind','rocksWind','spikesWind','spitWind','waveWind','teleportWind','slashWind'];
-const NEAR_MOVES = ['slam','spikes','teleport','leap'], FAR_MOVES = ['charge','leap','rocks','spit','wave','teleport','spikes'];
+const WIND = ['windup','slamWind','leapWind','chargeWind','rocksWind','spikesWind','spitWind','waveWind','teleportWind','slashWind',
+  'spinWind','rainWind','bombsWind','hopWind','burrowWind'];
+const NEAR_MOVES = ['slam','spikes','teleport','leap','spin','rain','hop','burrow'], FAR_MOVES = ['charge','leap','rocks','spit','wave','teleport','spikes','spin','rain','bombs','hop','burrow'];
 let boss = null;
 
 function spawnEnemy(type,x,y=-40-rand(0,120),id){
@@ -140,7 +154,9 @@ function archerAI(e,tg,dx,adx){
     if (e.t>=34){
       const sy=e.y-30, ty=tg.y-40;
       const vy=clamp((ty-sy)/Math.max(40,adx/8),-2.5,2.5);
-      if (ENEMY_TYPES[e.type].shot==='eorb'){ addEnemyProj({type:'eorb',x:e.x+e.face*22,y:sy-6,vx:e.face*4.5,vy:vy*0.5,life:170,dmg:e.dmg,home:true,col:ENEMY_TYPES[e.type].look.orb}); SFX.zap(); }
+      const ET=ENEMY_TYPES[e.type];
+      if (ET.shot==='lob'){ throwBomb(e,tg,ET.bombStyle,0); SFX.shoot(); }
+      else if (ET.shot==='eorb'){ addEnemyProj({type:'eorb',x:e.x+e.face*22,y:sy-6,vx:e.face*4.5,vy:vy*0.5,life:170,dmg:e.dmg,home:true,col:ENEMY_TYPES[e.type].look.orb}); SFX.zap(); }
       else { addEnemyProj({type:'arrow',x:e.x+e.face*18,y:sy,vx:e.face*8,vy,life:120,dmg:e.dmg}); SFX.shoot(); }
       e.state='strike'; e.t=0;
     }
@@ -205,6 +221,63 @@ function bossAI(e,tg,dx,adx){
     case 'recover':
       e.vx*=0.85; e.t++; if (e.t>=rec(enr?35:55)){ e.state='walk'; e.cd=rand(cdR[0],cdR[1])/spd; }
       break;
+    // spins toward the target, hitting everyone near it, then gets dizzy (a window to punish it)
+    case 'spinWind':
+      e.vx*=0.8; e.t++; if (e.t>=wnd(30)){ e.state='spin'; e.t=0; e.hitIds=new Set(); SFX.roar(); }
+      break;
+    case 'spin': {
+      e.t++; e.vx=clamp((tg.x-e.x)*0.04,-5,5)*(enr?1.3:1);
+      if (e.t%18===0) e.hitIds=new Set();
+      for (const p of alivePlayers())
+        if (!e.hitIds.has(p.id) && Math.abs(p.x-e.x)<e.w/2+42 && p.y>e.y-e.h && p.y-p.h<e.y){ e.hitIds.add(p.id); hurtPlayer(p,{dmg:Math.round(e.dmg*0.6),dir:p.x>e.x?1:-1,fromX:e.x,srcId:e.id}); }
+      if (e.t%4===0) dust(e.x,e.y,2);
+      if (e.t>=100){ e.state='recover'; e.t=-25; e.vx=0; }
+      break;
+    }
+    // bombs fall from the sky across the arena (style comes from the boss: confetti, eggs, presents…)
+    case 'rainWind':
+      e.vx*=0.8; e.t++;
+      if (e.t>=wnd(26)){
+        const n=enr?10:7, [l,r]=bounds();
+        for (let k=0;k<n;k++){ const x=k<alivePlayers().length ? alivePlayers()[k].x : l+60+Math.random()*(r-l-120);
+          addEnemyProj({type:'bomb',style:T.bombStyle,x,y:-40-k*35,vx:0,vy:2,grav:0.32,life:220,dmg:Math.round(e.dmg*0.5),r:16,explode:50}); }
+        SFX.go(); e.state='recover'; e.t=10;
+      }
+      break;
+    // throws a volley of arcing bombs at the target
+    case 'bombsWind':
+      e.vx*=0.8; e.t++; e.face=dx>0?1:-1;
+      if (e.t>=wnd(24)){ for (let k=0;k<(enr?4:3);k++) throwBomb(e,tg,T.bombStyle,k,70); SFX.blast(); e.state='recover'; e.t=12; }
+      break;
+    // three hops toward the target, each landing hits around it
+    case 'hopWind':
+      e.vx*=0.8; e.t++; if (e.t>=wnd(18)){ e.hops=3; bossHop(e,tg); }
+      break;
+    case 'hop':
+      e.t++;
+      if (e.onGround && e.t>5){
+        addShake(7); SFX.thud(); dust(e.x-30,e.y,6); dust(e.x+30,e.y,6);
+        for (const p of alivePlayers()) if (Math.abs(p.x-e.x)<e.w/2+60 && p.y>e.y-90) hurtPlayer(p,{dmg:Math.round(e.dmg*0.7),dir:p.x>e.x?1:-1,fromX:e.x,srcId:e.id});
+        if (--e.hops>0){ e.state='hopPause'; e.t=0; } else { e.state='recover'; e.t=0; }
+      }
+      break;
+    case 'hopPause':
+      e.vx*=0.7; e.t++; if (e.t>=(enr?8:14)) bossHop(e,tg);
+      break;
+    // sinks into the ground and bursts out under the target (a glowing mark shows where)
+    case 'burrowWind':
+      e.vx*=0.8; e.t++; if (e.t>=wnd(20)){ e.state='burrow'; e.t=0; e.hidden=true; dust(e.x,e.y,16); SFX.thud(); }
+      break;
+    case 'burrow':
+      e.t++; e.vx=0;
+      if (e.t===24){ const [l,r]=bounds(); e.bx=clamp(tg.x,l+e.w/2,r-e.w/2); }
+      if (e.t>=24) e.x=e.bx;
+      if (e.t>=(enr?44:54)){
+        e.hidden=false; e.state='recover'; e.t=0; addShake(12); SFX.slam(); dust(e.x,e.y,20);
+        for (const p of alivePlayers()) if (Math.abs(p.x-e.x)<e.w/2+50 && p.y>e.y-130) hurtPlayer(p,{dmg:e.dmg,dir:p.x>e.x?1:-1,fromX:e.x,srcId:e.id});
+        if (T.burrowWave) for (const d of [-1,1]) addEnemyProj({type:'swave',style:T.burrowWave,x:e.x+d*60,y:e.y,vx:d*8,vy:0,life:70,dmg:Math.round(e.dmg*0.55)});
+      }
+      break;
     case 'rocksWind':
       e.vx*=0.8; e.t++; e.face=dx>0?1:-1;
       if (e.t>=wnd(enr?24:32)){
@@ -266,6 +339,13 @@ function bossAI(e,tg,dx,adx){
       break;
   }
 }
+// An arcing bomb aimed at the target's position
+function throwBomb(e,tg,style,k=0,explode=0){
+  const flight=40+k*6, tx=tg.x+(k?rand(-80,80):0);
+  addEnemyProj({type:'bomb',style:style||'confetti',x:e.x+e.face*24,y:e.y-e.h*0.7,vx:clamp((tx-e.x)/flight,-9,9),vy:-9.5-k*0.4,grav:0.42,life:200,
+    dmg:Math.round(e.dmg*(explode?0.55:1)),r:explode?16:13,explode});
+}
+function bossHop(e,tg){ e.state='hop'; e.t=0; e.vy=-12; e.vx=clamp((tg.x-e.x)/40,-8,8); e.face=tg.x>e.x?1:-1; SFX.jump(); }
 function updateEnemy(e){
   e.anim++; if (e.flash>0) e.flash--;
   if (e.state==='dying'){ e.t++; e.vx*=0.96; physics(e,true); if (e.t>45) e.dead=true; return; }
@@ -357,9 +437,41 @@ function drawScorpion(e,T,c,F,sx,noShadow){
   if (e.hp>0 && wind && (e.anim>>2)%2) txt('!',sx,e.y-e.h-18,22,'#ff4040');
   if (!boss && e.hp>0 && e.hp<e.maxHp){ ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(sx-20,e.y-e.h-10,40,5); ctx.fillStyle='#ff4d5e'; ctx.fillRect(sx-20,e.y-e.h-10,40*e.hp/e.maxHp,5); }
 }
+// Carnival "bonecão": a giant puppet with a huge head and floppy cloth arms
+function drawPuppet(e,T,c,F,sx,noShadow){
+  const boss=!!T.boss, s=c.s, st=e.state;
+  if (e.hidden) return;
+  ctx.save(); ctx.translate(sx,e.y); ctx.scale(e.face*s,s);
+  if (st==='dying'){ ctx.globalAlpha=Math.max(0,1-e.t/45); ctx.rotate(-Math.min(1,e.t/14)*1.2); }
+  const moving=Math.abs(e.vx)>0.3 && e.onGround, ph=moving?Math.sin(e.anim*0.25):0, spin=st==='spin';
+  ctx.rotate(spin?Math.sin(e.anim*0.5)*0.08:ph*0.06);
+  ctx.fillStyle=F('#2b2b3a'); ctx.fillRect(-7+ph*3,-12,5,12); ctx.fillRect(2-ph*3,-12,5,12);
+  ctx.fillStyle=F(c.body); ctx.beginPath(); ctx.moveTo(-15,-12); ctx.lineTo(15,-12); ctx.lineTo(10,-42); ctx.lineTo(-10,-42); ctx.closePath(); ctx.fill();
+  ctx.fillStyle=F(c.cloth); for (let k=-12;k<12;k+=8) ctx.fillRect(k,-40,4,28);
+  // arms: hang and swing; raised while winding up; whirl around while spinning
+  const base=WIND.includes(st)?-2.4:st==='strike'?0.9:0.35;
+  for (const side of [-1,1]){
+    const a = spin ? e.anim*0.55+(side>0?Math.PI:0) : base+side*0.25+Math.sin(e.anim*0.15+side)*0.25;
+    ctx.save(); ctx.translate(side*9,-38); ctx.rotate(a);
+    ctx.fillStyle=F(c.cloth); ctx.beginPath(); ctx.roundRect(-3,0,7,26,3); ctx.fill();
+    ctx.fillStyle=F(c.skin); circle(0.5,28,4); ctx.restore();
+  }
+  // big head
+  ctx.fillStyle=F(c.skin); circle(0,-58,17);
+  ctx.fillStyle=F(c.hair); ctx.beginPath(); ctx.arc(0,-62,17.5,Math.PI*1.05,Math.PI*1.95); ctx.fill();
+  ctx.fillStyle='#ffffff'; circle(-6,-58,4.5); circle(6,-58,4.5);
+  const look=WIND.includes(st)||spin?'#ff2020':'#1b1b2e'; ctx.fillStyle=look; circle(-5,-58,2.2); circle(7,-58,2.2);
+  ctx.fillStyle=F('#ff8fa3'); circle(-11,-51,3); circle(11,-51,3);
+  ctx.strokeStyle=F('#8a2b2b'); ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(0,-50,5,0.2,Math.PI-0.2); ctx.stroke();
+  if (c.crown){ ctx.fillStyle=F('#ffd23f'); ctx.fillRect(-10,-78,20,4); tri(-10,-78,-7,-86,-4,-78); tri(-3,-78,0,-88,3,-78); tri(4,-78,7,-86,10,-78); }
+  if (st==='recover' && e.t<0) for (let k=0;k<3;k++){ const a=e.anim*0.2+k*2.1; ctx.fillStyle='#ffd23f'; circle(Math.cos(a)*14,-82+Math.sin(a)*4,2.2); }
+  ctx.restore();
+  if (e.hp>0 && WIND.includes(st) && (e.anim>>2)%2) txt('!',sx,e.y-e.h-18,22,'#ff4040');
+  if (!boss && e.hp>0 && e.hp<e.maxHp){ ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(sx-20,e.y-e.h-10,40,5); ctx.fillStyle='#ff4d5e'; ctx.fillRect(sx-20,e.y-e.h-10,40*e.hp/e.maxHp,5); }
+}
 function drawMonsterShadow(e){
   const T=ENEMY_TYPES[e.type], sx=e.x-cam.x;
-  if (T.look.kind==='bat' || e.state==='dying') return;
+  if (T.look.kind==='bat' || e.state==='dying' || e.hidden) return;
   const s=T.boss?GROUND:surfaceBelow(e.x,e.y), d=clamp((s-e.y)/250,0,0.7);
   shadow(sx,s,(T.look.kind==='scorpion'?e.w*0.55:e.w*0.6)*(1-d));
 }
@@ -368,6 +480,7 @@ function drawMonster(e,noShadow){
   if (sx<-200||sx>W+200) return;
   if (c.kind==='bat') return drawBat(e,T,c,F,sx);
   if (c.kind==='scorpion') return drawScorpion(e,T,c,F,sx,noShadow);
+  if (c.kind==='puppet') return drawPuppet(e,T,c,F,sx,noShadow);
   if (!noShadow && e.state!=='dying'){ const s=T.boss?GROUND:surfaceBelow(e.x,e.y), d=clamp((s-e.y)/250,0,0.7); shadow(sx,s,e.w*0.6*(1-d)); }
   ctx.save(); ctx.translate(sx,e.y);
   if (T.boss && e.hp>0 && e.hp<e.maxHp*((T.tune&&T.tune.enrage)??0.5)){
@@ -396,6 +509,8 @@ function drawMonster(e,noShadow){
   ctx.fillStyle=F(c.skin); circle(3,-43,12);
   if (ears){ tri(10,-48,22,-55,12,-40); }
   if (c.wrap){ ctx.strokeStyle=F('#a89b78'); ctx.lineWidth=2; for (let k=0;k<3;k++){ ctx.beginPath(); ctx.moveTo(-9,-50+k*6); ctx.lineTo(15,-47+k*6); ctx.stroke(); } }
+  if (c.plume) c.plume.forEach((col,k)=>{ ctx.fillStyle=F(col); ctx.beginPath(); ctx.ellipse(-4+k*6,-62-k%2*3,3.5,11,(k-1)*0.35,0,Math.PI*2); ctx.fill(); });
+  if (c.clown){ ctx.fillStyle=F('#1b1b2e'); tri(-8,-52,4,-76,14,-52); ctx.fillStyle=F('#ff4fd8'); circle(4,-77,3.5); ctx.fillStyle=F('#1b1b2e'); circle(-6,-30,2); circle(-6,-24,2); }
   if (c.crystal){ ctx.fillStyle=F(c.crystal); tri(-6,-52,-2,-68,2,-52); tri(2,-54,8,-72,12,-53); tri(-12,-34,-16,-50,-6,-36); ctx.fillStyle='rgba(255,255,255,0.6)'; tri(4,-56,8,-70,9,-56); }
   if (c.hood){ ctx.fillStyle=F(c.hood); ctx.beginPath(); ctx.arc(2,-44,14,Math.PI*0.8,Math.PI*1.95); ctx.lineTo(-15,-32); ctx.closePath(); ctx.fill(); }
   if (c.helmet){
@@ -406,6 +521,8 @@ function drawMonster(e,noShadow){
   const eyeC=(WIND.includes(st)||st==='charge')?'#ff2020':c.eye;
   if (c.skull){ ctx.fillStyle='#1d1d1d'; circle(9,-44,3.4); circle(1,-44,3); ctx.fillStyle=eyeC; circle(9,-44,1.6); ctx.fillStyle='#1d1d1d'; ctx.fillRect(2,-37,10,2); }
   else { ctx.fillStyle=eyeC; circle(9,-44,2.4); }
+  if (c.mask){ ctx.fillStyle=F(c.mask); ctx.beginPath(); ctx.roundRect(-3,-48,20,7,3); ctx.fill(); ctx.fillStyle='#1b1b2e'; circle(9,-44.5,2.2); }
+  if (c.clown){ ctx.fillStyle='#1b1b2e'; ctx.fillRect(8,-41,1.5,5); ctx.fillStyle='#e84a8a'; circle(12,-38,1.6); }
   if (!c.skull && !c.closed){ ctx.strokeStyle=F('#1d1d1d'); ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(4,-49); ctx.lineTo(12,-46.5); ctx.stroke(); }
   if (c.tusk){ ctx.fillStyle=F('#fff8e1'); tri(8,-35,10,-41,12,-35); }
   let ang=-0.4+ph*0.2;
@@ -434,6 +551,8 @@ function drawMonster(e,noShadow){
       ctx.fillStyle=F('#2b2236'); ctx.beginPath(); ctx.moveTo(16,-4); ctx.lineTo(50,-3); ctx.lineTo(56,0); ctx.lineTo(50,3); ctx.lineTo(16,4); ctx.closePath(); ctx.fill();
       ctx.strokeStyle=fl?'#fff':'rgba(255,92,240,0.8)'; ctx.lineWidth=1.2; ctx.beginPath(); ctx.moveTo(18,0); ctx.lineTo(50,0); ctx.stroke(); }
     else if (c.weapon==='fist'){ ctx.fillStyle=F(c.skin); circle(13,0,4.5); }
+    else if (c.weapon==='tambourine'){ ctx.strokeStyle=F('#c9a227'); ctx.lineWidth=2.5; ctx.beginPath(); ctx.arc(18,0,8,0,Math.PI*2); ctx.stroke();
+      ctx.fillStyle=F('#f5f0e6'); circle(18,0,6); ctx.fillStyle=F('#d9d9d9'); for (let k=0;k<4;k++){ const a=k*Math.PI/2; circle(18+Math.cos(a)*8,Math.sin(a)*8,1.8); } }
     ctx.restore();
   }
   ctx.restore();
