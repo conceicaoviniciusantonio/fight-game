@@ -12,6 +12,7 @@ function makePlayer(hero,opts={}){
     jumps:0, airAtk:0, inv:0, anim:0, dropThrough:0, onGround:true,
     lastTap:{dir:0,t:-99}, localInv:0, tx:0, ty:GROUND, guardHp:100, rollCd:0, rollDir:1,
     base:!!opts.base || opts.local===false, def:0, lvl:1, tier:0, aim:0,
+    status:{}, speedMul:1,
     lives: opts.base ? 1 : START_LIVES,   // story/co-op: like Grand Chase, you get back up while lives remain
   };
   applyStats(p); p.hp=p.maxHp;
@@ -114,6 +115,7 @@ function hitFeedback(p,crit,mpGain=4){
 function strikeEnemy(p,e,base,dir,kb,up){
   const {dmg,crit}=rollDamage(p,base);
   if (p.local){ hitFeedback(p,crit); score+=Math.round(dmg*(1+Math.min(combo,50)/25)); }
+  if (shieldBlocks(e,dir)) return true;
   if (isGuest()){
     // the host owns enemies: show the hit right away and report it
     e.flash=6; spark(e.x-dir*e.w*0.3,e.y-e.h*0.55,crit?'#ffe066':'#fff7d6'); addText(e.x,e.y-e.h-8,crit?dmg+'!':dmg,crit?'#ffd23f':'#ffffff',crit);
@@ -175,8 +177,15 @@ function applyHurt(p,h){
     p.inv = h.up ? 45 : 6;
     p.state='hurt'; p.t=h.up?30:16; p.vx=h.dir*(h.kb||3)*0.8; p.vy = h.up ? h.up : (p.onGround ? -2 : Math.min(p.vy,-3));
   } else {
-    p.inv=60; p.state='hurt'; p.t=22; p.vx=h.dir*5; p.vy=-5;
+    p.inv=60; p.state='hurt'; p.t=22; p.vx=h.dir*(h.kb||5); p.vy=h.up||-5;
+    hurtExtras(p,h);
   }
+}
+// Extra effects some enemies and traps add to a hit (see mechanics.js): status, stolen MP or gold
+function hurtExtras(p,h){
+  if (h.stealMp && p.mp>0){ const n=Math.min(p.mp,h.stealMp); p.mp-=n; addText(p.x,p.y-p.h-28,'-MP','#7fd7ff'); }
+  if (h.stealGold && !p.base && Progress.gold>0){ const n=Math.min(Progress.gold,h.stealGold); Progress.gold-=n; run.gold-=n; addText(p.x,p.y-p.h-28,'-'+n+' ouro','#ffd23f'); }
+  if (h.status) for (const k in h.status) applyStatus(p,k,h.status[k]);
 }
 
 function blockHit(p,h){
@@ -266,7 +275,9 @@ function updatePlayer(p){
     else tryRevive(p);
     return;
   }
-  if (p.onGround) p.safeX=p.x; // where to come back after falling
+  // where to come back after falling into a pit
+  if (p.onGround && !(pits.length && (inPit(p.x-50)||inPit(p.x)||inPit(p.x+50)))) p.safeX=p.x;
+  updateStatus(p);
   // archer aim: holding ↑/↓ while shooting raises/lowers the bow little by little
   if (Hh.aim){
     if (p.state==='attack' || (p.state==='skill' && p.sk===0)){
@@ -286,7 +297,7 @@ function updatePlayer(p){
   switch (p.state){
     case 'free': {
       const mv=(I.right?1:0)-(I.left?1:0);
-      if (mv){ p.vx=mv*Hh.speed; p.face=mv; } else p.vx*=0.6;
+      if (mv){ p.vx=mv*Hh.speed*p.speedMul; p.face=mv; } else p.vx*=0.6;
       if (p.onGround){ p.jumps=0; p.airAtk=0; }
       if (P.down && p.onGround && p.y<GROUND-1){ p.dropThrough=12; }
       else if (P.jump){
@@ -345,8 +356,9 @@ function updatePlayer(p){
       break;
     }
     case 'hurt':
-      p.t--; p.vx*=0.9; if (p.t<=0) p.state='free';
+      p.t--; p.vx*=0.9; if (p.t<=0) p.state=p.status && p.status.grab>0 ? 'grabbed' : 'free';
       break;
+    case 'grabbed': updateGrabbed(p); break;
     case 'skill': {
       const s=Hh.skills[p.sk];
       p.t++;

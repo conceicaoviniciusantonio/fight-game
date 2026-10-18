@@ -189,8 +189,10 @@ function drawMonsterOutlined(e){
   }
   const bw=T.look.kind==='bat'?90:Math.max(170,130*s), bh=T.look.kind==='bat'?120:Math.max(150,108*s);
   drawMonsterShadow(e);
-  if (T.look.noOutline){ drawMonster(e,true); return; } // big glowing figures look better without the box-limited outline
-  withOutline(sx,e.y,bw,bh,()=>drawMonster(e,true));
+  if (e.big){ ctx.save(); ctx.translate(sx,e.y); ctx.scale(e.big,e.big); ctx.translate(-sx,-e.y); } // mini-bosses are drawn bigger
+  if (T.look.noOutline) drawMonster(e,true); // big glowing figures look better without the box-limited outline
+  else withOutline(sx,e.y,bw,bh,()=>drawMonster(e,true));
+  if (e.big) ctx.restore();
 }
 
 // ----- lighting: darkness with holes punched by light sources, plus a soft additive glow -----
@@ -244,32 +246,8 @@ function spark(x,y,color='#fff7d6'){ parts.push({spark:true,x,y,vx:0,vy:0,life:9
 
 function nameTag(p,label,color){ if (p) txt(label,p.x-cam.x,p.y-p.h-30,12,color); }
 
-function drawHazards(){
-  for (const h of hazards){
-    const x=h.x-cam.x; if (x+h.w<-40 || x>W+40) continue;
-    if (h.type==='gift'){
-      if (h.state==='done') continue;
-      const fuse=h.state==='fuse', sh=fuse?Math.sin(clock*1.5)*2:0, y=GROUND-14;
-      ctx.save(); ctx.translate(x+sh,y);
-      ctx.fillStyle=fuse && (clock>>2)%2 ? '#ffffff' : h.col||'#e63946'; ctx.fillRect(-16,-14,32,28);
-      ctx.fillStyle='#ffd23f'; ctx.fillRect(-3,-14,6,28); ctx.fillRect(-16,-3,32,6);
-      ctx.beginPath(); ctx.ellipse(-6,-18,7,4,0.5,0,Math.PI*2); ctx.ellipse(6,-18,7,4,-0.5,0,Math.PI*2); ctx.fill();
-      if (fuse){ ctx.fillStyle=(clock>>1)%2?'#fff3c4':'#ff9d4d'; circle(10,-26,4+Math.random()*2); }
-      ctx.restore();
-      continue;
-    }
-    if (h.type==='fire'){ // bonfire: crossed logs and layered flames
-      ctx.fillStyle='#5d3a1a'; for (let k=0;k<h.w;k+=18){ ctx.save(); ctx.translate(x+k+9,GROUND-6); ctx.rotate((k/18%2?0.4:-0.4)); ctx.fillRect(-14,-4,28,8); ctx.restore(); }
-      for (let k=0;k<h.w;k+=14){ const fl=Math.sin(clock*0.3+k)*5, fx=x+k+7;
-        ctx.fillStyle='#ff5a1f'; ctx.beginPath(); ctx.ellipse(fx,GROUND-26,9,24+fl,0,0,Math.PI*2); ctx.fill();
-        ctx.fillStyle='#ffb347'; ctx.beginPath(); ctx.ellipse(fx,GROUND-20,6,16+fl*0.6,0,0,Math.PI*2); ctx.fill();
-        ctx.fillStyle='#fff3c4'; ctx.beginPath(); ctx.ellipse(fx,GROUND-14,3,8,0,0,Math.PI*2); ctx.fill(); }
-      if (clock%4===0) parts.push({x:h.x+rand(0,h.w),y:GROUND-40,vx:rand(-0.4,0.4),vy:-rand(1,2.5),life:30,max:30,color:pick(['#ffb347','#ff5a1f','#ffd36b']),size:2,grav:0});
-    }
-  }
-}
 function drawWorld(){
-  drawBG(); drawPlatforms(); drawHazards(); drawItems();
+  drawBG(); drawPits(); drawPlatforms(); drawHazards(); drawItems();
   for (const e of enemies) drawMonsterOutlined(e);
   drawParts();
   for (const p of players) if (p!==me) drawHeroOutlined(p);

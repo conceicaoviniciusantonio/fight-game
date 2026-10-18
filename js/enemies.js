@@ -106,13 +106,15 @@ let boss = null;
 
 function spawnEnemy(type,x,y=-40-rand(0,120),id){
   const T=ENEMY_TYPES[type];
+  // never drop a new enemy into a pit
+  for (const p of pits) if (x>p.x-30 && x<p.x+p.w+30) x = x-p.x < p.x+p.w-x ? p.x-40 : p.x+p.w+40;
   const e={isEnemy:true,type,x,y,vx:0,vy:0,w:T.w,h:T.h,hp:T.hp,maxHp:T.hp,speed:T.speed*rand(0.85,1.15),dmg:T.dmg,
     face:-1,state:'walk',t:0,cd:rand(50,110),flash:0,id:id||('e'+nextId++),anim:rand(0,100),onGround:false,dead:false};
   // regular enemies get tougher stage by stage (bosses are tuned one by one above)
   const D=(!T.boss && stage && stage.diff) || {hp:1,dmg:1};
   if (!id){ e.hp=e.maxHp=Math.round(T.hp*D.hp); e.dmg=Math.round(T.dmg*D.dmg); }
   if (players.length>1 && !id){ e.hp=e.maxHp=Math.round(e.hp*(T.boss?1.6:1.5)); } // tougher in co-op
-  if (T.boss){ e.cd=120; e.dispHp=e.hp; boss=e; }
+  if (T.boss){ e.cd=120; e.dispHp=e.hp; e.noPits=true; boss=e; }
   enemies.push(e);
   return e;
 }
@@ -120,6 +122,7 @@ function spawnEnemy(type,x,y=-40-rand(0,120),id){
 // Authoritative damage (single player or co-op host)
 function damageEnemy(e,dmg,dir,kb,up,crit,src){
   if (e.hp<=0) return;
+  if (shieldBlocks(e,dir)) return;
   e.hp-=dmg; e.flash=6; spark(e.x-dir*e.w*0.3,e.y-e.h*0.55,crit?'#ffe066':'#fff7d6');
   addText(e.x,e.y-e.h-8,crit?dmg+'!':dmg,crit?'#ffd23f':'#ffffff',crit);
   burst(e.x-dir*e.w*0.2,e.y-e.h*0.55,crit?'#ffd23f':'#fff3c4',crit?14:8,6);
@@ -216,6 +219,7 @@ function bossAI(e,tg,dx,adx){
   const wnd=n=>n*(U.wind||1), rec=n=>n*(U.rec||1), cdR=U.cd||[40,90];
   if (e.wasAir && e.onGround && e.state!=='leap'){ addShake(12); SFX.thud(); dust(e.x,e.y,16); }
   e.wasAir=!e.onGround;
+  bossPhaseCheck(e,T);
   if (e.state==='walk'){
     const many=(U.summons??2)>=2;
     if (!e.summon1 && e.hp<e.maxHp*(many?0.6:0.5)){ e.summon1=true; e.state='roar'; e.t=0; }
@@ -226,8 +230,8 @@ function bossAI(e,tg,dx,adx){
       e.face=dx>0?1:-1;
       e.vx = adx>110 ? e.face*e.speed*spd : e.vx*0.8;
       if (e.cd<=0 && e.onGround){
-        const near=adx<200, pool=T.moves.filter(m=>(near?NEAR_MOVES:FAR_MOVES).includes(m));
-        e.state=pick(pool.length?pool:T.moves)+'Wind'; e.t=0;
+        const moves=bossMoves(e,T), near=adx<200, pool=moves.filter(m=>(near?NEAR_MOVES:FAR_MOVES).includes(m));
+        e.state=pick(pool.length?pool:moves)+'Wind'; e.t=0;
       }
       break;
     }
@@ -376,6 +380,8 @@ function bossAI(e,tg,dx,adx){
       }
       if (e.t>=70){ e.state='walk'; e.cd=40; }
       break;
+    default: // moves a stage file added for its own boss (mechanics.js)
+      if (BOSS_STATES[e.state]) BOSS_STATES[e.state](e,tg,dx,adx,{enr,spd,wnd,rec});
   }
 }
 // An arcing bomb aimed at the target's position
@@ -405,6 +411,8 @@ function updateEnemy(e){
     else if (T.ai==='trickster') tricksterAI(e,tg,dx,adx);
     else meleeAI(e,tg,dx,adx);
   }
+  // walkers stop at the edge of a pit (but can still be knocked in)
+  if (!T.fly && !T.boss && pits.length && e.onGround && e.state!=='hurt' && e.vx && inPit(e.x+Math.sign(e.vx)*(e.w/2+8)+e.vx*4)) e.vx=0;
   if (T.fly){ if (e.state==='hurt') e.vy*=0.9; e.x+=e.vx; e.y=clamp(e.y+e.vy,60,GROUND-6); e.onGround=false; }
   else physics(e,!!T.boss);
   const [l,r]=bounds(); e.x=clamp(e.x,l+e.w/2,r-e.w/2);

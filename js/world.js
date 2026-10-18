@@ -9,6 +9,7 @@ let combo = 0, comboTimer = 0, maxCombo = 0, score = 0;
 let nextId = 1, pidSeq = 0;
 let platClock = 0; // drives moving platforms; the co-op guest follows the host's value
 let hazards = [];  // stage traps (bonfires, booby-trapped presents…), copied from the stage on load
+let pits = [];     // holes in the ground ({x,w}); falling in costs some life (see mechanics.js)
 
 const bounds = () => locked ? [lockL, lockR] : [0, worldW];
 
@@ -24,27 +25,44 @@ function physics(e, ignorePlat){
   e.vy = Math.min(e.vy + G, 15);
   e.x += e.vx; e.y += e.vy;
   e.onGround = false; e.plat = null;
-  if (e.y >= GROUND){ e.y = GROUND; e.vy = 0; e.onGround = true; return; }
+  // the ground holds everyone except over a pit (bosses never fall: e.noPits)
+  if (e.y >= GROUND && prevY <= GROUND+0.01 && (e.noPits || !pits.length || !inPit(e.x))){ e.y = GROUND; e.vy = 0; e.onGround = true; return; }
   if (e.vy >= 0 && !ignorePlat && !(e.dropThrough > 0)){
     for (const p of platforms){
-      if (e.x > p.x-4 && e.x < p.x+p.w+4 && prevY <= p.y+0.01 && e.y >= p.y){ e.y=p.y; e.vy=0; e.onGround=true; e.plat=p; break; }
+      if (p.gone) continue;
+      if (e.x > p.x-4 && e.x < p.x+p.w+4 && prevY <= p.y+0.01 && e.y >= p.y){
+        e.y=p.y; e.vy=0; e.onGround=true; e.plat=p;
+        if (p.crumble && !p.shakeT) p.shakeT=1;
+        if (p.bounce){ e.vy=-p.bounce; e.onGround=false; e.plat=null; e.jumps=1; if (e.local && e.inp) SFX.jump(); }
+        break;
+      }
     }
   }
 }
-// Moving platforms (e.g. parade floats) slide back and forth and carry whoever stands on them
+// Moving platforms (parade floats, lifts) slide back and forth (move.axis 'x' or 'y') and carry whoever stands on them.
+// Crumbling ones (`crumble`) shake when stepped on, fall and come back a few seconds later.
+const CRUMBLE_SHAKE = 40, CRUMBLE_BACK = 240;
 function updatePlatforms(){
   platClock++;
   let moved=false;
   for (const p of platforms){
-    if (!p.move){ p.dx=0; continue; }
-    const nx=p.x0+Math.sin(platClock*p.move.speed)*p.move.range;
-    p.dx=nx-p.x; p.x=nx; moved=true;
+    if (p.crumble && p.shakeT){
+      p.shakeT++;
+      if (p.shakeT===CRUMBLE_SHAKE){ p.gone=true; for (let k=0;k<p.w;k+=16) parts.push({x:p.x+k,y:p.y,vx:rand(-1,1),vy:rand(0,2),life:30,max:30,color:'#8a6a48',size:rand(3,6),grav:0.3}); }
+      if (p.shakeT>=CRUMBLE_SHAKE+CRUMBLE_BACK){ p.gone=false; p.shakeT=0; }
+    }
+    p.dx=0; p.dy=0;
+    if (!p.move) continue;
+    const off=Math.sin(platClock*p.move.speed+(p.move.phase||0))*p.move.range;
+    if (p.move.axis==='y'){ const ny=p.y0+off; p.dy=ny-p.y; p.y=ny; }
+    else { const nx=p.x0+off; p.dx=nx-p.x; p.x=nx; }
+    moved=true;
   }
   if (!moved) return;
   const riders=[...players.filter(p=>p.local), ...enemies.filter(e=>!e.puppet), ...items];
-  for (const e of riders) if (e.plat && e.plat.dx && e.onGround) e.x+=e.plat.dx;
+  for (const e of riders) if (e.plat && e.onGround){ e.x+=e.plat.dx; e.y+=e.plat.dy; }
 }
-function surfaceBelow(x,y){ let s=GROUND; for (const p of platforms) if (x>p.x && x<p.x+p.w && p.y>=y-1 && p.y<s) s=p.y; return s; }
+function surfaceBelow(x,y){ let s=GROUND; for (const p of platforms) if (!p.gone && x>p.x && x<p.x+p.w && p.y>=y-1 && p.y<s) s=p.y; return s; }
 
 // ----- effects -----
 function addShake(v){ if (Settings.shake) shake=Math.max(shake,v); }

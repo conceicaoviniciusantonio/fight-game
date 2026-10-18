@@ -43,28 +43,6 @@ function celebrateBoss(e){
   const name=e ? ENEMY_TYPES[e.type].name.split(',')[0] : 'O chefe';
   banner={txt:'VITÓRIA!',sub:name+' foi derrotado',t:150,max:150};
 }
-function updateZones(){
-  const zones=stage.zones;
-  if (!locked){
-    const lead=Math.max(...alivePlayers().map(p=>p.x), -1);
-    if (zi<zones.length && lead>zones[zi].at){
-      const z=zones[zi]; locked=true; lockL=z.left; lockR=z.left+W; wave=0; waveDelay=0; goTimer=0;
-      for (const [t,x] of z.waves[0]) spawnEnemy(t,x);
-      if (z.boss){ banner={txt:boss?ENEMY_TYPES[boss.type].name:'Chefe',sub:'— CHEFE —',t:170,max:170,boss:true}; SFX.roar(); playMusic(stage.bossMusic); }
-    }
-    return;
-  }
-  if (enemies.some(e=>e.hp>0)){ waveDelay=0; return; }
-  if (++waveDelay<45) return;
-  waveDelay=0; wave++;
-  const z=zones[zi];
-  if (wave<z.waves.length){ for (const [t,x] of z.waves[wave]) spawnEnemy(t,x); }
-  else {
-    locked=false; zi++;
-    if (!z.boss){ goTimer=200; SFX.go(); dropItem(clamp(me.x+120,lockL+60,lockR-60),-30,'hp',0); }
-  }
-}
-
 function projNear(pr,e){
   return pr.type==='parrow'
     ? Math.abs(e.x-pr.x)<e.w/2+(pr.big?14:8) && pr.y>e.y-e.h-(pr.big?10:0) && pr.y<e.y+4
@@ -161,40 +139,6 @@ function updateItems(){
   }
   items=items.filter(it=>it.keep ? it.t<99999 : it.t<720);
 }
-// Traps run on the browser that owns the world (single player / co-op host); hits reach the guest via hurtPlayer
-function updateHazards(){
-  const dmg=k=>Math.round(k*(stage.diff?stage.diff.dmg:1));
-  for (const h of hazards){
-    if (h.type==='gift'){
-      // a surprise present: some burst into coins, the rest light a fuse and explode
-      if (h.state==='idle' && alivePlayers().some(p=>Math.abs(p.x-h.x)<36 && p.y>GROUND-60)){
-        if (h.good){ for (let k=0;k<4;k++) dropItem(h.x,GROUND-30,'gold',-rand(5,8),25,rand(-3,3)); setGift(h,'done',true); }
-        else setGift(h,'fuse');
-      } else if (h.state==='fuse' && ++h.t>=40){
-        for (const p of alivePlayers()) if (Math.hypot(p.x-h.x,(p.y-30)-(GROUND-20))<95) hurtPlayer(p,{dmg:dmg(40),dir:p.x>=h.x?1:-1,fromX:h.x});
-        setGift(h,'done',true);
-      }
-      continue;
-    }
-    if (h.type==='fire'){
-      for (const p of alivePlayers()) if (p.x>h.x-6 && p.x<h.x+h.w+6 && p.y>GROUND-46) hurtPlayer(p,{dmg:dmg(16),dir:p.x<h.x+h.w/2?-1:1,fromX:h.x+h.w/2});
-    }
-  }
-  // fireworks falling from the sky now and then, aimed near a hero
-  const bossFight=locked && stage.zones[zi] && stage.zones[zi].boss;
-  if (stage.rockets && frame%stage.rockets===0 && !winTimer && !bossFight){
-    const p=pick(alivePlayers()); if (p) addEnemyProj({type:'bomb',style:'fire',x:p.x+rand(-140,140),y:-40,vx:rand(-1,1),vy:3,grav:0.3,life:200,dmg:dmg(24),r:14,explode:55});
-  }
-}
-function setGift(h,state,send){
-  h.state=state; h.t=0;
-  if (state==='fuse') SFX.charge();
-  if (state==='done'){
-    if (h.good){ burst(h.x,GROUND-24,'#ffd23f',18,6); SFX.pickup(); }
-    else { ring(h.x,GROUND-24,'#ffb347',9,20,9,10); burst(h.x,GROUND-24,'#e63946',26,8,0.12); SFX.blast(); addShake(8); }
-  }
-  if (send!==false) netSend({type:'fx',k:'gift',i:h.i,s:state});
-}
 function followCamera(){
   const [l,r]=bounds();
   const target=clamp(me.x-W/2,l,r-W);
@@ -226,10 +170,11 @@ function tickPlay(){
     for (const e of enemies) updateEnemy(e);
     separate();
     enemies=enemies.filter(e=>!e.dead);
-    updateItems(); updateZones(); updateHazards();
+    updateItems(); updateZones(); updateHazards(); handleFalls();
     if (goTimer>0) goTimer--;
   }
-  updateProjs(); updateFx();
+  for (const p of players) if (p.local && p.y>H+60 && p.state!=='dead') fellInPit(p);
+  updateLocalHazards(); updateProjs(); updateFx();
   if (comboTimer>0 && --comboTimer===0) combo=0;
   if (boss) boss.dispHp+=(Math.max(0,boss.hp)-boss.dispHp)*0.05;
   followCamera();
@@ -297,7 +242,9 @@ function hintLine(){
   return `${bindLabel('left')}${bindLabel('right')} mover  ${bindLabel('jump')} pular (2x no ar)  ${bindLabel('attack')} atacar  ${bindLabel('dodge')} esquiva  ${bindLabel('guard')} defesa  ${sk}`;
 }
 function drawStoryHUD(){
+  drawBlindOverlay();
   heroPanel(me,14,12);
+  drawStatusBadges(me,30,92);
   const partner=players.find(p=>p!==me);
   if (partner) drawPartnerPanel(partner,14,96);
   if (me.state==='dead' && canRespawn(me))
@@ -309,6 +256,7 @@ function drawStoryHUD(){
   if (stage.eggs) txt(`🥚 ${run.eggs||0}/${stage.eggs.length}`,W-20,96,14,'#ffd6e0','right');
   const s=Math.floor(frame/60); txt(`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`,W-20,50,16,'#cfe3ff','right');
   drawCombo(W-90,130);
+  drawEncounterHUD();
   if (locked && stage.zones[zi] && stage.zones[zi].boss) drawBossBar();
   if (goTimer>0 && (goTimer>>4)%2===0) txt('GO ▶',W-90,H/2,44,'#ffd23f');
   if (frame<720 && mode==='play' && Input.device!=='touch'){

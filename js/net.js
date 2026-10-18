@@ -100,6 +100,7 @@ function onNet(m){
   if (NET_HANDLERS[m.type]) NET_HANDLERS[m.type](m);
 }
 const FX_HANDLERS = {
+  hz:m=>remoteHazard(m),
   blast: m => { ring(m.x,m.y,'#e2c6ff',8,18,8,m.r*0.3); burst(m.x,m.y,'#c79bff',16,6,0.05); },
   boom: m => {
     projs=projs.filter(q=>!(q.pid===m.pid && !q.local));
