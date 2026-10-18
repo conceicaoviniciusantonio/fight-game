@@ -225,6 +225,8 @@ function startAttack(p,a){
   p.state='attack'; p.atk=a; p.t=0; p.queued=false; p.hitIds=new Set();
   if (a.air){ p.airAtk++; p.vy=Math.min(p.vy,-2); }
 }
+const RUN_MUL = 1.6;
+const holdingDir = p => p.face>0 ? !!p.inp.held.right && !p.inp.held.left : !!p.inp.held.left && !p.inp.held.right;
 function startDash(p,dir){
   p.face=dir;
   if (HEROES[p.hero].blink){
@@ -294,17 +296,21 @@ function updatePlayer(p){
     }
   }
   let doPhysics=true;
+  if (p.state!=='free' && p.state!=='dash') p.running=false;
   switch (p.state){
     case 'free': {
       const mv=(I.right?1:0)-(I.left?1:0);
-      if (mv){ p.vx=mv*Hh.speed*p.speedMul; p.face=mv; } else p.vx*=0.6;
+      // running (double tap and keep holding): faster until the direction is released or changed
+      if (p.running && mv!==p.face) p.running=false;
+      if (mv){ p.vx=mv*Hh.speed*p.speedMul*(p.running?RUN_MUL:1); p.face=mv; } else p.vx*=0.6;
+      if (p.running && p.onGround && p.anim%6===0) dust(p.x-p.face*10,p.y,1);
       if (p.onGround){ p.jumps=0; p.airAtk=0; }
       if (P.down && p.onGround && p.y<GROUND-1){ p.dropThrough=12; }
       else if (P.jump){
         if (p.onGround){ p.vy=Hh.jump; p.jumps=1; psfx('jump'); dust(p.x,p.y,4); }
         else if (p.jumps<2){ p.vy=-10.5; p.jumps=2; p.flip=FLIP_T; psfx('djump'); ring(p.x,p.y,'#ffffff',2.5,14,3,6); burst(p.x,p.y-10,'#ffffff',6,2,0); }
       }
-      if (P.attack){ if (p.onGround) startAttack(p,Hh.atk.c1); else if (p.airAtk<2) startAttack(p,Hh.atk.air); }
+      if (P.attack){ if (p.onGround) startAttack(p,p.running?Hh.atk.dash:Hh.atk.c1); else if (p.airAtk<2) startAttack(p,Hh.atk.air); }
       else if (P.dodge && p.onGround && p.rollCd<=0) startRoll(p);
       else if (I.guard && p.onGround){ p.state='guard'; p.t=0; p.vx=0; }
       trySkills(p);
@@ -351,8 +357,8 @@ function updatePlayer(p){
       p.t--; p.vx=Hh.blink ? 0 : p.face*(5+p.t*0.45);
       if (p.t%2===0) parts.push({ghost:true,hero:p.hero,x:p.x,y:p.y,face:p.face,anim:p.anim,life:12,max:12});
       if (P.attack) startAttack(p,Hh.atk.dash);
-      else if (P.jump){ p.state='free'; p.vy=Hh.jump; p.jumps=1; }
-      else if (p.t<=0) p.state='free';
+      else if (P.jump){ p.state='free'; p.vy=Hh.jump; p.jumps=1; p.running=holdingDir(p); }
+      else if (p.t<=0){ p.state='free'; p.running=holdingDir(p); }
       break;
     }
     case 'hurt':

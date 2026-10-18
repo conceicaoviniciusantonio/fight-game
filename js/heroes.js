@@ -279,8 +279,9 @@ function drawHero(p,alpha=1,ghost=false,noShadow=false){
   if (p.state==='roll'){ ctx.translate(0,-30); ctx.rotate(Math.min(1,p.t/20)*Math.PI*2); ctx.translate(0,30); }
   if (big){ const gl=ctx.createRadialGradient(0,-45,5,0,-45,90); gl.addColorStop(0,Hh.aura); gl.addColorStop(1,'rgba(255,150,50,0)'); ctx.fillStyle=gl; circle(0,-45,90); }
   if (p.state==='skill' && !big && p.t<12){ ctx.strokeStyle=Hh.skills[p.sk].color; ctx.globalAlpha*=0.6; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(0,-45,40-p.t*2,0,Math.PI*2); ctx.stroke(); ctx.globalAlpha/=0.6; }
-  const run = p.state==='free' && p.onGround && Math.abs(p.vx)>0.5;
-  const ph = run ? Math.sin(p.anim*0.35) : 0, air=!p.onGround && p.state!=='dead';
+  const run = p.state==='free' && p.onGround && Math.abs(p.vx)>0.5, sprint = run && Math.abs(p.vx)>Hh.speed*1.2;
+  if (sprint) ctx.rotate(0.14); // leaning forward while running
+  const ph = run ? Math.sin(p.anim*(sprint?0.55:0.35)) : 0, air=!p.onGround && p.state!=='dead';
   const sway = Math.sin(p.anim*0.15)*3 + (run?Math.abs(p.vx)*1.5:0);
   // cape
   ctx.fillStyle=ghost?gc:C.cape;

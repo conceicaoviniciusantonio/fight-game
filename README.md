@@ -34,7 +34,7 @@ Teclado (as teclas podem ser trocadas em **Opções → Configurar teclas**):
 
 | Tecla | Ação |
 |---|---|
-| ← → | andar (toque duas vezes para dash) |
+| ← → | andar (toque duas vezes para dash; segure no segundo toque para continuar correndo, e ataque correndo para o golpe de investida) |
 | ↑ / Espaço | pular (pulo duplo no ar) |
 | ↓ | descer da plataforma |
 | Z | atacar |
