@@ -277,7 +277,7 @@ function updateZones(){
         zi++; return;
       }
       locked=true; lockL=z.left; lockR=z.left+W; wave=0; waveDelay=0; goTimer=0;
-      if (z.type==='survive'){ surviveT=z.secs*60; banner={txt:'SOBREVIVA!',sub:`Aguente ${z.secs} segundos`,t:110,max:110}; }
+      if (z.type==='survive'){ surviveT=z.secs*60; banner={txt:z.label||'SOBREVIVA!',sub:`Aguente ${z.secs} segundos`,t:110,max:110}; }
       if (z.type==='ambush') banner={txt:'EMBOSCADA!',sub:'Eles vêm dos dois lados',t:100,max:100};
       for (const w of (z.waves && z.waves[0]) || []) zoneSpawn(w);
       if (z.boss){ banner={txt:boss?ENEMY_TYPES[boss.type].name:'Chefe',sub:'— CHEFE —',t:170,max:170,boss:true}; SFX.roar(); playMusic(stage.bossMusic); }

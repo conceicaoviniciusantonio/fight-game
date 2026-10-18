@@ -24,7 +24,7 @@ registerContinent({
         {at:330, left:100, waves:[
           [['foliao',560],['foliao',760],['pierrot',950]],
           [['foliao',300],['pierrot',880],['foliao',620],['foliao',700]]]},
-        {at:1700, left:1480, type:'survive', secs:20, spawn:['foliao','foliao','pierrot','bonecao'], every:75, max:5, waves:[[['foliao',1800],['pierrot',2200]]]},
+        {at:1700, left:1480, type:'survive', secs:20, spawn:['foliao','foliao','pierrot','bonecao'], every:75, max:5, label:'Bloco de rua', waves:[[['foliao',1800],['pierrot',2200]]]},
         {at:3000, left:2860, type:'ambush', waves:[
           [['foliao','L'],['foliao','R'],['pierrot',3160]],
           [['bonecao','L'],['pierrot','R'],['foliao',3500]],
@@ -63,30 +63,34 @@ registerContinent({
       ],
       arena:{left:3240, extra:[{x:3670,y:296,w:110}]},
     },
+    // Bonfires, fireworks from the sky, the fishing pond, a "quadrilha" to survive and stalls that collapse
     { id:'junina', map:{x:480,y:320,icon:'bonfire'}, arenaName:'Arraial',
-      name:'Festa Junina', theme:'junina', worldW:4000, music:'junina', bossMusic:'boss',
+      name:'Festa Junina', theme:'junina', worldW:5000, music:'junina', bossMusic:'boss',
       // bonfires hurt on touch; fireworks fall every `rockets` frames
-      hazards:[{type:'fire',x:690,w:56},{type:'fire',x:1640,w:56},{type:'fire',x:2700,w:56}],
-      rockets:300,
+      hazards:[{type:'fire',x:690,w:56},{type:'fire',x:1420,w:56},{type:'fire',x:2300,w:56},{type:'fire',x:3500,w:56}],
+      rockets:280,
       platforms:[
-        {x:400,y:372,w:180},{x:560,y:290,w:160},{x:780,y:372,w:180},
-        {x:1360,y:372,w:180},{x:1520,y:290,w:170},{x:1720,y:372,w:200},{x:1960,y:296,w:130},
-        {x:2400,y:372,w:200},{x:2580,y:290,w:160},{x:2800,y:372,w:180},
-        {x:3200,y:372,w:170},{x:3720,y:372,w:170},
+        {x:400,y:372,w:180},{x:560,y:290,w:160},
+        {x:1200,y:372,w:150,crumble:true},
+        {x:1700,y:372,w:180},{x:1880,y:290,w:160},{x:2150,y:372,w:160},
+        {x:2580,y:378,w:90,crumble:true},{x:2700,y:378,w:90,crumble:true},
+        {x:3050,y:372,w:180},{x:3230,y:290,w:160},{x:3390,y:208,w:140},{x:3650,y:372,w:170},
+        {x:4180,y:372,w:170},{x:4750,y:372,w:170},
       ],
+      pits:[{x:1150,w:150},{x:2560,w:260}],
+      lifeItems:[3460],
       zones:[
         {at:330, left:100, waves:[
           [['espantalho',560],['buscape',800],['fogueteiro',950]],
           [['buscape',300],['fogueteiro',880],['espantalho',620],['buscape',720]]]},
-        {at:1260, left:1150, waves:[
-          [['espantalho',1500],['fogueteiro',1850],['buscape',1300],['buscape',1700]],
-          [['espantalho',1450],['espantalho',1950],['fogueteiro',1650],['buscape',1800],['buscape',1350]]]},
-        {at:2260, left:2150, waves:[
-          [['espantalho',2550],['fogueteiro',2950],['buscape',2400],['buscape',2850]],
-          [['espantalho',2300],['espantalho',2900],['fogueteiro',2560],['fogueteiro',2880],['buscape',2650],['buscape',2450]]]},
-        {at:3150, left:3040, boss:true, waves:[[['boitata',3760]]]},
+        {at:1820, left:1600, type:'survive', secs:22, spawn:['buscape','espantalho','fogueteiro','buscape'], every:80, max:5, label:'Quadrilha', waves:[[['espantalho',1900],['buscape',2300]]]},
+        {at:3100, left:2950, type:'ambush', waves:[
+          [['buscape','L'],['buscape','R'],['fogueteiro',3290]],
+          [['espantalho','L'],['espantalho','R'],['fogueteiro',3700]],
+          [['espantalho',3700,{mini:true,name:'Zé do Milho'}],['fogueteiro',3290],['buscape','L']]]},
+        {at:4150, left:4040, boss:true, waves:[[['boitata',4760]]]},
       ],
-      arena:{left:3040, extra:[{x:3470,y:296,w:110}]},
+      arena:{left:4040, extra:[{x:4470,y:296,w:110}]},
     },
     { id:'saci', map:{x:650,y:200,icon:'saci'}, arenaName:'Clareira do Saci',
       name:'Noite do Saci', theme:'saci', worldW:4000, music:'saci', bossMusic:'boss',

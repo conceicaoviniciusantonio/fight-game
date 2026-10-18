@@ -238,3 +238,38 @@ Object.assign(ENEMY_TYPES.coelhoRei, {
   phases:[0.6,0.25],
   onPhase(e){ e.state='eggHideWind'; e.t=0; e.vx=0; },
 });
+
+// ---------- Boitatá (Festa Junina) ----------
+// The fire serpent leaves burning trails where it charges; from 60% it sets the stalls (platforms) of the
+// arena on fire one at a time, and from 30% it dives underground and erupts three times in a row.
+addWind('multiBurrowWind');
+FAR_MOVES.push('multiBurrow'); NEAR_MOVES.push('multiBurrow');
+BOSS_STATES.multiBurrowWind = (e) => { e.vx*=0.8; e.t++; if (e.t>=20){ e.state='multiBurrow'; e.t=0; e.hidden=true; e.erupts=3; dust(e.x,e.y,16); SFX.thud(); } };
+BOSS_STATES.multiBurrow = (e,tg) => {
+  e.t++; e.vx=0;
+  if (e.t===16){ const [l,r]=bounds(); e.x=clamp(tg.x,l+e.w/2,r-e.w/2); e.crack=true; }
+  if (e.t>=50){
+    e.crack=false; addShake(12); SFX.slam(); dust(e.x,e.y,20); burst(e.x,GROUND-40,'#ff9d4d',26,8,0.1);
+    for (const p of alivePlayers()) if (Math.abs(p.x-e.x)<e.w/2+50 && p.y>e.y-130) hurtPlayer(p,{dmg:e.dmg,dir:p.x>e.x?1:-1,fromX:e.x,srcId:e.id});
+    addHazard({type:'fire',patch:true,x:e.x-40,w:80,ttl:200,dmg:16});
+    if (--e.erupts>0) e.t=0;
+    else { e.hidden=false; e.state='recover'; e.t=0; }
+  }
+};
+Object.assign(ENEMY_TYPES.boitata, {
+  phases:[0.6,0.3],
+  movesByPhase:[['wave','burrow','bombs','charge'], ['wave','burrow','bombs','charge'], ['wave','multiBurrow','bombs','charge']],
+  onPhase(e,n){
+    if (n===2){ e.stallT=30; bigText(e.x,e.y-e.h-30,'AS BARRACAS ESTÃO PEGANDO FOGO!','#ffb347'); }
+    if (n===3) bigText(e.x,e.y-e.h-30,'Cuidado com o chão!','#ffb347');
+  },
+  bossTick(e){
+    if (e.hp<=0) return;
+    if (e.state==='charge' && e.t%12===0) addHazard({type:'fire',patch:true,x:e.x-23,w:46,ttl:150,dmg:14});
+    if ((e.phase||1)>=2 && --e.stallT<=0){
+      const stalls=platforms.filter(p=>!p.gone && p.x+p.w>lockL && p.x<lockR);
+      const p=pick(stalls); if (p) addHazard({type:'fire',patch:true,x:p.x+6,w:p.w-12,y:p.y,ttl:260,dmg:16});
+      e.stallT=320;
+    }
+  },
+});

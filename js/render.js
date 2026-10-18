@@ -186,7 +186,7 @@ function drawMonsterOutlined(e){
   if (e.state==='bones'){ drawBonePile(e,sx); return; }
   if (e.hidden && e.state==='dig'){ drawDigMound(e,sx); return; }
   if (e.hidden){ // burrowed boss: a glowing crack marks where it will come out
-    if (e.state==='burrow' && e.t>=24){ const a=0.4+0.4*Math.sin(clock*0.5); ctx.fillStyle=`rgba(255,120,40,${a})`; ctx.beginPath(); ctx.ellipse(sx,GROUND-2,e.w*0.7,8,0,0,Math.PI*2); ctx.fill(); }
+    if ((e.state==='burrow' && e.t>=24) || e.crack){ const a=0.4+0.4*Math.sin(clock*0.5); ctx.fillStyle=`rgba(255,120,40,${a})`; ctx.beginPath(); ctx.ellipse(sx,GROUND-2,e.w*0.7,8,0,0,Math.PI*2); ctx.fill(); }
     return;
   }
   const bw=T.look.kind==='bat'?90:Math.max(170,130*s), bh=T.look.kind==='bat'?120:Math.max(150,108*s);
