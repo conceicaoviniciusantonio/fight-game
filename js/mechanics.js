@@ -196,6 +196,11 @@ function drawHazards(){
       }
       case 'roller': {
         ctx.save(); ctx.translate(x,GROUND-h.r); ctx.rotate(h.x/h.r);
+        if (h.style==='ball'){ // giant beach ball
+          const cols=['#e63946','#ffffff','#ffd23f','#ffffff','#4d9de0','#ffffff'];
+          for (let k=0;k<6;k++){ ctx.fillStyle=cols[k]; ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,h.r,k*Math.PI/3,(k+1)*Math.PI/3); ctx.closePath(); ctx.fill(); }
+          ctx.fillStyle='#ffffff'; circle(0,0,h.r*0.18); ctx.restore(); break;
+        }
         ctx.fillStyle='#6b6f7c'; circle(0,0,h.r); ctx.fillStyle='#8a8f9c'; circle(-h.r*0.3,-h.r*0.3,h.r*0.45);
         ctx.strokeStyle='#4a4e58'; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(-h.r*0.7,0); ctx.lineTo(h.r*0.6,h.r*0.2); ctx.stroke();
         ctx.restore(); break;
@@ -272,7 +277,7 @@ function updateZones(){
     if (zi<zones.length && lead>zones[zi].at){
       const z=zones[zi];
       if (z.type==='chase'){
-        addHazard({type:'roller',x:z.at-480,r:70,speed:z.speed||3.6,until:z.to});
+        addHazard({type:'roller',x:z.at-480,r:70,speed:z.speed||3.6,until:z.to,style:z.style});
         banner={txt:'CORRA!',sub:z.label||'Uma pedra gigante vem rolando',t:120,max:120,boss:true}; SFX.roar(); addShake(8);
         zi++; return;
       }
@@ -309,7 +314,7 @@ function drawEncounterHUD(){
   // a chasing boulder still off screen: show how close it is
   for (const h of hazards) if (h.type==='roller' && h.x+h.r<cam.x){
     const d=Math.round((cam.x-h.x)/10), a=0.6+0.4*Math.sin(clock*0.3);
-    ctx.globalAlpha=a; txt('◀ PEDRA '+d+'m',70,GROUND-120,18,'#ff6b6b'); ctx.globalAlpha=1;
+    ctx.globalAlpha=a; txt((h.style==='ball'?'◀ BOLA ':'◀ PEDRA ')+d+'m',70,GROUND-120,18,'#ff6b6b'); ctx.globalAlpha=1;
   }
   for (const e of enemies) if (e.mini && e.hp>0){
     const sx=e.x-cam.x, y=e.y-e.h-26;

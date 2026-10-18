@@ -125,30 +125,41 @@ registerContinent({
       ],
       arena:{left:4640, extra:[{x:5070,y:296,w:110}]},
     },
+    // The longest stage: a summer Christmas on the beach — presents, sand, an inflatable trampoline,
+    // a giant beach ball rolling after the heroes and four fights before the thief
     { id:'natal', map:{x:830,y:300,icon:'gift'}, arenaName:'Praia de Natal',
-      name:'Natal', theme:'natal', worldW:4000, music:'natal', bossMusic:'boss',
+      name:'Natal', theme:'natal', worldW:6200, music:'natal', bossMusic:'boss',
       // surprise presents: `good` ones burst into coins, the others light a fuse and explode
-      hazards:[{type:'gift',x:300,good:true,col:'#2a9d8f'},{type:'gift',x:980,good:false},{type:'gift',x:1300,good:true,col:'#4d9de0'},
-               {type:'gift',x:2050,good:false},{type:'gift',x:2350,good:true,col:'#ff4fd8'},{type:'gift',x:2980,good:false}],
+      hazards:[{type:'gift',x:300,good:true,col:'#2a9d8f'},{type:'gift',x:980,good:false},{type:'gift',x:1500,good:true,col:'#4d9de0'},
+               {type:'gift',x:2350,good:false},{type:'gift',x:2560,good:true,col:'#ff4fd8'},{type:'gift',x:4400,good:false},{type:'gift',x:4520,good:true,col:'#ffd23f'},
+               {type:'slow',kind:'sand',x:1080,w:150},{type:'slow',kind:'sand',x:3000,w:130},{type:'spikes',x:3250,w:80,period:110,on:50}],
       platforms:[
-        {x:420,y:372,w:180},{x:580,y:290,w:160},{x:820,y:372,w:200},
-        {x:1360,y:372,w:200},{x:1540,y:290,w:170},{x:1760,y:372,w:180},{x:1950,y:296,w:130},
-        {x:2420,y:372,w:200},{x:2600,y:290,w:170},{x:2840,y:372,w:180},
-        {x:3180,y:372,w:170},{x:3750,y:372,w:170},
+        {x:420,y:372,w:180},{x:580,y:290,w:160},
+        {x:1290,y:430,w:70,bounce:17},{x:1370,y:208,w:150},
+        {x:1750,y:372,w:180},{x:1920,y:290,w:160},{x:2180,y:372,w:160},
+        {x:3120,y:376,w:110},
+        {x:3950,y:372,w:180},{x:4130,y:290,w:160},{x:4380,y:372,w:160},
+        {x:4800,y:372,w:170},{x:4980,y:290,w:150},
+        {x:5380,y:372,w:170},{x:5950,y:372,w:170},
       ],
+      pits:[{x:3520,w:160}],
+      lifeItems:[1440],
       zones:[
         {at:330, left:100, waves:[
           [['duende',600],['duende',780],['soldadinho',950]],
           [['rena',880],['duende',300],['duende',620],['soldadinho',720]]]},
-        {at:1260, left:1150, waves:[
-          [['duende',1500],['soldadinho',1850],['rena',1300],['duende',1700]],
-          [['rena',1450],['rena',1950],['soldadinho',1650],['duende',1800],['duende',1350]]]},
-        {at:2260, left:2150, waves:[
-          [['rena',2550],['soldadinho',2950],['duende',2400],['duende',2700]],
-          [['rena',2300],['rena',2900],['soldadinho',2560],['soldadinho',2880],['duende',2650],['duende',2450]]]},
-        {at:3150, left:3040, boss:true, waves:[[['ladrao',3760]]]},
+        {at:1800, left:1600, waves:[
+          [['duende',1900],['soldadinho',2400],['rena',1700],['duende',2200]],
+          [['rena',1650],['rena',2450],['soldadinho',1990],['duende',2300],['duende',1800]]]},
+        {at:2720, type:'chase', to:3500, style:'ball', label:'Uma bola de praia gigante vem rolando!'},
+        {at:3980, left:3820, type:'ambush', waves:[
+          [['duende','L'],['duende','R'],['soldadinho',4200]],
+          [['rena','L'],['soldadinho','R'],['duende',4450]],
+          [['duende',4500,{mini:true,name:'Duende Chefe'}],['soldadinho',4200],['rena','L']]]},
+        {at:4860, left:4720, type:'survive', secs:24, spawn:['duende','rena','soldadinho','duende'], every:80, max:5, label:'Ceia de Natal', waves:[[['duende',5000],['rena',5300]]]},
+        {at:5350, left:5240, boss:true, waves:[[['ladrao',5960]]]},
       ],
-      arena:{left:3040, extra:[{x:3470,y:296,w:110}]},
+      arena:{left:5240, extra:[{x:5670,y:296,w:110}]},
     },
   ],
 });

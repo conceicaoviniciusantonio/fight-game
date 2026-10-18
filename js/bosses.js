@@ -86,8 +86,9 @@ Object.assign(ENEMY_TYPES.golem, {
     }
   },
 });
-// the crystal shell around a shielded boss
+// the crystal shell around a shielded boss (and the thief's escape rope)
 function drawBossShell(e){
+  if (e.state==='escape' && e.hp>0){ const sx=e.x-cam.x+e.face*10; ctx.strokeStyle='#c9a227'; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(sx,0); ctx.lineTo(sx,e.y-e.h*0.75); ctx.stroke(); }
   if (!e.shielded || e.hp<=0 || !ENEMY_TYPES[e.type].boss) return;
   const sx=e.x-cam.x, a=0.25+0.12*Math.sin(clock*0.15);
   ctx.fillStyle=`rgba(127,240,255,${a})`; ctx.strokeStyle='rgba(191,248,255,0.8)'; ctx.lineWidth=3;
@@ -307,3 +308,56 @@ Object.assign(ENEMY_TYPES.mula, {
   onPhase(e,n){ bigText(e.x,e.y-e.h-30,n===2?'Suba nas plataformas!':'A MULA ENFURECEU!','#ffb347'); },
 });
 FAR_MOVES.push('gallop'); NEAR_MOVES.push('gallop');
+
+// ---------- Ladrão de Presentes (Natal) ----------
+// His teleport slash steals MP; at 60% he scatters presents — some are mimics that bite whoever comes close,
+// the others hold treats. From 30% he tries to escape up a rope with the sack: hit him enough while he
+// hangs there, or he gets away with some of his life back.
+ENEMY_TYPES.ladrao.hitFx = {stealMp:90};
+ENEMY_TYPES.presente = {hp:70, w:36, h:36, speed:2.6, dmg:45, ai:'pylon', score:80, look:{kind:'present'}};
+ENEMY_NAMES.presente = 'Presente';
+TRICKS.presente = {
+  ai(e,tg,dx,adx){
+    if (e.mimic && !e.awake && adx<90){ e.awake=true; bigText(e.x,e.y-60,'MÍMICO!','#ff8a8a'); SFX.roar(); e.cd=10; }
+    if (!e.awake){ e.vx=0; return true; }
+    hopperAI(e,tg,dx,adx); return true;
+  },
+  onKill(e){ if (!e.mimic){ dropItem(e.x,e.y-20,Math.random()<0.5?'hp':'mp'); dropItem(e.x,e.y-20,'gold',-6,40,rand(-2,2)); } return false; },
+};
+EXTRA_DRAW.present = (e,T,c,F,sx) => {
+  const open=e.awake, bob=open ? Math.abs(Math.sin(e.anim*0.3))*4 : 0, cols=['#e63946','#2a9d8f','#4d9de0','#ff4fd8'], col=cols[(e.id.length+e.id.charCodeAt(e.id.length-1))%4];
+  ctx.save(); ctx.translate(sx,e.y); ctx.scale(e.face,1); foeDying(e);
+  ctx.fillStyle=F(col); ctx.fillRect(-18,-30,36,30);
+  ctx.fillStyle=F('#ffd23f'); ctx.fillRect(-3,-30,6,30);
+  ctx.save(); ctx.translate(0,-30-bob); ctx.rotate(open?-0.35:0);
+  ctx.fillStyle=F(col); ctx.fillRect(-20,-8,40,9); ctx.fillStyle=F('#ffd23f'); ctx.fillRect(-3,-8,6,9);
+  ctx.beginPath(); ctx.ellipse(-6,-11,7,4,0.5,0,Math.PI*2); ctx.ellipse(6,-11,7,4,-0.5,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  if (open){ ctx.fillStyle='#1b1b2e'; ctx.fillRect(-16,-32,32,5); ctx.fillStyle='#ffffff'; for (let k=-14;k<14;k+=6) tri(k,-32,k+3,-26,k+6,-32); ctx.fillStyle='#ff2a2a'; circle(6,-36-bob,2.5); circle(12,-36-bob,2.5); }
+  ctx.restore(); foeBars(e,T,sx);
+};
+function scatterPresents(e){
+  const xs=[lockL+150,lockL+340,lockL+620,lockL+810].sort(()=>Math.random()-0.5);
+  xs.forEach((x,i)=>{ const p=spawnEnemy('presente',x,GROUND-300); p.mimic=i<2; p.vy=2; });
+  bigText(e.x,e.y-e.h-30,'Presentes! (ou não…)','#ffd23f'); SFX.blink();
+}
+addWind('escapeWind');
+BOSS_STATES.escapeWind = (e) => { // runs to the nearest wall (at most once every 15 s)
+  if (e.t===0){ if (e.lastEscape && frame-e.lastEscape<900){ e.state='teleportWind'; return; } e.lastEscape=frame; }
+  const [l,r]=bounds(), wall=e.x-l<r-e.x ? l+e.w/2+6 : r-e.w/2-6;
+  e.face=wall>e.x?1:-1; e.vx=e.face*9; e.t++;
+  if (Math.abs(e.x-wall)<12 || e.t>90){ e.x=wall; e.vx=0; e.state='escape'; e.t=0; e.hpAtRope=e.hp; bigText(e.x,GROUND-300,'Ele vai fugir! Bata nele!','#ffd23f'); }
+};
+BOSS_STATES.escape = (e,tg) => { // hanging from the rope, throwing presents
+  e.t++; e.vx=0; e.vy=-G; e.y=Math.max(GROUND-120,e.y-4);
+  if (e.t%50===0 && tg) throwBomb(e,tg,'gift',1,55);
+  const hit=e.hpAtRope-e.hp;
+  if (hit>=e.maxHp*0.04){ e.state='recover'; e.t=-50; e.vy=4; bigText(e.x,e.y-e.h-20,'DERRUBADO!','#9fe3a8'); SFX.guardBreak(); addShake(8); }
+  else if (e.t>=300){ const h=Math.round(e.maxHp*0.05); e.hp=Math.min(e.maxHp,e.hp+h); addText(e.x,e.y-e.h-10,'+'+h,'#7dff8a'); bigText(e.x,e.y-e.h-30,'Escapou com os presentes!','#ff8a8a'); e.state='recover'; e.t=0; e.vy=4; }
+};
+Object.assign(ENEMY_TYPES.ladrao, {
+  phases:[0.6,0.3],
+  movesByPhase:[['bombs','teleport','rain','charge'], ['bombs','teleport','rain','charge'], ['teleport','escape','bombs','charge','teleport']],
+  onPhase(e,n){ if (n===2) scatterPresents(e); if (n===3){ e.state='escapeWind'; e.t=0; } },
+});
+FAR_MOVES.push('escape'); NEAR_MOVES.push('escape');
