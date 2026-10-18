@@ -45,13 +45,13 @@ PROJ_DRAW.axe = pr => {
 // ---------- Golem de Cristal (Caverna de Cristal) ----------
 // At 65% and 30% life it grows crystal pylons around the arena and a crystal shell: the shell blocks
 // every hit until all pylons are broken, and the pylons fire crystal shards meanwhile.
-ENEMY_TYPES.pilar = {hp:220, w:40, h:96, speed:0, dmg:30, ai:'pylon', anchored:true, score:200, look:{kind:'pylon', glow:'#7ff0ff'}};
+ENEMY_TYPES.pilar = {hp:180, w:40, h:96, speed:0, dmg:30, ai:'pylon', anchored:true, score:200, look:{kind:'pylon', glow:'#7ff0ff'}};
 ENEMY_NAMES.pilar = 'Pilar de cristal';
 TRICKS.pilar = {
   ai(e,tg){
     e.vx=0; e.cd=(e.cd??rand(60,140))-1;
     if (e.cd<=0){ const sy=e.y-e.h+10, a=Math.atan2((tg.y-40)-sy,tg.x-e.x);
-      addEnemyProj({type:'eorb',x:e.x,y:sy,vx:Math.cos(a)*4.5,vy:Math.sin(a)*4.5,life:160,dmg:e.dmg,col:'#7ff0ff'}); SFX.zap(); e.cd=rand(200,260); }
+      addEnemyProj({type:'eorb',x:e.x,y:sy,vx:Math.cos(a)*4.5,vy:Math.sin(a)*4.5,life:160,dmg:e.dmg,col:'#7ff0ff'}); SFX.zap(); e.cd=rand(260,320); }
     return true;
   },
 };
@@ -126,5 +126,39 @@ Object.assign(ENEMY_TYPES.darklord, {
   onPhase(e,n){
     if (n===2){ shadowCopies(e,2); bigText(e.x,e.y-e.h-30,'Qual é o verdadeiro?','#ff9ad0'); }
     if (n===3){ shadowCopies(e,1); bigText(e.x,e.y-e.h-30,'AS TOCHAS SE APAGARAM!','#ff9ad0'); }
+  },
+});
+
+// ---------- Bonecão Desgovernado (Carnaval) ----------
+// Grabs whoever gets close and throws them across the arena; at half life the parade starts:
+// floats drive through the arena from alternating sides — ride on top of them or get run over.
+NEAR_MOVES.push('grab');
+addWind('grabWind');
+BOSS_STATES.grabWind = (e,tg,dx) => {
+  e.vx*=0.8; e.t++; if (e.t<20) e.face=dx>0?1:-1;
+  if (e.t===34){
+    e.vx=e.face*6; SFX.strike();
+    for (const p of alivePlayers()) if ((p.x-e.x)*e.face>-20 && Math.abs(p.x-e.x)<e.w/2+90 && p.y>e.y-e.h)
+      { hurtPlayer(p,{dmg:Math.round(e.dmg*0.8),dir:e.face,fromX:e.x,kb:15,up:-13,srcId:e.id}); bigText(p.x,p.y-p.h-20,'ARREMESSADO!','#ffd23f'); }
+  }
+  if (e.t>=56){ e.state='recover'; e.t=0; }
+};
+function spawnParadeFloat(fromLeft){
+  const w=220, f={x:fromLeft?lockL-w:lockR, y:GROUND-86, w, float:true, vx:fromLeft?4.2:-4.2, endL:lockL-w-60, endR:lockR+60};
+  f.x0=f.x; platforms.push(f);
+  bigText(fromLeft?lockL+120:lockR-120,GROUND-200,fromLeft?'CARRO ALEGÓRICO ▶':'◀ CARRO ALEGÓRICO','#ffd23f'); SFX.go();
+  if (Net.mode==='coop' && Net.host) netSend({type:'fx',k:'float',left:fromLeft,L:lockL,R:lockR});
+}
+FX_HANDLERS.float = m => { const w=220, f={x:m.left?m.L-w:m.R, y:GROUND-86, w, float:true, vx:m.left?4.2:-4.2, endL:m.L-w-60, endR:m.R+60}; f.x0=f.x; platforms.push(f); SFX.go(); };
+Object.assign(ENEMY_TYPES.bonecaoRei, {
+  phases:[0.5],
+  movesByPhase:[['spin','slam','grab','leap'], ['spin','rain','grab','leap']],
+  onPhase(e){ e.floatT=60; e.floatSide=true; bigText(e.x,e.y-e.h-30,'O DESFILE COMEÇOU!','#ffd23f'); },
+  bossTick(e){
+    if ((e.phase||1)<2 || e.hp<=0) return;
+    if (--e.floatT<=0){ spawnParadeFloat(e.floatSide); e.floatSide=!e.floatSide; e.floatT=430; }
+    // floats run over whoever is on the ground in their way
+    for (const f of platforms) if (f.vx) for (const p of alivePlayers())
+      if (p.y>f.y+20 && p.x>f.x-10 && p.x<f.x+f.w+10) hurtPlayer(p,{dmg:Math.round(e.dmg*0.6),dir:Math.sign(f.vx),fromX:f.x+f.w/2-Math.sign(f.vx)*200,kb:10,up:-9});
   },
 });

@@ -7,27 +7,31 @@ registerContinent({
   id:'brasilis', name:'Terra Brasilis', sub:'Continente 2',
   map:{x:640,y:250}, colors:{land:'#3fa34d', shore:'#f2d16b', dark:'#1f7a3a'},
   stages:[
+    // Parade floats carry the heroes over gaps in the avenue; a street "bloco" to survive and Rei Momo's ambush
     { id:'carnaval', map:{x:130,y:330,icon:'mask'}, arenaName:'Sambódromo',
-      name:'Carnaval', theme:'carnaval', worldW:4000, music:'carnaval', bossMusic:'boss',
+      name:'Carnaval', theme:'carnaval', worldW:4800, music:'carnaval', bossMusic:'boss',
       platforms:[
-        {x:380,y:372,w:180},{x:520,y:290,w:150},{x:760,y:372,w:200,float:true,move:{range:100,speed:0.015}},
-        {x:1330,y:372,w:180},{x:1480,y:290,w:170},{x:1730,y:372,w:220,float:true,move:{range:120,speed:0.012}},{x:2000,y:372,w:130},
-        {x:2400,y:372,w:180},{x:2560,y:290,w:170},{x:2800,y:372,w:200,float:true,move:{range:90,speed:0.014}},
-        {x:3180,y:372,w:170},{x:3750,y:372,w:170},
+        {x:380,y:372,w:180},{x:520,y:290,w:150},
+        {x:1160,y:372,w:180,float:true,move:{range:110,speed:0.014}},
+        {x:1560,y:372,w:180},{x:1740,y:290,w:160},{x:2050,y:372,w:160},
+        {x:2540,y:372,w:180,float:true,move:{range:120,speed:0.012}},
+        {x:2950,y:372,w:170},{x:3100,y:290,w:150},{x:3250,y:208,w:130},{x:3450,y:372,w:160},
+        {x:3980,y:372,w:170},{x:4550,y:372,w:170},
       ],
+      pits:[{x:1150,w:200},{x:2500,w:260}],
+      lifeItems:[3315],
       zones:[
         {at:330, left:100, waves:[
           [['foliao',560],['foliao',760],['pierrot',950]],
           [['foliao',300],['pierrot',880],['foliao',620],['foliao',700]]]},
-        {at:1260, left:1150, waves:[
-          [['foliao',1500],['pierrot',1850],['foliao',1300],['bonecao',1700]],
-          [['bonecao',1450],['foliao',1950],['pierrot',1650],['pierrot',2050]]]},
-        {at:2260, left:2150, waves:[
-          [['bonecao',2550],['pierrot',2950],['foliao',2400],['foliao',2700]],
-          [['bonecao',2300],['bonecao',2900],['pierrot',2560],['pierrot',2880],['foliao',2650]]]},
-        {at:3150, left:3040, boss:true, waves:[[['bonecaoRei',3760]]]},
+        {at:1700, left:1480, type:'survive', secs:20, spawn:['foliao','foliao','pierrot','bonecao'], every:75, max:5, waves:[[['foliao',1800],['pierrot',2200]]]},
+        {at:3000, left:2860, type:'ambush', waves:[
+          [['foliao','L'],['foliao','R'],['pierrot',3160]],
+          [['bonecao','L'],['pierrot','R'],['foliao',3500]],
+          [['bonecao',3600,{mini:true,name:'Rei Momo'}],['pierrot',3160],['foliao','R']]]},
+        {at:3950, left:3840, boss:true, waves:[[['bonecaoRei',4560]]]},
       ],
-      arena:{left:3040, extra:[{x:3470,y:296,w:110}]},
+      arena:{left:3840, extra:[{x:4270,y:296,w:110}]},
     },
     { id:'pascoa', map:{x:300,y:220,icon:'egg'}, arenaName:'Fábrica de Chocolate',
       name:'Páscoa', theme:'pascoa', worldW:4000, music:'pascoa', bossMusic:'boss',

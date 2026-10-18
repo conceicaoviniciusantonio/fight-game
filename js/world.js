@@ -52,6 +52,7 @@ function updatePlatforms(){
       if (p.shakeT>=CRUMBLE_SHAKE+CRUMBLE_BACK){ p.gone=false; p.shakeT=0; }
     }
     p.dx=0; p.dy=0;
+    if (p.vx){ p.x+=p.vx; p.dx=p.vx; moved=true; continue; } // driving across once (e.g. a parade float in a boss fight)
     if (!p.move) continue;
     const off=Math.sin(platClock*p.move.speed+(p.move.phase||0))*p.move.range;
     if (p.move.axis==='y'){ const ny=p.y0+off; p.dy=ny-p.y; p.y=ny; }
@@ -59,6 +60,7 @@ function updatePlatforms(){
     moved=true;
   }
   if (!moved) return;
+  platforms=platforms.filter(p=>!p.vx || (p.x<p.endR && p.x+p.w>p.endL));
   const riders=[...players.filter(p=>p.local), ...enemies.filter(e=>!e.puppet), ...items];
   for (const e of riders) if (e.plat && e.onGround){ e.x+=e.plat.dx; e.y+=e.plat.dy; }
 }
