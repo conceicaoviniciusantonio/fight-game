@@ -8,15 +8,15 @@ const SCENERY = {
   clouds:    [...Array(14)].map((_,i)=>({x:i*190+SR()*90,y:40+SR()*120,s:0.6+SR()*0.8})),
   farTrees:  [...Array(64)].map((_,i)=>({x:i*42+SR()*30,h:60+SR()*60})),
   nearTrees: [...Array(48)].map((_,i)=>({x:i*105+SR()*60,h:120+SR()*90,r:30+SR()*18})),
-  tufts:     [...Array(260)].map(()=>({x:SR()*4000,s:0.6+SR()*0.8})),
-  pebbles:   [...Array(160)].map(()=>({x:SR()*4000,y:GROUND+18+SR()*60,r:2+SR()*4})),
-  ruins:     [{x:3080,h:200},{x:3300,h:120,broken:true},{x:3620,h:160,broken:true},{x:3960,h:210}],
+  tufts:     [...Array(460)].map(()=>({x:SR()*7000,s:0.6+SR()*0.8})),
+  pebbles:   [...Array(280)].map(()=>({x:SR()*7000,y:GROUND+18+SR()*60,r:2+SR()*4})),
+  ruins:     [{x:40,h:200},{x:260,h:120,broken:true},{x:580,h:160,broken:true},{x:920,h:210}], // around the boss arena (x from its left edge)
 };
 
 const THEMES = {
   forest: {
     platform:{post:'#5d4632', body:'#8d7458', line:'#6f5a44', top:'#6cc24f', vine:'#3f8a30'},
-    darkness:cx => clamp((cx-2300)/900,0,1)*0.3,   // the sun sets near the boss
+    darkness:cx => clamp((cx-arenaX()+740)/900,0,1)*0.3,   // the sun sets near the boss
     ambient(cx){ // falling leaves
       for (let i=0;i<16;i++){
         const x=((i*233-cx*0.9+clock*0.7)%(W+80)+W+80)%(W+80)-40, y=((i*131+clock*(0.8+(i%3)*0.3))%(H+40))-20;
@@ -50,7 +50,7 @@ const THEMES = {
         circle(x,GROUND-n.h,n.r); circle(x-n.r*0.7,GROUND-n.h+12,n.r*0.75); circle(x+n.r*0.7,GROUND-n.h+10,n.r*0.8);
         ctx.fillStyle=mix('#3fae58','#30523f',t); circle(x-6,GROUND-n.h-8,n.r*0.55);
       }
-      for (const r of S.ruins){ const x=r.x-cx; if (x<-60||x>W+60) continue;
+      for (const r of S.ruins){ const x=arenaX()+r.x-cx; if (x<-60||x>W+60) continue;
         ctx.fillStyle='#8a8494'; ctx.fillRect(x-22,GROUND-r.h,44,r.h);
         ctx.fillStyle='#a59fae'; ctx.fillRect(x-30,GROUND-r.h-(r.broken?0:16),60,r.broken?10:16);
         ctx.fillStyle='rgba(0,0,0,0.15)'; for (let y=GROUND-r.h+20;y<GROUND;y+=34) ctx.fillRect(x-22,y,44,3);
@@ -70,7 +70,7 @@ const THEMES = {
     darkness:() => 0.55,
     lights(cx){
       const L=[];
-      for (const r of SCENERY.ruins){ const x=r.x-cx; if (x>-200 && x<W+200) L.push({x,y:GROUND-r.h*0.6,r:170,c:'127,240,255'}); }
+      for (const r of SCENERY.ruins){ const x=arenaX()+r.x-cx; if (x>-200 && x<W+200) L.push({x,y:GROUND-r.h*0.6,r:170,c:'127,240,255'}); }
       SCENERY.farTrees.forEach((f,i)=>{ if (i%4) return; const x=f.x-cx*0.35; if (x>-100 && x<W+100) L.push({x,y:GROUND-40,r:90,c:f.h>90?'255,123,216':'127,240,255'}); });
       return L;
     },
@@ -91,7 +91,7 @@ const THEMES = {
       ctx.fillStyle='#241b3d';
       for (const n of S.nearTrees){ const x=n.x-cx*0.6; if (x<-60||x>W+60) continue; tri(x-n.r*0.6,-10,x,n.h*0.6,x+n.r*0.6,-10); tri(x+n.r*0.5,-10,x+n.r*0.8,n.h*0.3,x+n.r*1.1,-10); }
       // big crystal pillars in the boss arena
-      for (const r of S.ruins){ const x=r.x-cx; if (x<-80||x>W+80) continue;
+      for (const r of S.ruins){ const x=arenaX()+r.x-cx; if (x<-80||x>W+80) continue;
         const gl=ctx.createLinearGradient(x-24,0,x+24,0); gl.addColorStop(0,'#3a6f9a'); gl.addColorStop(0.5,'#9ff8ff'); gl.addColorStop(1,'#3a6f9a');
         ctx.fillStyle=gl; ctx.beginPath(); ctx.moveTo(x-22,GROUND); ctx.lineTo(x-14,GROUND-r.h); ctx.lineTo(x,GROUND-r.h-28); ctx.lineTo(x+14,GROUND-r.h); ctx.lineTo(x+22,GROUND); ctx.closePath(); ctx.fill(); }
       // floating motes
@@ -105,7 +105,7 @@ const THEMES = {
   },
   desert: {
     platform:{post:'#a0703a', body:'#c99554', line:'#a87a40', top:'#f0c47a', vine:'#8a5a2a'},
-    darkness:cx => clamp((cx-2300)/900,0,1)*0.22,
+    darkness:cx => clamp((cx-arenaX()+740)/900,0,1)*0.22,
     ambient(cx){ // sand blown by the wind
       ctx.strokeStyle='rgba(255,230,170,0.35)'; ctx.lineWidth=1.5;
       for (let i=0;i<22;i++){
@@ -138,7 +138,7 @@ const THEMES = {
         ctx.beginPath(); ctx.roundRect(x-22,GROUND-h*0.7,8,h*0.35,4); ctx.fill(); ctx.fillRect(x-22,GROUND-h*0.42,16,7);
         ctx.beginPath(); ctx.roundRect(x+14,GROUND-h*0.85,8,h*0.3,4); ctx.fill(); ctx.fillRect(x+6,GROUND-h*0.6,16,7); }
       // sandstone columns in the boss arena
-      for (const r of S.ruins){ const x=r.x-cx; if (x<-60||x>W+60) continue;
+      for (const r of S.ruins){ const x=arenaX()+r.x-cx; if (x<-60||x>W+60) continue;
         ctx.fillStyle='#c99a5e'; ctx.fillRect(x-20,GROUND-r.h,40,r.h); ctx.fillStyle='#e0b878'; ctx.fillRect(x-28,GROUND-r.h-(r.broken?0:14),56,r.broken?8:14);
         ctx.fillStyle='rgba(0,0,0,0.12)'; for (let y=GROUND-r.h+18;y<GROUND;y+=30) ctx.fillRect(x-20,y,40,3); }
       ctx.fillStyle='#e3b36b'; ctx.fillRect(-30,GROUND,W+60,H-GROUND+30);
@@ -191,14 +191,14 @@ const THEMES = {
         ctx.fillStyle='#5d4037'; ctx.fillRect(x-83,wy+150,6,18);
         ctx.fillStyle='#ff8a3d'; ctx.beginPath(); ctx.ellipse(x-80,wy+142,6,11+fl,0,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#ffe08a'; ctx.beginPath(); ctx.ellipse(x-80,wy+145,3,6,0,0,Math.PI*2); ctx.fill();
       }
-      for (const r of S.ruins){ const x=r.x-cx; if (x<-60||x>W+60) continue;
+      for (const r of S.ruins){ const x=arenaX()+r.x-cx; if (x<-60||x>W+60) continue;
         ctx.fillStyle='#3a3448'; ctx.fillRect(x-22,GROUND-r.h-40,44,r.h+40); ctx.fillStyle='#4a4458'; ctx.fillRect(x-30,GROUND-r.h-56,60,16); }
       ctx.fillStyle='#3a3448'; ctx.fillRect(-30,GROUND,W+60,H-GROUND+30);
       ctx.strokeStyle='rgba(0,0,0,0.3)'; ctx.lineWidth=2;
       const toff=((-cx)%64+64)%64;
       for (let x=toff-64;x<W+64;x+=64){ ctx.beginPath(); ctx.moveTo(x,GROUND); ctx.lineTo(x,H); ctx.stroke(); }
       ctx.fillStyle='#5a536e'; ctx.fillRect(-30,GROUND-4,W+60,8);
-      if (cx>2600){ ctx.fillStyle='#6a0f2a'; ctx.fillRect(3040-cx,GROUND+6,W,22); ctx.fillStyle='#ffd34d'; ctx.fillRect(3040-cx,GROUND+6,W,2); ctx.fillRect(3040-cx,GROUND+26,W,2); }
+      if (cx>arenaX()-440){ ctx.fillStyle='#6a0f2a'; ctx.fillRect(arenaX()-cx,GROUND+6,W,22); ctx.fillStyle='#ffd34d'; ctx.fillRect(arenaX()-cx,GROUND+6,W,2); ctx.fillRect(arenaX()-cx,GROUND+26,W,2); }
     },
   },
 };
@@ -255,7 +255,7 @@ THEMES.carnaval = {
       const x2=x+240*0.6*1.6; ctx.strokeStyle='rgba(30,20,40,0.9)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(x,176); ctx.quadraticCurveTo((x+x2)/2,230,x2,176); ctx.stroke();
       for (let k=1;k<10;k++){ const t=k/10, bx=x+(x2-x)*t, by=176+ (1-(2*t-1)**2)*27; ctx.fillStyle=['#ffd23f','#ff4fd8','#3ec1d3','#7bd389'][(k+Math.floor(clock/20))%4]; circle(bx,by+3,3.2); } }
     // sambódromo stands behind the boss arena
-    const ax=3040-cx;
+    const ax=arenaX()-cx;
     if (ax<W){ for (let k=0;k<6;k++){ ctx.fillStyle=k%2?'#5c5470':'#6d6582'; ctx.fillRect(ax,GROUND-60-k*34,1200,34); }
       for (let i=0;i<160;i++){ const px=ax+((i*53)%1180)+10, py=GROUND-72-((i*7)%6)*34+Math.sin(clock*0.15+i)*2; ctx.fillStyle=['#ffd23f','#ff4fd8','#3ec1d3','#ffffff','#7bd389'][i%5]; circle(px,py,4); } }
     // cobbled street
@@ -294,7 +294,7 @@ THEMES.pascoa = {
       ctx.fillStyle=pal[k]; ctx.beginPath(); ctx.ellipse(x,GROUND-h/2,h*0.36,h/2,0,0,Math.PI*2); ctx.fill();
       ctx.fillStyle=pal[(k+1)%4]; ctx.fillRect(x-h*0.34,GROUND-h*0.55,h*0.68,8); ctx.fillStyle=pal[(k+2)%4]; for (let d=-2;d<=2;d++) circle(x+d*h*0.12,GROUND-h*0.35,4); }
     // chocolate factory behind the boss arena
-    const fx=3040-cx;
+    const fx=arenaX()-cx;
     if (fx<W){ ctx.fillStyle='#6b3e26'; ctx.fillRect(fx+60,GROUND-260,820,260);
       ctx.fillStyle='#8b5a3c'; for (let k=0;k<5;k++) ctx.fillRect(fx+100+k*160,GROUND-330,50,80);
       ctx.fillStyle='rgba(255,255,255,0.6)'; for (let k=0;k<5;k++) circle(fx+125+k*160+Math.sin(clock*0.03+k)*6,GROUND-350-((clock*0.5+k*30)%60),12);
@@ -337,7 +337,7 @@ THEMES.junina = {
       for (let k=1;k<12;k++){ const t=k/12, bx=x+(x2-x)*t, by=156+(1-(2*t-1)**2)*22, sw=Math.sin(clock*0.08+k)*2;
         ctx.fillStyle=['#e63946','#ffd23f','#2a9d8f','#4d9de0','#ff4fd8','#7bd389'][k%6]; tri(bx-6,by,bx+6,by,bx+sw,by+14); } }
     // the big festival arch over the boss arena
-    const ax=3500-cx; if (ax>-300 && ax<W+300){ ctx.strokeStyle='#8a5a2a'; ctx.lineWidth=14; ctx.beginPath(); ctx.arc(ax,GROUND,260,Math.PI,0); ctx.stroke();
+    const ax=arenaX()+460-cx; if (ax>-300 && ax<W+300){ ctx.strokeStyle='#8a5a2a'; ctx.lineWidth=14; ctx.beginPath(); ctx.arc(ax,GROUND,260,Math.PI,0); ctx.stroke();
       for (let k=0;k<16;k++){ const a=Math.PI+k/15*Math.PI; ctx.fillStyle=['#e63946','#ffd23f','#2a9d8f','#4d9de0'][k%4]; tri(ax+Math.cos(a)*260-7,GROUND+Math.sin(a)*260,ax+Math.cos(a)*260+7,GROUND+Math.sin(a)*260,ax+Math.cos(a)*244,GROUND+Math.sin(a)*244+14); } }
     // packed earth with straw
     ctx.fillStyle='#7a5434'; ctx.fillRect(-30,GROUND,W+60,H-GROUND+30);
@@ -384,7 +384,7 @@ THEMES.saci = {
       ctx.fillStyle='#2e2418'; ctx.fillRect(x-3,236,6,GROUND-236); ctx.fillRect(x-3,236,20,4);
       ctx.fillStyle='#3a2a1a'; ctx.fillRect(x+10,240,12,16); ctx.fillStyle='#ffcf6b'; ctx.fillRect(x+12,243,8,10); }
     // old stone well and wooden cross-fence at the clearing (boss arena)
-    const ax=3040-cx;
+    const ax=arenaX()-cx;
     if (ax<W && ax>-1000){ ctx.fillStyle='#3a3a3a'; ctx.fillRect(ax+420,GROUND-60,110,60); ctx.fillStyle='#2a2a2a'; ctx.fillRect(ax+414,GROUND-66,122,10);
       ctx.fillStyle='#4a3a28'; for (let k=0;k<12;k++) ctx.fillRect(ax+40+k*80,GROUND-50,6,50); ctx.fillRect(ax+40,GROUND-40,900,5); }
     ctx.fillStyle='#1c1a14'; ctx.fillRect(-30,GROUND,W+60,H-GROUND+30);
@@ -396,10 +396,10 @@ THEMES.saci = {
 
 THEMES.natal = {
   platform:{post:'#6b4a2a', body:'#2a9d8f', line:'#1f7a70', top:'#e63946', vine:'#ffd23f'},
-  darkness:cx => 0.15+clamp((cx-2200)/1000,0,1)*0.25,   // sunset turning into a Christmas night
+  darkness:cx => 0.15+clamp((cx-arenaX()+840)/1000,0,1)*0.25,   // sunset turning into a Christmas night
   lights(cx){
     const L=[]; for (const n of SCENERY.nearTrees){ const x=n.x-cx*0.6; if (x>-120 && x<W+120 && (n.x|0)%2) L.push({x,y:GROUND-n.h-20,r:110,c:'255,220,140'}); }
-    const tx=3520-cx; if (tx>-300 && tx<W+300) L.push({x:tx,y:GROUND-200,r:260,c:'255,230,150'});
+    const tx=arenaX()+480-cx; if (tx>-300 && tx<W+300) L.push({x:tx,y:GROUND-200,r:260,c:'255,230,150'});
     return L;
   },
   ambient(cx){ // sparkles in the warm evening air
@@ -424,7 +424,7 @@ THEMES.natal = {
       ctx.fillStyle='#6b4a2a'; circle(x+4,top+8,6); circle(x+14,top+10,6);
       for (let k=0;k<7;k++){ const yy=GROUND-12-k*(n.h/7), xx=x+((yy-GROUND)/(top-GROUND))*14; ctx.fillStyle=['#e63946','#ffd23f','#2a9d8f','#ffffff'][(k+Math.floor(clock/18))%4]; circle(xx,yy,3); } }
     // the giant Christmas tree in the boss arena
-    const tx=3520-cx;
+    const tx=arenaX()+480-cx;
     if (tx>-300 && tx<W+300){
       ctx.fillStyle='#5a3a1a'; ctx.fillRect(tx-14,GROUND-40,28,40);
       for (let k=0;k<4;k++){ const w=200-k*44, y=GROUND-40-k*70; ctx.fillStyle=k%2?'#2d6a4f':'#1b4332'; tri(tx-w/2,y,tx,y-110,tx+w/2,y); }

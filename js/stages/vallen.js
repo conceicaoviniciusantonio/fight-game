@@ -7,28 +7,29 @@ registerContinent({
   id:'vallen', name:'Reino de Vallen', sub:'Continente 1',
   map:{x:250,y:250}, colors:{land:'#7fb069', shore:'#e9d8a6', dark:'#4f7a3a'},
   stages:[
+    // Short first stage: one small pit to learn jumping, an ambush, crumbling ledges over a wide pit
     { id:'forest', map:{x:150,y:322,icon:'tree'}, arenaName:'Ruínas do Bosque',
-      name:'Bosque de Vallen', theme:'forest', worldW:4000, music:'stage', bossMusic:'boss',
+      name:'Bosque de Vallen', theme:'forest', worldW:3480, music:'stage', bossMusic:'boss',
       platforms:[
         // low steps ~90px up (one jump); high steps ~82px above a low step beside them
-        {x:420,y:372,w:200},{x:560,y:290,w:160},{x:800,y:372,w:200},
-        {x:1380,y:372,w:200},{x:1540,y:290,w:180},{x:1820,y:372,w:200},{x:1990,y:296,w:130},
-        {x:2400,y:372,w:220},{x:2580,y:292,w:170},{x:2850,y:372,w:180},
-        {x:3180,y:372,w:170},{x:3750,y:372,w:170},
+        {x:420,y:372,w:200},{x:560,y:290,w:160},
+        {x:1300,y:372,w:180},{x:1450,y:290,w:170},{x:1760,y:372,w:180},
+        {x:2215,y:378,w:80,crumble:true},{x:2325,y:378,w:80,crumble:true},
+        {x:2660,y:372,w:170},{x:3230,y:372,w:170},
       ],
+      pits:[{x:1080,w:90},{x:2200,w:220}],
+      lifeItems:[1535],
       zones:[
         {at:330, left:100, waves:[
           [['goblin',560],['goblin',760],['goblin',920]],
           [['goblin',250],['archer',950],['goblin',640],['archer',690]]]},
-        {at:1260, left:1150, waves:[
-          [['goblin',1500],['archer',1800],['archer',1250],['goblin',1650]],
-          [['orc',1700],['goblin',1350],['goblin',1950],['archer',2080]]]},
-        {at:2260, left:2150, waves:[
-          [['orc',2550],['archer',2900],['goblin',2400],['goblin',2700]],
-          [['orc',2300],['orc',2950],['archer',2560],['archer',2880],['goblin',2650]]]},
-        {at:3150, left:3040, boss:true, waves:[[['gorgo',3760]]]},
+        {at:1420, left:1220, type:'ambush', waves:[
+          [['goblin','L'],['goblin','R'],['archer',1530]],
+          [['goblin','L'],['archer','R'],['goblin','R'],['goblin',1800]],
+          [['orc',1900,{mini:true,name:'Grak, o Capataz'}],['goblin','L'],['archer',1530]]]},
+        {at:2630, left:2520, boss:true, waves:[[['gorgo',3240]]]},
       ],
-      arena:{left:3040, extra:[{x:3470,y:296,w:110}]},
+      arena:{left:2520, extra:[{x:2950,y:296,w:110}]},
     },
     { id:'cave', map:{x:375,y:215,icon:'crystal'}, arenaName:'Caverna de Cristal',
       name:'Caverna de Cristal', theme:'cave', worldW:4000, music:'cave', bossMusic:'boss',

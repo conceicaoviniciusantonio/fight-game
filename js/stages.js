@@ -19,6 +19,8 @@ function registerContinent(c){
 }
 const continentOf = stageId => CONTINENTS.find(c=>c.id===STAGES[stageId].continent);
 
+// Left edge of the boss arena (the last zone): themes draw their arena scenery from here
+const arenaX = () => stage ? stage.zones[stage.zones.length-1].left : 3040;
 function drawBG(){ THEMES[stage ? stage.theme : 'forest'].draw(cam.x); }
 function drawPlatforms(){
   const c=THEMES[stage ? stage.theme : 'forest'].platform;

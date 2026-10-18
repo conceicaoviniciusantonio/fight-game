@@ -845,7 +845,7 @@ function drawMonster(e,noShadow){
     if (c.weapon==='dagger'){ ctx.fillStyle=F('#5d4037'); ctx.fillRect(9,-2,5,4); ctx.fillStyle=F('#cfd8dc'); tri(14,-3,28,0,14,3); }
     else if (c.weapon==='club'){ ctx.fillStyle=F('#6d4c41'); ctx.beginPath(); ctx.moveTo(8,-2.5); ctx.lineTo(32,-5.5); ctx.lineTo(32,5.5); ctx.lineTo(8,2.5); ctx.closePath(); ctx.fill();
       ctx.fillStyle=F('#bdbdbd'); tri(22,-4.5,25,-9,28,-5); tri(22,4.5,25,9,28,5); }
-    else if (c.weapon==='axe'){ ctx.fillStyle=F('#b0bec5'); ctx.beginPath(); ctx.ellipse(36,0,8,15,0,0,Math.PI*2); ctx.fill();
+    else if (c.weapon==='axe' && e.state!=='axeWait'){ ctx.fillStyle=F('#b0bec5'); ctx.beginPath(); ctx.ellipse(36,0,8,15,0,0,Math.PI*2); ctx.fill();
       ctx.fillStyle=F('#5d4037'); ctx.fillRect(6,-1.8,36,3.6); ctx.fillStyle=F('#eceff1'); ctx.fillRect(41,-12,2,24); }
     else if (c.weapon==='pick'){ ctx.fillStyle=F('#6d4c41'); ctx.fillRect(8,-1.5,22,3); ctx.fillStyle=F('#b0bec5'); ctx.beginPath(); ctx.moveTo(26,-10); ctx.quadraticCurveTo(34,0,26,10); ctx.lineTo(30,0); ctx.closePath(); ctx.fill(); }
     else if (c.weapon==='staff'){ ctx.fillStyle=F('#5d4037'); ctx.fillRect(-6,-1.5,40,3); const g=ctx.createRadialGradient(36,0,1,36,0,9); g.addColorStop(0,'#fff'); g.addColorStop(1,c.orb||'#7ff0ff'); ctx.fillStyle=g; circle(36,0,5); }

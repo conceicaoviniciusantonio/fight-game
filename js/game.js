@@ -77,6 +77,8 @@ function bombBurst(pr){
 function updateProjs(){
   for (const pr of projs){
     pr.x+=pr.vx; pr.y+=pr.vy; pr.life--;
+    // boomerangs (`ax`) slow down, turn around and can hit again on the way back
+    if (pr.ax){ const s=Math.sign(pr.vx); pr.vx+=pr.ax; if (Math.sign(pr.vx)!==s && pr.hitP) pr.hitP=new Set(); }
     if (pr.grav) pr.vy+=pr.grav;
     if (pr.type==='parrow' && pr.y>=GROUND){ pr.life=0; dust(pr.x,GROUND,2); continue; }
     if (pr.owner==='p'){
