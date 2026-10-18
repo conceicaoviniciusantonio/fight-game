@@ -191,10 +191,12 @@ function drawMonsterOutlined(e){
   }
   const bw=T.look.kind==='bat'?90:Math.max(170,130*s), bh=T.look.kind==='bat'?120:Math.max(150,108*s);
   drawMonsterShadow(e);
+  if (T.look.ghost) ctx.globalAlpha=0.55+0.15*Math.sin(clock*0.2);
   if (e.big){ ctx.save(); ctx.translate(sx,e.y); ctx.scale(e.big,e.big); ctx.translate(-sx,-e.y); } // mini-bosses are drawn bigger
   if (T.look.noOutline) drawMonster(e,true); // big glowing figures look better without the box-limited outline
   else withOutline(sx,e.y,bw,bh,()=>drawMonster(e,true));
   if (e.big) ctx.restore();
+  ctx.globalAlpha=1;
   if (e.guarding && e.hp>0) drawFoeShield(e,sx);
   drawBossShell(e);
 }

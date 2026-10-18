@@ -107,3 +107,24 @@ Object.assign(ENEMY_TYPES.scorpking, {
     if (n===3) bigText(e.x,e.y-e.h-30,'Ele vai se enterrar!','#ffd9a0');
   },
 });
+
+// ---------- Lorde Sombrio (Castelo Sombrio) ----------
+// At 60% two shadow copies of him join the fight (one hit each breaks them less easily than it looks);
+// at 30% the torches go out, he summons fresh shadows and teleports more often.
+ENEMY_TYPES.sombra = {hp:160, w:56, h:96, speed:2.0, dmg:30, ai:'melee', reach:70, windup:30, score:150,
+  look:{...ENEMY_TYPES.darklord.look, s:1.65, cape:'#2a0f22', eye:'#ff9ad0', ghost:true, noOutline:true}};
+ENEMY_NAMES.sombra = 'Sombra do Lorde';
+TRICKS.sombra = { onKill(e){ burst(e.x,e.y-e.h/2,'#4a3f5c',24,6,0); return false; } };
+function shadowCopies(e,n){
+  for (let k=0;k<n;k++){ const x=clamp(e.x+(k%2?-1:1)*(200+k*90),lockL+60,lockR-60), s=spawnEnemy('sombra',x,GROUND-2); s.vy=0;
+    burst(x,GROUND-50,'#4a3f5c',20,6,0); ring(x,GROUND-50,'#ff2a6a',6,20,5,10); }
+  SFX.blink();
+}
+Object.assign(ENEMY_TYPES.darklord, {
+  phases:[0.6,0.3],
+  movesByPhase:[['charge','wave','teleport','slam'], ['charge','wave','teleport','slam'], ['teleport','wave','teleport','charge','slam']],
+  onPhase(e,n){
+    if (n===2){ shadowCopies(e,2); bigText(e.x,e.y-e.h-30,'Qual é o verdadeiro?','#ff9ad0'); }
+    if (n===3){ shadowCopies(e,1); bigText(e.x,e.y-e.h-30,'AS TOCHAS SE APAGARAM!','#ff9ad0'); }
+  },
+});

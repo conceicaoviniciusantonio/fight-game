@@ -88,28 +88,42 @@ registerContinent({
       ],
       arena:{left:3640, extra:[{x:4070,y:298,w:110}]},
     },
+    // The longest stage of the kingdom: blade pendulums, spiked floors, a bridge that falls apart and four fights before the throne
     { id:'castle', map:{x:820,y:190,icon:'castle'}, arenaName:'Castelo Sombrio',
-      name:'Castelo Sombrio', theme:'castle', worldW:4000, music:'castle', bossMusic:'boss',
+      name:'Castelo Sombrio', theme:'castle', worldW:6000, music:'castle', bossMusic:'boss',
       platforms:[
-        // low steps ~90px up (one jump); high steps ~82px above a low step beside them
-        {x:440,y:370,w:200},{x:600,y:288,w:170},{x:860,y:370,w:180},
-        {x:1360,y:370,w:200},{x:1520,y:288,w:190},{x:1800,y:370,w:200},{x:1990,y:296,w:130},
-        {x:2380,y:370,w:200},{x:2560,y:288,w:200},{x:2860,y:370,w:180},
-        {x:3200,y:370,w:180},{x:3720,y:370,w:180},
+        {x:440,y:370,w:200},{x:600,y:288,w:170},
+        {x:1600,y:370,w:120},
+        {x:1850,y:370,w:180},{x:2010,y:288,w:170},{x:2300,y:370,w:180},
+        {x:2665,y:378,w:80,crumble:true},{x:2775,y:378,w:80,crumble:true},{x:2885,y:378,w:80,crumble:true},
+        {x:3150,y:370,w:180},{x:3330,y:288,w:180},{x:3650,y:370,w:170},
+        {x:4050,y:370,w:140},{x:4110,y:290,w:130},{x:4150,y:208,w:120},
+        {x:4600,y:370,w:170},{x:4780,y:288,w:150},
+        {x:5180,y:370,w:180},{x:5760,y:370,w:180},
       ],
+      pits:[{x:2650,w:320}],
+      hazards:[
+        {type:'pendulum',x:1240,y:50,len:360,amp:0.85,speed:0.035},{type:'spikes',x:1360,w:100,period:120,on:55},
+        {type:'pendulum',x:1500,y:50,len:360,amp:0.85,speed:0.035,phase:1.6},
+        {type:'pendulum',x:3920,y:50,len:360,amp:0.9,speed:0.04},{type:'spikes',x:4250,w:100,period:110,on:50,offset:55},
+        {type:'pendulum',x:4380,y:50,len:360,amp:0.9,speed:0.04,phase:2},
+      ],
+      lifeItems:[4210],
       zones:[
         {at:330, left:100, waves:[
           [['skeleton',600],['skeleton',800],['darkmage',950]],
           [['bat',500],['skeleton',300],['skeleton',700],['darkmage',650]]]},
-        {at:1260, left:1150, waves:[
-          [['skeleton',1500],['darkmage',1900],['blackknight',1700],['bat',1300]],
-          [['blackknight',1450],['skeleton',1950],['darkmage',1650],['skeleton',1800]]]},
-        {at:2260, left:2150, waves:[
-          [['blackknight',2500],['darkmage',2950],['skeleton',2350],['bat',2750]],
-          [['blackknight',2300],['blackknight',2900],['darkmage',2550],['darkmage',2850],['skeleton',2650]]]},
-        {at:3150, left:3040, boss:true, waves:[[['darklord',3760]]]},
+        {at:1900, left:1750, waves:[
+          [['skeleton',2050],['darkmage',2400],['blackknight',2200],['bat',1800]],
+          [['blackknight',1850],['skeleton',2500],['darkmage',2090],['skeleton',2300]]]},
+        {at:3200, left:3050, type:'ambush', waves:[
+          [['skeleton','L'],['skeleton','R'],['darkmage',3410]],
+          [['blackknight','L'],['skeleton','R'],['bat',3500],['bat',3300]],
+          [['blackknight',3800,{mini:true,name:'Sir Vorn, o Caído'}],['darkmage',3410]]]},
+        {at:4560, left:4450, type:'survive', secs:20, spawn:['skeleton','bat','skeleton','darkmage'], every:85, max:5, waves:[[['skeleton',4800],['bat',5000]]]},
+        {at:5150, left:5040, boss:true, waves:[[['darklord',5760]]]},
       ],
-      arena:{left:3040, extra:[{x:3470,y:290,w:110}]},
+      arena:{left:5040, extra:[{x:5470,y:290,w:110}]},
     },
   ],
 });

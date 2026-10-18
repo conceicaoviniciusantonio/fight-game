@@ -150,8 +150,10 @@ const THEMES = {
   },
   castle: {
     platform:{post:'#2b2636', body:'#4a4458', line:'#3a3448', top:'#6a6380', vine:'#7a1f2f'},
-    darkness:() => 0.5,
+    // the Dark Lord's last phase puts the torches out (they flicker back for a moment now and then)
+    darkness:() => darkLordLightsOut() ? 0.86 : 0.5,
     lights(cx){ // wall torches (same spacing as in draw)
+      if (darkLordLightsOut() && clock%240>12) return [];
       const L=[], off=((-cx*0.6)%240+240)%240;
       for (let x=off-240;x<W+240;x+=240) L.push({x:x-80,y:292,r:150+Math.sin(clock*0.3+x)*6,c:'255,150,60'});
       return L;
