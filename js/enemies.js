@@ -343,7 +343,7 @@ function bossAI(e,tg,dx,adx){
     case 'spitWind':
       e.vx*=0.8; e.t++; e.face=dx>0?1:-1;
       if (e.t>=wnd(enr?20:28)){
-        for (let k=-1;k<=1;k++) addEnemyProj({type:'glob',x:e.x+e.face*50,y:e.y-e.h*0.7,vx:clamp(dx/40,-9,9)+k*1.6,vy:-9-Math.abs(k),grav:0.45,life:150,dmg:Math.round(e.dmg*0.45),r:16});
+        for (let k=-1;k<=1;k++) addEnemyProj({type:'glob',x:e.x+e.face*50,y:e.y-e.h*0.7,vx:clamp(dx/40,-9,9)+k*1.6,vy:-9-Math.abs(k),grav:0.45,life:150,dmg:Math.round(e.dmg*0.45),r:16,pool:T.spitPool});
         SFX.blast(); e.state='recover'; e.t=15;
       }
       break;

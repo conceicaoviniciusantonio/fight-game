@@ -45,13 +45,13 @@ PROJ_DRAW.axe = pr => {
 // ---------- Golem de Cristal (Caverna de Cristal) ----------
 // At 65% and 30% life it grows crystal pylons around the arena and a crystal shell: the shell blocks
 // every hit until all pylons are broken, and the pylons fire crystal shards meanwhile.
-ENEMY_TYPES.pilar = {hp:300, w:40, h:96, speed:0, dmg:30, ai:'pylon', anchored:true, score:200, look:{kind:'pylon', glow:'#7ff0ff'}};
+ENEMY_TYPES.pilar = {hp:220, w:40, h:96, speed:0, dmg:30, ai:'pylon', anchored:true, score:200, look:{kind:'pylon', glow:'#7ff0ff'}};
 ENEMY_NAMES.pilar = 'Pilar de cristal';
 TRICKS.pilar = {
   ai(e,tg){
     e.vx=0; e.cd=(e.cd??rand(60,140))-1;
     if (e.cd<=0){ const sy=e.y-e.h+10, a=Math.atan2((tg.y-40)-sy,tg.x-e.x);
-      addEnemyProj({type:'eorb',x:e.x,y:sy,vx:Math.cos(a)*4.5,vy:Math.sin(a)*4.5,life:160,dmg:e.dmg,col:'#7ff0ff'}); SFX.zap(); e.cd=rand(150,210); }
+      addEnemyProj({type:'eorb',x:e.x,y:sy,vx:Math.cos(a)*4.5,vy:Math.sin(a)*4.5,life:160,dmg:e.dmg,col:'#7ff0ff'}); SFX.zap(); e.cd=rand(200,260); }
     return true;
   },
 };
@@ -93,3 +93,17 @@ function drawBossShell(e){
   ctx.fillStyle=`rgba(127,240,255,${a})`; ctx.strokeStyle='rgba(191,248,255,0.8)'; ctx.lineWidth=3;
   ctx.beginPath(); ctx.ellipse(sx,e.y-e.h*0.5,e.w*0.85,e.h*0.62,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
 }
+
+// ---------- Rei Escorpião (Deserto Escaldante) ----------
+// Its spit leaves poison pools; at 60% a sandstorm blows across the arena (changing direction) over a patch
+// of quicksand; at 30% it starts burrowing under the sand.
+Object.assign(ENEMY_TYPES.scorpking, {
+  spitPool:true,
+  phases:[0.6,0.3],
+  movesByPhase:[['charge','leap','spit','slam'], ['charge','leap','spit','slam'], ['charge','spit','slam','burrow']],
+  onPhase(e,n){
+    const L=lockL;
+    if (n===2){ addHazard({type:'wind',x:L,w:W,force:1.3,period:360}); addHazard({type:'slow',kind:'sand',x:L+400,w:170}); bigText(e.x,e.y-e.h-30,'TEMPESTADE DE AREIA!','#ffd9a0'); }
+    if (n===3) bigText(e.x,e.y-e.h-30,'Ele vai se enterrar!','#ffd9a0');
+  },
+});

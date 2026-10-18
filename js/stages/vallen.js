@@ -60,28 +60,33 @@ registerContinent({
       ],
       arena:{left:4240, extra:[{x:4670,y:296,w:110}]},
     },
+    // Quicksand, a mummy ambush and a giant boulder chasing the heroes down a corridor until it drops into a pit
     { id:'desert', map:{x:600,y:318,icon:'pyramid'}, arenaName:'Deserto',
-      name:'Deserto Escaldante', theme:'desert', worldW:4000, music:'desert', bossMusic:'boss',
+      name:'Deserto Escaldante', theme:'desert', worldW:4600, music:'desert', bossMusic:'boss',
       platforms:[
-        // low steps ~90px up (one jump); high steps ~82px above a low step beside them
-        {x:500,y:376,w:240},{x:700,y:300,w:150},{x:900,y:376,w:160},
-        {x:1400,y:376,w:220},{x:1600,y:298,w:170},{x:1860,y:376,w:200},{x:2040,y:300,w:120},
-        {x:2420,y:376,w:240},{x:2620,y:298,w:160},{x:2880,y:376,w:170},
-        {x:3230,y:376,w:160},{x:3700,y:376,w:160},
+        {x:500,y:376,w:240},{x:700,y:300,w:150},
+        {x:1650,y:376,w:160},{x:1800,y:296,w:160},{x:2080,y:376,w:160},
+        {x:2860,y:376,w:120},
+        {x:3780,y:376,w:160},{x:4350,y:376,w:160},
       ],
+      pits:[{x:1380,w:110},{x:3280,w:140}],
+      hazards:[
+        {type:'slow',kind:'sand',x:1130,w:160},
+        {type:'slow',kind:'sand',x:2700,w:130},{type:'spikes',x:3000,w:80,period:110,on:50},{type:'slow',kind:'sand',x:3120,w:110},
+      ],
+      lifeItems:[1880],
       zones:[
         {at:330, left:100, waves:[
           [['scorpion',600],['scorpion',850],['nomad',950]],
           [['mummy',800],['scorpion',300],['nomad',650]]]},
-        {at:1260, left:1150, waves:[
-          [['scorpion',1500],['nomad',1900],['mummy',1700],['scorpion',1300]],
-          [['mummy',1450],['mummy',1950],['nomad',1650],['scorpion',1800]]]},
-        {at:2260, left:2150, waves:[
-          [['mummy',2500],['nomad',2950],['scorpion',2350],['scorpion',2750]],
-          [['mummy',2300],['mummy',2900],['nomad',2550],['nomad',2850],['scorpion',2650]]]},
-        {at:3150, left:3040, boss:true, waves:[[['scorpking',3760]]]},
+        {at:1760, left:1560, type:'ambush', waves:[
+          [['mummy','L'],['mummy','R'],['nomad',1880]],
+          [['scorpion','L'],['scorpion','R'],['nomad',2150],['scorpion',1700]],
+          [['mummy',2200,{mini:true,name:'Faraó Esquecido'}],['nomad',1880]]]},
+        {at:2620, type:'chase', to:3260, label:'Uma pedra gigante rola atrás de você!'},
+        {at:3750, left:3640, boss:true, waves:[[['scorpking',4360]]]},
       ],
-      arena:{left:3040, extra:[{x:3470,y:298,w:110}]},
+      arena:{left:3640, extra:[{x:4070,y:298,w:110}]},
     },
     { id:'castle', map:{x:820,y:190,icon:'castle'}, arenaName:'Castelo Sombrio',
       name:'Castelo Sombrio', theme:'castle', worldW:4000, music:'castle', bossMusic:'boss',

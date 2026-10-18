@@ -98,7 +98,11 @@ function updateHazards(){
 function updateLocalHazards(){
   for (const h of hazards){
     if (h.ttl!=null) h.ttl--;
-    if (h.type==='roller'){ h.x+=h.speed; if (h.x>h.until+200) h.ttl=0; if (frame%3===0) dust(h.x-h.r*0.6,GROUND,2); }
+    if (h.type==='roller'){
+      h.x+=h.speed; if (frame%3===0) dust(h.x-h.r*0.6,GROUND,2);
+      // the boulder ends its run in the first pit it reaches (or a little past the end of the chase)
+      if (inPit(h.x) || h.x>h.until+200){ h.ttl=0; dust(h.x,GROUND,24); addShake(10); SFX.slam(); }
+    }
     for (const p of players){
       if (!p.local || !isAlive(p)) continue;
       if (h.type==='wind' && p.x>h.x && p.x<h.x+h.w && p.state!=='guard') p.x+=h.force*windDir(h);
@@ -268,7 +272,7 @@ function updateZones(){
     if (zi<zones.length && lead>zones[zi].at){
       const z=zones[zi];
       if (z.type==='chase'){
-        addHazard({type:'roller',x:z.at-650,r:70,speed:z.speed||4.6,until:z.to});
+        addHazard({type:'roller',x:z.at-480,r:70,speed:z.speed||3.6,until:z.to});
         banner={txt:'CORRA!',sub:z.label||'Uma pedra gigante vem rolando',t:120,max:120,boss:true}; SFX.roar(); addShake(8);
         zi++; return;
       }
@@ -302,6 +306,11 @@ function updateZones(){
 function drawEncounterHUD(){
   const z=stage && stage.zones[zi];
   if (locked && z && z.type==='survive') txt(`SOBREVIVA: ${Math.max(0,Math.ceil(surviveT/60))}s`,W/2,40,26,'#ffd23f');
+  // a chasing boulder still off screen: show how close it is
+  for (const h of hazards) if (h.type==='roller' && h.x+h.r<cam.x){
+    const d=Math.round((cam.x-h.x)/10), a=0.6+0.4*Math.sin(clock*0.3);
+    ctx.globalAlpha=a; txt('◀ PEDRA '+d+'m',70,GROUND-120,18,'#ff6b6b'); ctx.globalAlpha=1;
+  }
   for (const e of enemies) if (e.mini && e.hp>0){
     const sx=e.x-cam.x, y=e.y-e.h-26;
     txt(e.mini,sx,y-10,12,'#ffb0a0');

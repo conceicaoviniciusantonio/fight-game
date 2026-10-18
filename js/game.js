@@ -101,7 +101,7 @@ function updateProjs(){
     } else {
       if ((pr.type==='shock'||pr.type==='swave') && frame%3===0) dust(pr.x,pr.y,1);
       if (PROJ_TRAIL[pr.type] && frame%2===0) PROJ_TRAIL[pr.type](pr);
-      if (pr.grav && pr.y>=GROUND-4){ pr.life=0; if (pr.type==='bomb') bombBurst(pr); else { dust(pr.x,GROUND,6); if (pr.type==='glob') burst(pr.x,GROUND-6,'#8bdc4a',8,3); } continue; }
+      if (pr.grav && pr.y>=GROUND-4){ pr.life=0; if (pr.pool && pr.local && !inPit(pr.x)) addHazard({type:'poison',x:pr.x-40,w:80,ttl:300}); if (pr.type==='bomb') bombBurst(pr); else { dust(pr.x,GROUND,6); if (pr.type==='glob') burst(pr.x,GROUND-6,'#8bdc4a',8,3); } continue; }
       if (pr.home){
         const tp=nearestPlayer(pr.x,pr.y);
         if (tp) pr.vy=clamp(pr.vy+clamp(((tp.y-40)-pr.y)*0.01,-0.12,0.12),-3,3);
