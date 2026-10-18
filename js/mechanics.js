@@ -236,7 +236,7 @@ function drawStatusBadges(p,x,y){
 }
 function drawBlindOverlay(){
   const b=me && me.status && me.status.blind; if (!b) return;
-  const a=Math.min(1,b/30)*0.85, cols=['#ff4fd8','#ffd23f','#3ec1d3','#7bd389'];
+  const a=Math.min(1,b/30)*0.7, cols=['#ff4fd8','#ffd23f','#3ec1d3','#7bd389'];
   ctx.globalAlpha=a;
   for (let i=0;i<9;i++){ const x=(i*157+40)%W, y=(i*89+60)%(H-80); ctx.fillStyle=cols[i%4]; circle(x,y,46+(i%3)*14); circle(x+30,y+20,26); }
   ctx.globalAlpha=1;
@@ -325,8 +325,15 @@ function bossPhaseCheck(e,T){
 const bossMoves = (e,T) => T.movesByPhase ? T.movesByPhase[Math.min(e.phase||1,T.movesByPhase.length)-1] : T.moves;
 // Shields: `shielded` blocks every hit (break whatever powers it first); `guarding` only blocks hits from the front
 function shieldBlocks(e,dir){
+  if (e.dodgeT>0){ if (!e.blockT || frame-e.blockT>20){ e.blockT=frame; addText(e.x,e.y-e.h-8,'ESQUIVOU','#ffffff'); } return true; }
   const front = e.guarding && dir===-e.face;
   if (!e.shielded && !front) return false;
+  // three blocked hits break a frontal guard for a while
+  if (front && !isGuest() && (e.guardHits=(e.guardHits||0)+1)>=3){
+    e.guardHits=0; e.guarding=false; e.guardBroken=150; e.state='hurt'; e.t=50; e.vx=dir*3;
+    bigText(e.x,e.y-e.h-14,'DEFESA QUEBRADA!','#ff8a8a'); SFX.guardBreak(); burst(e.x,e.y-e.h*0.6,'#c9ced6',14,6);
+    return true;
+  }
   if (!e.blockT || frame-e.blockT>20){ e.blockT=frame; addText(e.x,e.y-e.h-8,e.shielded?'ESCUDO':'BLOQUEOU','#8fe6ff'); SFX.block(); }
   burst(e.x-dir*e.w*0.4,e.y-e.h*0.55,'#8fe6ff',6,4,0);
   return true;

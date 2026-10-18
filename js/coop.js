@@ -30,7 +30,7 @@ function onCoopStart(m){
 // ----- host → guest world stream -----
 function sendWorld(){
   netSend({type:'w',
-    en:enemies.map(e=>[e.id,e.type,Math.round(e.x),Math.round(e.y),e.face,e.state,e.t,Math.round(e.hp),e.maxHp,e.anim|0,Math.round(e.vx*10)/10,e.flash,(e.hidden?1:0)|(e.shielded?2:0)|(e.guarding?4:0),e.mini||0,e.phase||1]),
+    en:enemies.map(e=>[e.id,e.type,Math.round(e.x),Math.round(e.y),e.face,e.state,e.t,Math.round(e.hp),e.maxHp,e.anim|0,Math.round(e.vx*10)/10,e.flash,(e.hidden?1:0)|(e.shielded?2:0)|(e.guarding?4:0)|(e.dodgeT>0?8:0),e.mini||0,e.phase||1]),
     it:items.map(i=>[i.id,i.type,Math.round(i.x),Math.round(i.y),i.t,i.keep?1:0]),
     z:[locked?1:0,lockL,lockR,zi,goTimer], sc:score, b:boss?boss.id:null, pc:platClock});
 }
@@ -41,7 +41,7 @@ function applyWorld(m){
     seen.add(id);
     let e=enemies.find(o=>o.id===id);
     if (!e){ e=spawnEnemy(type,x,y,id); e.puppet=true; e.x=x; e.y=y; }
-    Object.assign(e,{tx:x,ty:y,face,state,t,hp,maxHp,anim,vx,hidden:!!(fl&1),shielded:!!(fl&2),guarding:!!(fl&4),phase});
+    Object.assign(e,{tx:x,ty:y,face,state,t,hp,maxHp,anim,vx,hidden:!!(fl&1),shielded:!!(fl&2),guarding:!!(fl&4),dodgeT:fl&8?2:0,phase});
     if (mini && !e.mini){ e.mini=mini; e.big=1.35; e.w=Math.round(e.w*1.35); e.h=Math.round(e.h*1.35); }
     if (flash>e.flash) e.flash=flash;
   }

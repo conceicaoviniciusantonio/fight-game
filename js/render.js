@@ -183,6 +183,8 @@ function drawHeroOutlined(p){
 function drawMonsterOutlined(e){
   const T=ENEMY_TYPES[e.type], s=T.look.s||1, sx=e.x-cam.x;
   if (sx<-260 || sx>W+260) return;
+  if (e.state==='bones'){ drawBonePile(e,sx); return; }
+  if (e.hidden && e.state==='dig'){ drawDigMound(e,sx); return; }
   if (e.hidden){ // burrowed boss: a glowing crack marks where it will come out
     if (e.state==='burrow' && e.t>=24){ const a=0.4+0.4*Math.sin(clock*0.5); ctx.fillStyle=`rgba(255,120,40,${a})`; ctx.beginPath(); ctx.ellipse(sx,GROUND-2,e.w*0.7,8,0,0,Math.PI*2); ctx.fill(); }
     return;
@@ -193,6 +195,7 @@ function drawMonsterOutlined(e){
   if (T.look.noOutline) drawMonster(e,true); // big glowing figures look better without the box-limited outline
   else withOutline(sx,e.y,bw,bh,()=>drawMonster(e,true));
   if (e.big) ctx.restore();
+  if (e.guarding && e.hp>0) drawFoeShield(e,sx);
 }
 
 // ----- lighting: darkness with holes punched by light sources, plus a soft additive glow -----

@@ -70,7 +70,9 @@ function bombBurst(pr){
   for (let i=0;i<(pr.explode?22:12);i++){ const a=Math.random()*Math.PI*2, s=rand(1,pr.explode?7:4);
     parts.push({x:pr.x,y:Math.min(pr.y,GROUND-6),vx:Math.cos(a)*s,vy:Math.sin(a)*s-2,life:rand(20,36)|0,max:36,color:pick(cols),size:rand(2,4),grav:0.15}); }
   if (pr.explode){ ring(pr.x,Math.min(pr.y,GROUND-10),pick(cols),6,16,6,8); SFX.blast(); addShake(4);
-    if (pr.local) for (const p of alivePlayers()) if (Math.hypot(p.x-pr.x,(p.y-30)-Math.min(pr.y,GROUND-10))<pr.explode+16) hurtPlayer(p,{dmg:pr.dmg,dir:p.x>=pr.x?1:-1,fromX:pr.x}); }
+    if (pr.local) for (const p of alivePlayers()) if (Math.hypot(p.x-pr.x,(p.y-30)-Math.min(pr.y,GROUND-10))<pr.explode+16) hurtPlayer(p,{dmg:pr.dmg,dir:p.x>=pr.x?1:-1,fromX:pr.x,...(pr.fx||{})}); }
+  // eggs that land can hatch into a chick
+  if (pr.hatch && pr.local && Math.random()<0.4 && enemies.filter(e=>e.type===pr.hatch && e.hp>0).length<4){ const c=spawnEnemy(pr.hatch,pr.x,GROUND-8); c.vy=-4; }
 }
 function updateProjs(){
   for (const pr of projs){
@@ -108,7 +110,7 @@ function updateProjs(){
       for (const p of alivePlayers()){
         if (p.inv>0 || pr.hitP.has(p.id) || !test || !test(pr,p)) continue;
         pr.hitP.add(p.id);
-        hurtPlayer(p,{dmg:pr.dmg,dir:Math.sign(pr.vx)||(p.x>=pr.x?1:-1),fromX:pr.x-pr.vx*5});
+        hurtPlayer(p,{dmg:pr.dmg,dir:Math.sign(pr.vx)||(p.x>=pr.x?1:-1),fromX:pr.x-pr.vx*5,...(pr.fx||{})});
         if (ONCE_PROJ.includes(pr.type)){ pr.life=0; if (pr.type==='bomb') bombBurst(pr); break; }
       }
     }

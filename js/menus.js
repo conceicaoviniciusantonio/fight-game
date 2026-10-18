@@ -95,7 +95,7 @@ let worldSel=0, mapCont=0, mapSel=0, mapLastStage=0;
 const ENEMY_NAMES = { goblin:'Goblin', archer:'Goblin arqueiro', orc:'Orc', bat:'Morcego', kobold:'Kobold', shaman:'Xamã',
   scorpion:'Escorpião', mummy:'Múmia', nomad:'Nômade', skeleton:'Esqueleto', darkmage:'Mago sombrio', blackknight:'Cavaleiro negro',
   foliao:'Folião', pierrot:'Pierrô', bonecao:'Bonecão', coelho:'Coelho', ovo:'Ovo rolante', galinha:'Galinha', espantalho:'Espantalho', fogueteiro:'Espantalho fogueteiro', buscape:'Busca-pé',
-  saci:'Saci', fogofatuo:'Fogo-fátuo', lobisomem:'Lobisomem', duende:'Duende', soldadinho:'Soldadinho', rena:'Rena' };
+  saci:'Saci', fogofatuo:'Fogo-fátuo', lobisomem:'Lobisomem', duende:'Duende', soldadinho:'Soldadinho', rena:'Rena', pintinho:'Pintinho', corvo:'Corvo' };
 // Spots for islands still to come: drawn under fog unless a registered continent already sits there
 const COMING_SOON = [{x:570,y:190},{x:790,y:320},{x:420,y:390},{x:860,y:120}];
 const freeSlots = () => COMING_SOON.filter(s=>CONTINENTS.every(C=>Math.hypot(C.map.x-s.x,C.map.y-s.y)>230)).slice(0,2);
@@ -237,7 +237,7 @@ function drawMap(){
   coinIcon(W-150,52,10); txt(String(Progress.gold),W-130,52,20,'#5a3d1a','left',false);
   const id=ids[shopSel?mapLastStage:mapSel], S=STAGES[id], open=stageUnlocked(id);
   const bossType=S.zones[S.zones.length-1].waves[0][0][0];
-  const foes=[...new Set(S.zones.filter(z=>!z.boss).flatMap(z=>z.waves.flat().map(w=>w[0])))].map(t=>ENEMY_NAMES[t]||t);
+  const foes=[...new Set(S.zones.filter(z=>!z.boss).flatMap(z=>[...(z.waves||[]).flat().map(w=>w[0]),...(z.spawn||[])]))].map(t=>ENEMY_NAMES[t]||t);
   panel(W/2-300,H-126,600,92,14,'rgba(90,61,26,0.88)');
   txt(`Fase ${ids.indexOf(id)+1} · ${S.name}`,W/2,H-106,20,'#ffd23f','center',false);
   if (open){

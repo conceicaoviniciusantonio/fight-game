@@ -137,6 +137,7 @@ function damageEnemy(e,dmg,dir,kb,up,crit,src){
 }
 function killEnemy(e,dir){
   const T=ENEMY_TYPES[e.type];
+  if (trickOnKill(e,dir)) return;
   e.hp=0; e.state='dying'; e.t=0; e.vy=-6; e.vx=dir*4;
   score+=T.score;
   burst(e.x,e.y-e.h/2,'#ffffff',16,7);
@@ -165,7 +166,7 @@ function dropItem(x,y,type,vy=-6,val=0,vx=0){ items.push({x,y,vx,vy,type,val,t:0
 // ----- AI -----
 function enemyHitPlayers(e,x1,x2,y1,y2,dmg,dir){
   for (const p of alivePlayers())
-    if (p.x+p.w/2>x1 && p.x-p.w/2<x2 && p.y>y1 && p.y-p.h<y2) hurtPlayer(p,{dmg,dir:dir??(p.x>e.x?1:-1),fromX:e.x,srcId:e.id});
+    if (p.x+p.w/2>x1 && p.x-p.w/2<x2 && p.y>y1 && p.y-p.h<y2){ hurtPlayer(p,{dmg,dir:dir??(p.x>e.x?1:-1),fromX:e.x,srcId:e.id,...hitFxOf(e)}); trickOnHit(e,p); }
 }
 function meleeAI(e,tg,dx,adx){
   const T=ENEMY_TYPES[e.type], reach=T.reach;
@@ -196,7 +197,7 @@ function archerAI(e,tg,dx,adx){
       const sy=e.y-30, ty=tg.y-40;
       const vy=clamp((ty-sy)/Math.max(40,adx/8),-2.5,2.5);
       const ET=ENEMY_TYPES[e.type];
-      if (ET.shot==='lob'){ throwBomb(e,tg,ET.bombStyle,0); SFX.shoot(); }
+      if (ET.shot==='lob'){ const b=throwBomb(e,tg,ET.bombStyle,0); b.fx=ET.shotFx; b.hatch=ET.hatch; SFX.shoot(); }
       else if (ET.shot==='cork'){ addEnemyProj({type:'cork',x:e.x+e.face*26,y:sy-4,vx:e.face*9,vy:vy*0.6,life:110,dmg:e.dmg}); SFX.shoot(); }
       else if (ET.shot==='eorb'){ addEnemyProj({type:'eorb',x:e.x+e.face*22,y:sy-6,vx:e.face*4.5,vy:vy*0.5,life:170,dmg:e.dmg,home:true,col:ENEMY_TYPES[e.type].look.orb}); SFX.zap(); }
       else { addEnemyProj({type:'arrow',x:e.x+e.face*18,y:sy,vx:e.face*8,vy,life:120,dmg:e.dmg}); SFX.shoot(); }
@@ -386,8 +387,10 @@ function bossAI(e,tg,dx,adx){
 }
 // An arcing bomb aimed at the target's position
 function throwBomb(e,tg,style,k=0,explode=0){
-  const flight=40+k*6, tx=tg.x+(k?rand(-80,80):0);
-  addEnemyProj({type:'bomb',style:style||'confetti',x:e.x+e.face*24,y:e.y-e.h*0.7,vx:clamp((tx-e.x)/flight,-9,9),vy:-9.5-k*0.4,grav:0.42,life:200,
+  // time the arc so it comes down on the target (k>0 spreads extra bombs around it)
+  const tx=tg.x+(k?rand(-80,80):0), y0=e.y-e.h*0.7, vy=-9.5-k*0.4, g=0.42;
+  const flight=(-vy+Math.sqrt(vy*vy+2*g*Math.max(0,tg.y-24-y0)))/g;
+  return addEnemyProj({type:'bomb',style:style||'confetti',x:e.x+e.face*24,y:y0,vx:clamp((tx-e.x-e.face*24)/flight,-9,9),vy,grav:g,life:200,
     dmg:Math.round(e.dmg*(explode?0.55:1)),r:explode?16:13,explode});
 }
 function bossHop(e,tg){ e.state='hop'; e.t=0; e.vy=-12; e.vx=clamp((tg.x-e.x)/40,-8,8); e.face=tg.x>e.x?1:-1; SFX.jump(); }
@@ -402,7 +405,8 @@ function updateEnemy(e){
     if (e.t<=0 && (e.onGround || T.fly)){ e.state='walk'; e.cd=Math.max(e.cd,30); }
   } else {
     const dx=tg.x-e.x, adx=Math.abs(dx);
-    if (T.ai==='archer') archerAI(e,tg,dx,adx);
+    if (trickAI(e,tg,dx,adx)) {}
+    else if (T.ai==='archer') archerAI(e,tg,dx,adx);
     else if (T.ai==='boss') bossAI(e,tg,dx,adx);
     else if (T.ai==='flyer') flyerAI(e,tg,dx,adx);
     else if (T.ai==='hopper') hopperAI(e,tg,dx,adx);
@@ -410,6 +414,7 @@ function updateEnemy(e){
     else if (T.ai==='kamikaze') kamikazeAI(e,tg,dx,adx);
     else if (T.ai==='trickster') tricksterAI(e,tg,dx,adx);
     else meleeAI(e,tg,dx,adx);
+    trickTick(e,tg);
   }
   // walkers stop at the edge of a pit (but can still be knocked in)
   if (!T.fly && !T.boss && pits.length && e.onGround && e.state!=='hurt' && e.vx && inPit(e.x+Math.sign(e.vx)*(e.w/2+8)+e.vx*4)) e.vx=0;
@@ -426,7 +431,7 @@ function hopperAI(e,tg,dx,adx){
     else e.state='walk';
   } else if (e.hitIds){
     for (const p of alivePlayers())
-      if (!e.hitIds.has(p.id) && Math.abs(p.x-e.x)<e.w/2+p.w/2 && e.y>p.y-p.h && e.y-e.h<p.y){ e.hitIds.add(p.id); hurtPlayer(p,{dmg:e.dmg,dir:e.face,fromX:e.x,srcId:e.id}); }
+      if (!e.hitIds.has(p.id) && Math.abs(p.x-e.x)<e.w/2+p.w/2 && e.y>p.y-p.h && e.y-e.h<p.y){ e.hitIds.add(p.id); hurtPlayer(p,{dmg:e.dmg,dir:e.face,fromX:e.x,srcId:e.id,...hitFxOf(e)}); }
   }
 }
 // The Saci hops around on one leg, vanishes in a little whirlwind and reappears behind the target to kick
@@ -477,7 +482,7 @@ function rollerAI(e,tg,dx,adx){
   } else if (e.state==='charge'){
     e.t++; e.vx=e.face*7.5;
     for (const p of alivePlayers())
-      if (!e.hitIds.has(p.id) && Math.abs(p.x-e.x)<e.w/2+p.w/2 && p.y>e.y-e.h && p.y-p.h<e.y){ e.hitIds.add(p.id); hurtPlayer(p,{dmg:e.dmg,dir:e.face,fromX:e.x,srcId:e.id}); }
+      if (!e.hitIds.has(p.id) && Math.abs(p.x-e.x)<e.w/2+p.w/2 && p.y>e.y-e.h && p.y-p.h<e.y){ e.hitIds.add(p.id); hurtPlayer(p,{dmg:e.dmg,dir:e.face,fromX:e.x,srcId:e.id,...hitFxOf(e)}); }
     if (e.t%4===0) dust(e.x,e.y,1);
     if (e.t>55){ e.state='walk'; e.cd=rand(60,100); }
   } else e.state='walk';
@@ -499,7 +504,7 @@ function flyerAI(e,tg,dx,adx){
   } else if (e.state==='swoop'){
     e.t++;
     for (const p of alivePlayers())
-      if (!e.hitIds.has(p.id) && Math.abs(p.x-e.x)<28 && e.y>p.y-p.h && e.y-e.h<p.y){ e.hitIds.add(p.id); hurtPlayer(p,{dmg:e.dmg,dir:Math.sign(e.vx)||1,fromX:e.x,srcId:e.id}); }
+      if (!e.hitIds.has(p.id) && Math.abs(p.x-e.x)<28 && e.y>p.y-p.h && e.y-e.h<p.y){ e.hitIds.add(p.id); hurtPlayer(p,{dmg:e.dmg,dir:Math.sign(e.vx)||1,fromX:e.x,srcId:e.id,...hitFxOf(e)}); }
     if (e.t>40 || e.y>=GROUND-12){ e.state='walk'; e.cd=rand(70,120); e.vy=-4; }
   } else e.state='walk';
 }
