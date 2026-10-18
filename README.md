@@ -9,6 +9,10 @@ Jogo de ação 2D feito com HTML, CSS e JavaScript puro, sem etapa de build. Bas
 - **Co-op Online**: a história em dupla, cada jogador no seu navegador. Os inimigos ficam mais fortes, e quem cai volta depois de 10 segundos se o parceiro continuar de pé.
 - **PvP Online**: luta numa das quatro arenas, com melhor de 1, 3 ou 5 rounds e tempo configurável.
 
+Cada fase tem seu tamanho e seu jeito: buracos (cair custa um pedaço da vida e você volta ao último chão firme), armadilhas (espinhos, pêndulos, estalactites, vento, lama e areia que deixam lento, veneno), plataformas que desmoronam, trampolins e elevadores, emboscadas dos dois lados, salas onde é preciso sobreviver por um tempo, perseguições, mini-chefes e vidas escondidas. Cada inimigo tem um truque próprio (escudo, veneno, roubar ouro ou MP, agarrar, cegar, se remontar…) e cada chefe tem fases com mecânicas só dele.
+
+Você começa cada fase com 3 vidas (até 5); às vezes um inimigo deixa cair uma vida extra.
+
 Nos modos online, um jogador cria a sala e o outro entra com o código de 4 letras. Precisa de internet.
 
 ## Progressão
@@ -61,6 +65,8 @@ No celular aparecem botões na tela (jogue com o aparelho na horizontal).
 | `js/enemies.js` | inimigos, chefes e suas IAs |
 | `js/stages.js` | registro de continentes e fases, dificuldade automática |
 | `js/themes.js` | cenários: fundo, plataformas, iluminação e atmosfera |
+| `js/mechanics.js` | buracos, armadilhas, efeitos de status, tipos de encontro e fases de chefe |
+| `js/tricks.js` | o truque próprio de cada inimigo |
 | `js/stages/vallen.js` | continente 1, Reino de Vallen, e suas 4 fases |
 | `js/stages/brasilis.js` | continente 2, Terra Brasilis, e suas 5 fases |
 | `js/admin.js` | modo administrador para testes (`?admin`) |
@@ -71,14 +77,17 @@ No celular aparecem botões na tela (jogue com o aparelho na horizontal).
 | `js/coop.js` | modo cooperativo (sincronização do mundo) |
 | `js/menus.js` | menus, opções e pausa |
 | `js/game.js` | fluxo do jogo e loop principal |
+| `js/bosses.js` | mecânicas próprias de cada chefe (golpes, fases e mudanças na arena) |
 
 ## Como criar um continente novo
 
 1. Crie `js/stages/<nome>.js` copiando a estrutura de `js/stages/vallen.js` e chame `registerContinent({...})` com:
    - `id`, `name`, `sub` (por exemplo "Continente 2"), `map` (posição da ilha no mapa-múndi) e `colors` da ilha;
-   - `stages`: a lista de fases. Cada fase tem `id`, `name`, `map` (posição e ícone no mapa do continente), `theme`, `music`, `platforms`, `zones` (a última com `boss:true`) e, se quiser uma arena de PvP, `arena`.
+   - `stages`: a lista de fases. Cada fase tem `id`, `name`, `map` (posição e ícone no mapa do continente), `theme`, `music`, `worldW` (comprimento), `platforms`, `zones` (a última com `boss:true`) e, se quiser uma arena de PvP, `arena`.
+   - Opcionais: `pits` (buracos), `hazards` (armadilhas: `spikes`, `pendulum`, `stalactite`, `wind`, `slow`, `poison`, `fire`, `gift`), `lifeItems` (vidas escondidas) e plataformas especiais (`crumble`, `bounce`, `move` com `axis:'y'` para elevadores).
+   - Tipos de zona (`type`): ondas (padrão), `ambush` (inimigos entram por `'L'`/`'R'`), `survive` (`secs`, `spawn`, `every`, `max`) e `chase` (`to`, sem travar a câmera). Um inimigo da onda vira mini-chefe com `['orc',x,{mini:true,name:'…'}]`.
 2. Adicione o arquivo no `index.html`, depois de `js/stages/vallen.js` (a ordem dos arquivos é a ordem dos continentes).
-3. Se o continente tiver um cenário novo, crie o tema em `js/themes.js`. Inimigos e chefes novos ficam em `js/enemies.js`; chefes têm um ajuste próprio de dificuldade (`tune`).
+3. Se o continente tiver um cenário novo, crie o tema em `js/themes.js`. Inimigos e chefes novos ficam em `js/enemies.js`; chefes têm um ajuste próprio de dificuldade (`tune`). O truque de um inimigo vai em `js/tricks.js` e as fases e golpes próprios de um chefe em `js/bosses.js`.
 4. Aumente o número `?v=` dos arquivos no `index.html` para os navegadores baixarem a versão nova.
 
 A dificuldade dos inimigos comuns é calculada sozinha pela posição da fase na campanha, as fases liberam em sequência entre continentes, e as arenas de PvP entram na lista automaticamente. O progresso salvo dos jogadores continua valendo.

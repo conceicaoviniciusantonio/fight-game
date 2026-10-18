@@ -68,6 +68,15 @@ Cada fase termina com um commit próprio.
 - [x] Dificuldade dos chefes continuando a escadinha depois do Lorde Sombrio
 - [x] Modo administrador para testes (`?admin`)
 
+## Fase 10: Fases menos repetitivas
+- [x] 3 vidas por fase como no Grand Chase (até 5), com itens de vida que às vezes caem e vidas escondidas
+- [x] Buracos, armadilhas (espinhos, pêndulos, estalactites, vento, lama, veneno), plataformas que desmoronam, trampolins e elevadores
+- [x] Efeitos de status: veneno, lentidão, cegueira e agarrão
+- [x] Encontros variados: emboscadas, sobrevivência, perseguições e mini-chefes
+- [x] Um truque próprio para cada inimigo (escudo, se remontar, curar, cavar, roubar ouro/MP, esquivar…)
+- [x] Fases de tamanhos bem diferentes (de 3480 a 6200) com layouts próprios
+- [x] Chefes com fases e mecânicas próprias: machado-bumerangue e chão rachado (Gorgo), pilares de cristal (Golem), tempestade de areia (Rei Escorpião), sombras e apagão (Lorde Sombrio), desfile de carros alegóricos (Bonecão), jogo dos ovos (Coelho Colossal), rastro de fogo e erupções (Boitatá), galope de fogo (Mula), presentes mímicos e fuga pela corda (Ladrão)
+
 ## Próximas ideias
 - [ ] Continente 3
 - [ ] Arte em sprites (personagens desenhados quadro a quadro)
