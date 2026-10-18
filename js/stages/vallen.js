@@ -31,28 +31,34 @@ registerContinent({
       ],
       arena:{left:2520, extra:[{x:2950,y:296,w:110}]},
     },
+    // Long and vertical: stalactites, stairs up to the third tier, a lift across a pit and a dark chamber to survive in
     { id:'cave', map:{x:375,y:215,icon:'crystal'}, arenaName:'Caverna de Cristal',
-      name:'Caverna de Cristal', theme:'cave', worldW:4000, music:'cave', bossMusic:'boss',
+      name:'Caverna de Cristal', theme:'cave', worldW:5200, music:'cave', bossMusic:'boss',
       platforms:[
-        // low steps ~90px up (one jump); high steps ~82px above a low step beside them
-        {x:460,y:372,w:190},{x:620,y:296,w:150},{x:840,y:372,w:180},
-        {x:1340,y:372,w:180},{x:1500,y:296,w:200},{x:1780,y:372,w:220},{x:1960,y:300,w:130},
-        {x:2380,y:372,w:200},{x:2560,y:296,w:180},{x:2820,y:372,w:200},
-        {x:3200,y:372,w:170},{x:3720,y:372,w:170},
+        {x:460,y:372,w:190},{x:620,y:296,w:150},
+        {x:1650,y:372,w:170},{x:1810,y:290,w:150},{x:1970,y:208,w:150},{x:2150,y:372,w:180},
+        {x:2400,y:372,w:120},{x:2540,y:300,w:110,move:{axis:'y',range:70,speed:0.025}},
+        {x:2770,y:380,w:120,move:{range:130,speed:0.018}},
+        {x:3500,y:372,w:170},{x:3700,y:290,w:160},{x:3950,y:372,w:170},
+        {x:4380,y:372,w:170},{x:4950,y:372,w:170},
       ],
+      pits:[{x:2680,w:300}],
+      hazards:[
+        {type:'stalactite',x:1120,period:150},{type:'stalactite',x:1260,period:150,offset:50},{type:'stalactite',x:1400,period:150,offset:100},
+        {type:'stalactite',x:3080,period:170},{type:'stalactite',x:3220,period:170,offset:85},
+      ],
+      lifeItems:[2045],
       zones:[
         {at:330, left:100, waves:[
           [['bat',600],['kobold',800],['kobold',950]],
           [['shaman',900],['bat',300],['kobold',500],['bat',700]]]},
-        {at:1260, left:1150, waves:[
-          [['kobold',1500],['shaman',1900],['bat',1300],['bat',1700]],
-          [['kobold',1400],['kobold',1950],['shaman',1600],['bat',1800],['orc',1700]]]},
-        {at:2260, left:2150, waves:[
-          [['orc',2600],['shaman',2950],['bat',2400],['bat',2800]],
-          [['kobold',2300],['kobold',2900],['shaman',2500],['bat',2700],['bat',2400]]]},
-        {at:3150, left:3040, boss:true, waves:[[['golem',3760]]]},
+        {at:1700, left:1500, waves:[
+          [['kobold',1750],['shaman',2040],['bat',1600],['bat',2100]],
+          [['kobold',1550],['kobold',2300],['shaman',1880],['bat',1900],['orc',2200]]]},
+        {at:3480, left:3300, type:'survive', secs:25, spawn:['bat','kobold','kobold','shaman','bat'], every:80, max:5, waves:[[['kobold',3700],['bat',3900]]]},
+        {at:4350, left:4240, boss:true, waves:[[['golem',4960]]]},
       ],
-      arena:{left:3040, extra:[{x:3470,y:296,w:110}]},
+      arena:{left:4240, extra:[{x:4670,y:296,w:110}]},
     },
     { id:'desert', map:{x:600,y:318,icon:'pyramid'}, arenaName:'Deserto',
       name:'Deserto Escaldante', theme:'desert', worldW:4000, music:'desert', bossMusic:'boss',

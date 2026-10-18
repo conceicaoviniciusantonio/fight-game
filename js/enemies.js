@@ -99,6 +99,7 @@ const ENEMY_TYPES = {
     tune:{wind:0.95, rec:0.95, cd:[40,80], enrage:0.5, rage:1.3, charge:10, summons:2},
     look:{kind:'puppet', s:2.3, skin:'#f7c59f', body:'#7b2cbf', cloth:'#ffd23f', hair:'#1b1b2e', crown:true}},
 };
+const EXTRA_DRAW = {}; // drawings for foes added by other files (bosses.js), by look.kind
 const WIND = ['windup','slamWind','leapWind','chargeWind','rocksWind','spikesWind','spitWind','waveWind','teleportWind','slashWind',
   'spinWind','rainWind','bombsWind','hopWind','burrowWind'];
 const NEAR_MOVES = ['slam','spikes','teleport','leap','spin','rain','hop','burrow'], FAR_MOVES = ['charge','leap','rocks','spit','wave','teleport','spikes','spin','rain','bombs','hop','burrow'];
@@ -129,6 +130,7 @@ function damageEnemy(e,dmg,dir,kb,up,crit,src){
   SFX.hit(crit);
   if (ENEMY_TYPES[e.type].boss){
     if (e.state==='walk'||e.state==='recover') e.vx=dir*1.2;
+  } else if (ENEMY_TYPES[e.type].anchored){ // crystals, totems…: never pushed around
   } else {
     e.state='hurt'; e.t=up?28:16; e.vx=dir*kb;
     if (up) e.vy=up; else if (!e.onGround) e.vy=Math.min(e.vy,-3);
@@ -221,6 +223,7 @@ function bossAI(e,tg,dx,adx){
   if (e.wasAir && e.onGround && e.state!=='leap'){ addShake(12); SFX.thud(); dust(e.x,e.y,16); }
   e.wasAir=!e.onGround;
   bossPhaseCheck(e,T);
+  if (T.bossTick) T.bossTick(e,tg);
   if (e.state==='walk'){
     const many=(U.summons??2)>=2;
     if (!e.summon1 && e.hp<e.maxHp*(many?0.6:0.5)){ e.summon1=true; e.state='roar'; e.t=0; }
@@ -760,6 +763,7 @@ function drawMonsterShadow(e){
 function drawMonster(e,noShadow){
   const T=ENEMY_TYPES[e.type], c=T.look, fl=e.flash>0, F=col=>fl?'#ffffff':col, sx=e.x-cam.x;
   if (sx<-200||sx>W+200) return;
+  if (EXTRA_DRAW[c.kind]) return EXTRA_DRAW[c.kind](e,T,c,F,sx);
   if (c.kind==='bat') return drawBat(e,T,c,F,sx);
   if (c.kind==='scorpion') return drawScorpion(e,T,c,F,sx,noShadow);
   if (c.kind==='puppet') return drawPuppet(e,T,c,F,sx,noShadow);

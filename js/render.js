@@ -196,6 +196,7 @@ function drawMonsterOutlined(e){
   else withOutline(sx,e.y,bw,bh,()=>drawMonster(e,true));
   if (e.big) ctx.restore();
   if (e.guarding && e.hp>0) drawFoeShield(e,sx);
+  drawBossShell(e);
 }
 
 // ----- lighting: darkness with holes punched by light sources, plus a soft additive glow -----
