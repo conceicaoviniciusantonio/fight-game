@@ -273,3 +273,37 @@ Object.assign(ENEMY_TYPES.boitata, {
     }
   },
 });
+
+// ---------- Mula-sem-cabeça (Noite do Saci) ----------
+// From 55% it gallops from wall to wall three times, leaving fire on the ground (the platforms are safe);
+// from 25% it gallops faster and the flames on its neck spit fireballs.
+addWind('gallopWind');
+BOSS_STATES.gallopWind = (e,tg,dx) => {
+  e.vx*=0.8; e.t++; e.face=dx>0?1:-1;
+  if (e.t%5===0) dust(e.x-e.face*40,e.y,3);
+  if (e.t>=34){ e.state='gallop'; e.t=0; e.passes=3; e.hitIds=new Set(); SFX.roar(); }
+};
+BOSS_STATES.gallop = (e) => {
+  const fast=(e.phase||1)>=3, [l,r]=bounds();
+  e.t++; e.vx=e.face*(fast?14:12);
+  if (e.t%10===0) addHazard({type:'fire',patch:true,x:e.x-25,w:50,ttl:fast?170:130,dmg:13});
+  if (e.t%3===0) dust(e.x-e.face*40,e.y,2);
+  for (const p of alivePlayers())
+    if (!e.hitIds.has(p.id) && Math.abs(p.x-e.x)<e.w/2+p.w/2 && p.y>e.y-e.h && p.y-p.h<e.y){ e.hitIds.add(p.id); hurtPlayer(p,{dmg:Math.round(e.dmg*0.8),dir:e.face,fromX:e.x-e.face*20,srcId:e.id}); }
+  if ((e.face<0 && e.x<=l+e.w/2+4) || (e.face>0 && e.x>=r-e.w/2-4)){
+    addShake(6); SFX.thud();
+    if (--e.passes>0){ e.face*=-1; e.hitIds=new Set(); e.t=0; if (fast) tgFire(e); }
+    else { e.state='recover'; e.t=0; e.vx=0; }
+  }
+};
+// the flames on its neck spit a fireball at the nearest hero
+function tgFire(e){
+  const tg=nearestPlayer(e.x,e.y); if (!tg) return false;
+  throwBomb(e,tg,'fire',0,60); return true;
+}
+Object.assign(ENEMY_TYPES.mula, {
+  phases:[0.55,0.25],
+  movesByPhase:[['charge','leap','wave','slam'], ['gallop','leap','wave','gallop','slam'], ['gallop','wave','gallop','leap']],
+  onPhase(e,n){ bigText(e.x,e.y-e.h-30,n===2?'Suba nas plataformas!':'A MULA ENFURECEU!','#ffb347'); },
+});
+FAR_MOVES.push('gallop'); NEAR_MOVES.push('gallop');

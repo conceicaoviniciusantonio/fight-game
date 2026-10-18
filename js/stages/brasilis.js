@@ -92,27 +92,38 @@ registerContinent({
       ],
       arena:{left:4040, extra:[{x:4470,y:296,w:110}]},
     },
+    // A dark swamp: mud that slows, holes full of water, the Saci's whirlwinds pushing the heroes around and logs that sink
     { id:'saci', map:{x:650,y:200,icon:'saci'}, arenaName:'Clareira do Saci',
-      name:'Noite do Saci', theme:'saci', worldW:4000, music:'saci', bossMusic:'boss',
+      name:'Noite do Saci', theme:'saci', worldW:5600, music:'saci', bossMusic:'boss',
       platforms:[
-        {x:420,y:372,w:180},{x:580,y:290,w:160},{x:820,y:372,w:180},
-        {x:1340,y:372,w:200},{x:1520,y:290,w:170},{x:1760,y:372,w:180},{x:1950,y:296,w:130},
-        {x:2400,y:372,w:200},{x:2580,y:290,w:180},{x:2840,y:372,w:180},
-        {x:3200,y:372,w:170},{x:3720,y:372,w:170},
+        {x:420,y:372,w:180},{x:580,y:290,w:160},
+        {x:1250,y:380,w:90,crumble:true},{x:1380,y:380,w:90,crumble:true},
+        {x:1800,y:372,w:180},{x:1980,y:290,w:160},{x:2240,y:372,w:160},
+        {x:2950,y:372,w:150},{x:3110,y:290,w:140},{x:3260,y:208,w:130},{x:3460,y:372,w:160},
+        {x:3900,y:372,w:170},{x:4080,y:290,w:150},
+        {x:4780,y:372,w:170},{x:5350,y:372,w:170},
       ],
+      pits:[{x:1230,w:250},{x:2640,w:130}],
+      hazards:[
+        {type:'slow',kind:'mud',x:1050,w:150},{type:'wind',x:2450,w:420,force:1.6,period:300},
+        {type:'slow',kind:'mud',x:2800,w:120},{type:'wind',x:3600,w:300,force:1.4,period:260,phase:1.5},
+      ],
+      lifeItems:[3320],
       zones:[
         {at:330, left:100, waves:[
           [['saci',600],['fogofatuo',800],['saci',950]],
           [['lobisomem',880],['fogofatuo',300],['saci',620],['fogofatuo',720]]]},
-        {at:1260, left:1150, waves:[
-          [['saci',1500],['lobisomem',1850],['fogofatuo',1300],['fogofatuo',1700]],
-          [['lobisomem',1450],['saci',1950],['saci',1650],['fogofatuo',1800],['fogofatuo',1350]]]},
-        {at:2260, left:2150, waves:[
-          [['lobisomem',2550],['saci',2950],['fogofatuo',2400],['saci',2700]],
-          [['lobisomem',2300],['lobisomem',2900],['saci',2560],['saci',2880],['fogofatuo',2650],['fogofatuo',2450]]]},
-        {at:3150, left:3040, boss:true, waves:[[['mula',3760]]]},
+        {at:1850, left:1650, waves:[
+          [['saci',1900],['lobisomem',2350],['fogofatuo',1750],['fogofatuo',2200]],
+          [['lobisomem',1700],['saci',2450],['saci',2050],['fogofatuo',2300],['fogofatuo',1800]]]},
+        {at:3000, left:2900, type:'ambush', waves:[
+          [['saci','L'],['saci','R'],['fogofatuo',3200]],
+          [['lobisomem','L'],['fogofatuo','R'],['saci',3500]],
+          [['lobisomem',3700,{mini:true,name:'Lobisomem Alfa'}],['fogofatuo',3200],['saci','L']]]},
+        {at:4050, left:3880, type:'survive', secs:24, spawn:['saci','fogofatuo','lobisomem','fogofatuo'], every:80, max:5, label:'Lua cheia', waves:[[['saci',4100],['fogofatuo',4500]]]},
+        {at:4750, left:4640, boss:true, waves:[[['mula',5360]]]},
       ],
-      arena:{left:3040, extra:[{x:3470,y:296,w:110}]},
+      arena:{left:4640, extra:[{x:5070,y:296,w:110}]},
     },
     { id:'natal', map:{x:830,y:300,icon:'gift'}, arenaName:'Praia de Natal',
       name:'Natal', theme:'natal', worldW:4000, music:'natal', bossMusic:'boss',
