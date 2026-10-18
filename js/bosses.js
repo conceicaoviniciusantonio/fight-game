@@ -88,7 +88,7 @@ Object.assign(ENEMY_TYPES.golem, {
 });
 // the crystal shell around a shielded boss
 function drawBossShell(e){
-  if (!e.shielded || e.hp<=0) return;
+  if (!e.shielded || e.hp<=0 || !ENEMY_TYPES[e.type].boss) return;
   const sx=e.x-cam.x, a=0.25+0.12*Math.sin(clock*0.15);
   ctx.fillStyle=`rgba(127,240,255,${a})`; ctx.strokeStyle='rgba(191,248,255,0.8)'; ctx.lineWidth=3;
   ctx.beginPath(); ctx.ellipse(sx,e.y-e.h*0.5,e.w*0.85,e.h*0.62,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
@@ -161,4 +161,80 @@ Object.assign(ENEMY_TYPES.bonecaoRei, {
     for (const f of platforms) if (f.vx) for (const p of alivePlayers())
       if (p.y>f.y+20 && p.x>f.x-10 && p.x<f.x+f.w+10) hurtPlayer(p,{dmg:Math.round(e.dmg*0.6),dir:Math.sign(f.vx),fromX:f.x+f.w/2-Math.sign(f.vx)*200,kb:10,up:-9});
   },
+});
+
+// ---------- Coelho Colossal (Páscoa) ----------
+// At 60% and 25% it hides in one of three giant eggs, which shuffle around: break the right egg to knock it
+// out (stunned, extra damage); a wrong egg explodes and lets bunnies out.
+ENEMY_TYPES.ovoGigante = {hp:60, w:70, h:96, speed:0, dmg:40, ai:'pylon', anchored:true, score:0, look:{kind:'bigEgg'}};
+ENEMY_NAMES.ovoGigante = 'Ovo gigante';
+const EGG_SWAPS = 6, EGG_SWAP_T = 32;
+TRICKS.ovoGigante = {
+  ai(e){ e.vx=0; return true; },
+  onKill(e){
+    const b=enemies.find(o=>o.type==='coelhoRei' && o.hp>0);
+    if (e.real && b){
+      for (const o of enemies) if (o.type==='ovoGigante' && o!==e && o.hp>0){ o.hp=0; o.state='dying'; o.t=0; burst(o.x,o.y-40,'#ffe5ec',14,5); }
+      b.hidden=false; b.x=e.x; b.y=GROUND; b.state='recover'; b.t=-70; b.vx=0; b.flash=10;
+      damageEnemy(b,Math.round(b.maxHp*0.03),1,0,0,true,null);
+      bigText(e.x,GROUND-200,'ACHOU!','#ffd23f'); ring(e.x,GROUND-50,'#ffd23f',8,24,6,14); SFX.parry();
+    } else {
+      ring(e.x,GROUND-50,'#ff9d4d',9,20,9,10); burst(e.x,GROUND-50,'#ffd6a5',24,8,0.12); SFX.blast(); addShake(8);
+      for (const p of alivePlayers()) if (Math.abs(p.x-e.x)<120 && p.y>GROUND-150) hurtPlayer(p,{dmg:e.dmg,dir:p.x>=e.x?1:-1,fromX:e.x});
+      for (let k=0;k<2;k++) spawnChild('coelho',e.x+(k?20:-20),GROUND-40);
+      bigText(e.x,GROUND-200,'ERROU!','#ff8a8a');
+    }
+    return false;
+  },
+};
+EXTRA_DRAW.bigEgg = (e,T,c,F,sx) => {
+  const wob=e.shielded ? Math.sin(e.anim*0.5)*0.08 : Math.sin(e.anim*0.08)*0.03;
+  ctx.save(); ctx.translate(sx,e.y-46); ctx.rotate(wob);
+  if (e.state==='dying'){ ctx.globalAlpha=Math.max(0,1-e.t/20); ctx.scale(1+e.t/20,1+e.t/20); }
+  ctx.fillStyle=F('#fff3d6'); ctx.beginPath(); ctx.ellipse(0,0,34,46,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=F('#ffafcc'); ctx.fillRect(-33,-6,66,12);
+  ctx.fillStyle=F('#bde0fe'); for (let k=-24;k<=24;k+=16) circle(k,-24,5);
+  ctx.fillStyle=F('#cdeac0'); for (let k=-24;k<=24;k+=16) circle(k+8,22,5);
+  ctx.fillStyle='#ffd23f'; tri(-10,-50,0,-40,10,-50); tri(-10,-30,0,-40,10,-30);
+  ctx.restore();
+};
+addWind('eggHideWind');
+BOSS_STATES.eggHideWind = (e) => {
+  e.vx*=0.8; e.t++;
+  if (e.t===1){ e.vy=-14; SFX.jump(); }
+  if (e.t===30){
+    const L=lockL, slots=[L+240,L+480,L+720], real=(Math.random()*3)|0;
+    e.eggs=slots.map((x,i)=>{ const o=spawnEnemy('ovoGigante',x,GROUND-2); o.vy=0; o.real=i===real; o.shielded=true; return o.id; });
+    e.hidden=true; e.state='eggShow'; e.t=0; ring(slots[real],GROUND-50,'#ffd23f',6,20,5,12); dust(slots[real],GROUND,16); SFX.thud();
+    bigText(L+480,GROUND-230,'Siga o ovo certo!','#ffd23f');
+  }
+};
+const bossEggs = e => (e.eggs||[]).map(id=>enemies.find(o=>o.id===id)).filter(o=>o && o.hp>0);
+BOSS_STATES.eggShow = (e) => { // the egg the bunny jumped into blinks, then the shuffle starts
+  e.t++; const eggs=bossEggs(e), r=eggs.find(o=>o.real);
+  if (r && e.t%10<5) r.flash=3;
+  if (e.t>=60){ e.state='eggShuffle'; e.t=0; e.swaps=0; }
+};
+BOSS_STATES.eggShuffle = (e) => {
+  const eggs=bossEggs(e);
+  if (eggs.length<3){ e.state='eggWait'; e.t=0; return; }
+  if (e.t===0){ const a=(Math.random()*3)|0, b=(a+1+((Math.random()*2)|0))%3; e.swapA=eggs[a].id; e.swapB=eggs[b].id; e.fromA=eggs[a].x; e.fromB=eggs[b].x; SFX.roll(); }
+  e.t++;
+  const A=enemies.find(o=>o.id===e.swapA), B=enemies.find(o=>o.id===e.swapB), k=Math.min(1,e.t/EGG_SWAP_T), s=k*k*(3-2*k);
+  const speed=e.phase>=3 ? 0.75 : 1; // faster shuffle the second time
+  if (A && B){ A.x=e.fromA+(e.fromB-e.fromA)*s; B.x=e.fromB+(e.fromA-e.fromB)*s; A.y=B.y=GROUND-Math.sin(Math.PI*k)*30; }
+  if (e.t>=EGG_SWAP_T*speed){ if (A&&B){ A.x=e.fromB; B.x=e.fromA; A.y=B.y=GROUND; } e.t=0; if (++e.swaps>=EGG_SWAPS+(e.phase>=3?2:0)){ e.state='eggWait'; e.t=0; for (const o of eggs) o.shielded=false; } }
+};
+BOSS_STATES.eggWait = (e) => {
+  e.t++; const eggs=bossEggs(e), r=eggs.find(o=>o.real);
+  if (r){ e.x=r.x; e.y=GROUND; }
+  if (!e.hidden) return;
+  if (!r || e.t>600){ // took too long: it bursts out of its egg by itself
+    for (const o of eggs){ o.hp=0; o.state='dying'; o.t=0; burst(o.x,o.y-40,'#ffe5ec',14,5); }
+    e.hidden=false; e.state='recover'; e.t=0; SFX.roar(); addShake(10);
+  }
+};
+Object.assign(ENEMY_TYPES.coelhoRei, {
+  phases:[0.6,0.25],
+  onPhase(e){ e.state='eggHideWind'; e.t=0; e.vx=0; },
 });

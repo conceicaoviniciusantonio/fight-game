@@ -61,7 +61,7 @@ const ENEMY_TYPES = {
   coelho:{hp:90, w:30, h:44, speed:2.6, dmg:26, ai:'hopper', score:150, look:{kind:'bunny', s:1, fur:'#f1f1f1', inner:'#ffb3c6', eye:'#1b1b2e'}},
   ovo:{hp:120, w:34, h:42, speed:1.2, dmg:32, ai:'roller', score:170, look:{kind:'egg', s:1, shell:'#ffe5ec', band:'#7bd389', band2:'#bde0fe'}},
   galinha:{hp:85, w:30, h:44, speed:1.6, dmg:26, ai:'archer', shot:'lob', bombStyle:'egg', score:160, look:{kind:'chicken', s:1, body:'#ffffff', comb:'#e63946'}},
-  coelhoRei:{hp:7200, w:96, h:120, speed:2.0, dmg:128, ai:'boss', boss:true, score:6500, name:'Coelho Colossal',
+  coelhoRei:{hp:7200, w:96, h:120, speed:2.0, dmg:192, ai:'boss', boss:true, score:6500, name:'Coelho Colossal',
     moves:['hop','bombs','charge','rain'], summon:['coelho','coelho','galinha'], bombStyle:'egg',
     tune:{wind:0.92, rec:0.92, cd:[38,76], enrage:0.5, rage:1.32, charge:11, summons:2},
     look:{kind:'bunny', s:2.7, fur:'#7b4a2e', inner:'#ffb3c6', eye:'#ff2a2a', bow:'#ffd23f'}},
@@ -94,7 +94,7 @@ const ENEMY_TYPES = {
     moves:['bombs','teleport','rain','charge'], summon:['duende','duende','soldadinho'], bombStyle:'gift',
     tune:{wind:0.82, rec:0.82, cd:[30,62], enrage:0.55, rage:1.42, charge:13, summons:2},
     look:{s:2.3, skin:'#e0b48a', body:'#2b2d42', cloth:'#c1121f', eye:'#ffd23f', weapon:'cane', mask:'#111111', beanie:'#c1121f', sack:'#8a6a4a'}},
-  bonecaoRei:{hp:6300, w:100, h:175, speed:1.7, dmg:132, ai:'boss', boss:true, score:6000, name:'Bonecão Desgovernado',
+  bonecaoRei:{hp:6300, w:100, h:175, speed:1.7, dmg:124, ai:'boss', boss:true, score:6000, name:'Bonecão Desgovernado',
     moves:['spin','rain','slam','leap'], summon:['foliao','foliao','pierrot'], bombStyle:'confetti',
     tune:{wind:0.95, rec:0.95, cd:[40,80], enrage:0.5, rage:1.3, charge:10, summons:2},
     look:{kind:'puppet', s:2.3, skin:'#f7c59f', body:'#7b2cbf', cloth:'#ffd23f', hair:'#1b1b2e', crown:true}},
@@ -518,8 +518,9 @@ function separate(){
     const d=b.x-a.x, min=(a.w+b.w)*0.4;
     if (Math.abs(d)<min && Math.abs(a.y-b.y)<30){
       const push=(min-Math.abs(d))*0.1*(d>=0?1:-1);
-      if (!ENEMY_TYPES[a.type].boss) a.x-=push;
-      if (!ENEMY_TYPES[b.type].boss) b.x+=push;
+      const TA=ENEMY_TYPES[a.type], TB=ENEMY_TYPES[b.type];
+      if (!TA.boss && !TA.anchored) a.x-=push;
+      if (!TB.boss && !TB.anchored) b.x+=push;
     }
   }
 }
